@@ -361,17 +361,19 @@ Each workflow references its acceptance criterion in
 
 ## 7. Required Product and Architecture Decisions
 
-All ten decisions are recorded below. Status is PROPOSED until the Product
-Owner records approval; no decision may be treated as approved before then.
-Consequences and alternatives are recorded so approval is informed, not
-rubber-stamped. Corresponding architecture records: [docs/adr/](../adr/).
+All ten decisions are recorded below with status APPROVED. Approval was
+granted by Nick Baynham (Product Owner) on 2026-07-18 by explicit written
+instruction to the AI test lead, who recorded it; the approval covers
+DEC-01 through DEC-10 as written. Consequences and alternatives are recorded
+so approval is informed, not rubber-stamped. Corresponding architecture
+records: [docs/adr/](../adr/).
 
 ### DEC-01 — Workspace, User, and Artist Cardinality
 
 - Decision ID: DEC-01
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision:
 
@@ -400,9 +402,9 @@ new campaigns and generation while preserving all approved history (BR-014).
 ### DEC-02 — Required AIP Sections and Completeness
 
 - Decision ID: DEC-02
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision — required for approval: core identity, musical identity,
 differentiation hypothesis, artist personality, brand voice, audience
@@ -445,9 +447,9 @@ eligibility is binary and computed from required sections only.
 ### DEC-03 — Pre-Auth Identity and Approvals
 
 - Decision ID: DEC-03
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision: a stable seeded local owner identity exists from first run:
 
@@ -474,9 +476,9 @@ control and must not be used beyond local development.
 ### DEC-04 — Campaign Output Contract
 
 - Decision ID: DEC-04
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision — campaign-level fields: campaign ID, workspace ID, artist ID,
 approved AIP version ID, name, objective, summary, start date, end date,
@@ -508,9 +510,9 @@ versioned separately.
 ### DEC-05 — Generated-Content Quality Bar
 
 - Decision ID: DEC-05
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision — review rubric (binary checks for hard violations; 1–5 scale for
 subjective dimensions):
@@ -572,9 +574,9 @@ Maximum three provider attempts per item per explicit user action.
 ### DEC-06 — LLM Provider and Cost Ceilings
 
 - Decision ID: DEC-06
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision: a provider-neutral interface with one reference provider for
 development — Anthropic, reference model `claude-sonnet-5` (configuration
@@ -608,9 +610,9 @@ Behavior:
 ### DEC-07 — Export Consumers and Schemas
 
 - Decision ID: DEC-07
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision — export is a handoff, not publishing; no export is labeled
 "publishing".
@@ -643,9 +645,9 @@ Decision — export is a handoff, not publishing; no export is labeled
 ### DEC-08 — Bulk Approval
 
 - Decision ID: DEC-08
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision:
 
@@ -669,9 +671,9 @@ Decision:
 ### DEC-09 — Nonfunctional Requirements
 
 - Decision ID: DEC-09
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision — measurable MVP targets:
 
@@ -720,9 +722,9 @@ approval records. No RPO or RTO is defined for the local MVP.
 ### DEC-10 — Release Definition and Privacy
 
 - Decision ID: DEC-10
-- Status: PROPOSED
+- Status: APPROVED
 - Approver: Nick Baynham (Product Owner)
-- Decision date: pending
+- Decision date: 2026-07-18
 
 Decision — Phase 14 release definition:
 

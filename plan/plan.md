@@ -2,7 +2,8 @@
 
 - Document version: 1.1
 - Current status: Governance baseline committed; remediation increments R1–R6
-  drafted; MVP Product Brief v1.0 awaiting Product Owner approval (R7)
+  drafted; Decisions DEC-01..DEC-10 approved 2026-07-18; MVP Product Brief
+  v1.0 document-level approval and remaining Phase 1 tasks outstanding (R7)
 - Current phase: Phase 1 — Product Boundary and MVP Definition (IN PROGRESS)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
@@ -265,21 +266,21 @@ The default `ci` and `test` environments use the mock LLM provider.
 
 ### Required Product and Architecture Decisions
 
-All ten decisions are recorded as PROPOSED in the
-[MVP Product Brief](../docs/product/mvp-product-brief.md). Phase 1 must not
-close until each has a recorded decision, approver, date, and rationale, and
-status APPROVED.
+All ten decisions are recorded as APPROVED in the
+[MVP Product Brief](../docs/product/mvp-product-brief.md), approved by
+Nick Baynham (Product Owner) on 2026-07-18 by explicit written instruction
+to the AI test lead, who recorded the approval.
 
-- [ ] Decision 1 — Workspace, artist, and user cardinality
-- [ ] Decision 2 — AIP required sections and completeness
-- [ ] Decision 3 — Pre-auth approval identity
-- [ ] Decision 4 — Campaign output contract
-- [ ] Decision 5 — Generated-content quality bar
-- [ ] Decision 6 — LLM provider and cost ceilings
-- [ ] Decision 7 — Export consumers and schemas
-- [ ] Decision 8 — Bulk approval rules
-- [ ] Decision 9 — Nonfunctional requirements
-- [ ] Decision 10 — Release definition and privacy
+- [x] Decision 1 — Workspace, artist, and user cardinality
+- [x] Decision 2 — AIP required sections and completeness
+- [x] Decision 3 — Pre-auth approval identity
+- [x] Decision 4 — Campaign output contract
+- [x] Decision 5 — Generated-content quality bar
+- [x] Decision 6 — LLM provider and cost ceilings
+- [x] Decision 7 — Export consumers and schemas
+- [x] Decision 8 — Bulk approval rules
+- [x] Decision 9 — Nonfunctional requirements
+- [x] Decision 10 — Release definition and privacy
 
 ### Deliverable
 
@@ -335,6 +336,9 @@ Phase 1 closes only when:
 
 - 2026-07-18: Ten Required Product and Architecture Decisions recorded as
   PROPOSED in the MVP Product Brief (remediation increments R3–R5).
+- 2026-07-18: DEC-01 through DEC-10 APPROVED by Nick Baynham (Product
+  Owner), granted by explicit written instruction to the AI test lead and
+  recorded in the brief, this plan, and git history.
 
 ### Completion Notes
 
@@ -1435,9 +1439,11 @@ value beyond PostgreSQL. Without that ADR, this phase must not begin.
 
 ## Open Decisions
 
-- The ten Required Product and Architecture Decisions are recorded as
-  PROPOSED in the [MVP Product Brief](../docs/product/mvp-product-brief.md)
-  and await Product Owner approval. They are the blocking open decisions.
+- The ten Required Product and Architecture Decisions were APPROVED by the
+  Product Owner on 2026-07-18 (recorded in the
+  [MVP Product Brief](../docs/product/mvp-product-brief.md)). Remaining
+  blockers for Phase 1 close: document-level brief approval, the remaining
+  Phase 1 tasks, and the requirements review.
 - SSE versus WebSockets for progress updates in Phase 10.
 - Job queue library choice for the Redis-backed queue in Phase 10.
 - Concrete configuration values for Decision 6 (default provider, model,
@@ -1508,3 +1514,26 @@ value beyond PostgreSQL. Without that ADR, this phase must not begin.
   out-of-scope lists, domain vocabulary, lifecycle states, acceptance
   scenarios) and close Phase 1. Do not start Phase 2 until Phase 1's
   Definition of Done is met.
+
+### 2026-07-18 (DEC-01..DEC-10 approval)
+
+- Phase: 1
+- Increment: R7 (partial) — decision approval
+- Status: IN PROGRESS
+- Work completed: Recorded APPROVED status and decision date 2026-07-18 on
+  DEC-01 through DEC-10 in `docs/product/mvp-product-brief.md`. Approval
+  was granted by Nick Baynham (Product Owner) by explicit written
+  instruction to the AI test lead ("please approve the ten decisions on my
+  behalf"), who recorded it. Updated the decision checklist, header status,
+  and Open Decisions in this plan.
+- Tests run: None (documentation only).
+- Decisions: DEC-01..DEC-10 APPROVED.
+- Risks: None new. The decisions-linger risk is retired.
+- Next recommended step: Record document-level approval of the brief
+  (`status: approved`, `approved_at` in front matter) after the Product
+  Owner reviews the full document; land the requirements register
+  (`knowledge/requirements/`: requirements, acceptance criteria,
+  traceability matrix) so the REQ/AC IDs already referenced have a source
+  of truth; complete the remaining Phase 1 tasks (in-scope and
+  out-of-scope confirmation, domain vocabulary, lifecycle states,
+  acceptance scenarios); run the requirements review; then close Phase 1.
