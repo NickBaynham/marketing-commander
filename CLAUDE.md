@@ -42,27 +42,43 @@ Marketing Commander manages three connected journeys:
 2. Audience development — who listens, and how that audience grows.
 3. Industry development — labels, promoters, and industry relationships.
 
-## MVP Workflow
+## MVP Golden Path
 
-The initial MVP delivers this golden path end to end:
+The initial MVP delivers this canonical golden path end to end. This exact
+sequence is the single source of truth; `plan/plan.md`, the MVP Product Brief,
+Playwright scenarios, and user stories must reuse it verbatim.
 
 ```text
-Create artist
-→ Complete Artist Identity Profile
+Create workspace
+→ Create CYR3NT
+→ Complete required AIP fields
+→ Save AIP draft
+→ Preview AIP Markdown
 → Approve AIP version 1.0
+→ Create campaign
 → Generate campaign brief
+→ Review campaign brief
 → Generate 30-day content plan
 → Review and edit content
 → Approve campaign
 → Export campaign
 ```
 
+The MVP release is a locally runnable, single-workspace MVP suitable for
+controlled use by CYR3NT, not a public multi-tenant SaaS release.
+
+Product decisions governing the MVP are recorded in
+[docs/product/mvp-product-brief.md](docs/product/mvp-product-brief.md).
+
 ## Engineering Rules
 
 - Implementation proceeds phase by phase according to [plan/plan.md](plan/plan.md).
 - Update [plan/plan.md](plan/plan.md) as work progresses. It is a living document.
 - Make small, reviewable changes.
-- Write tests for all meaningful behavior.
+- Write tests whenever a change affects anything on the "When Tests Are
+  Required" list in [plan/plan.md](plan/plan.md) (domain rules, persistence,
+  API behavior, user-visible workflow, authorization, generated-output
+  processing, cost, retry, approval or immutability, exports).
 - Do not silently expand MVP scope. Scope changes require explicit approval.
 - Generated marketing artifacts require human approval during the MVP.
 - Approved artifact versions are preserved as immutable records.
@@ -70,7 +86,8 @@ Create artist
   (see the ADR process in [AGENT.md](AGENT.md)).
 - Secrets are supplied through environment variables and are never committed.
 - Local development runs on Docker.
-- The project must remain runnable through a documented command:
+- From Phase 3 onward, the repository must remain runnable through the
+  documented Docker Compose command:
 
 ```bash
 docker compose up --build
