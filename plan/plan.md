@@ -6,7 +6,8 @@
   ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
   and confirmed closed with zero unresolved Major findings. Next: Phase 2.
 - Current phase: Phase 2 — Repository and Development Foundation
-  (NOT STARTED)
+  (IN PROGRESS — authoring complete; first verified CI run pending a
+  GitHub remote)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -211,7 +212,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | Phase | Title | Status |
 |-------|-------|--------|
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
-| 2 | Repository and Development Foundation | NOT STARTED |
+| 2 | Repository and Development Foundation | IN PROGRESS |
 | 3 | Docker Runtime Foundation | NOT STARTED |
 | 4 | Backend Application Foundation | NOT STARTED |
 | 5 | Workspace and Artist Domain | NOT STARTED |
@@ -390,38 +391,62 @@ Phase 1 closes only when:
 
 ## Phase 2 — Repository and Development Foundation
 
-- Status: NOT STARTED
+- Status: IN PROGRESS — all authoring tasks complete (commit `b5eeb7e`);
+  open: first verified CI run, which requires a GitHub remote.
 - Objective: Establish a documented repository skeleton with automated
   validation.
 - Dependencies: Phase 1 (product vocabulary and scope inform structure).
 
 ### Tasks
 
-- [ ] Initialize monorepo structure.
-- [ ] Add root README.
-- [ ] Add environment example file.
-- [ ] Add Makefile or equivalent developer commands.
-- [ ] Establish formatting, linting, and testing conventions.
-- [ ] Establish CI.
-- [ ] Define branch and contribution conventions.
-- [ ] Add architecture and product documentation directories.
-- [ ] Verify clean local bootstrap.
-- [ ] Ship the test-data-strategy foundations (see Cross-Cutting
-  Requirements): deterministic CYR3NT seed fixture content and the factory
-  and reset conventions. Working entity factories and database reset
-  tooling land in Phase 5 with the real schema.
-- [ ] Define the clean bootstrap protocol and add a scripted bootstrap
-  check that runs in CI.
-- [ ] Record the CI platform choice as a Phase 2 decision.
-- [ ] Document the environment matrix (local, test, ci, optional
-  development-hosted) per the Environment Strategy.
+- [x] Initialize monorepo structure. (`apps/web`, `apps/api`, `apps/worker`
+  placeholders with per-phase notes; `scripts/`, `tests/`.)
+- [x] Add root README. (`README.md`, quickstart plus structure table.)
+- [x] Add environment example file. (`.env.example`, variables grouped by
+  the phase that starts using them.)
+- [x] Add Makefile or equivalent developer commands. (setup, lint, format,
+  test, bootstrap-check; build/run guarded until Phase 3 delivers
+  docker-compose.yml.)
+- [x] Establish formatting, linting, and testing conventions.
+  (`docs/development/conventions.md`; ruff and pytest configured in
+  `pyproject.toml`; `.editorconfig`.)
+- [ ] Establish CI. (Workflow authored at `.github/workflows/ci.yml` and
+  its exact commands verified locally; the first hosted run requires a
+  GitHub remote, which does not exist yet.)
+- [x] Define branch and contribution conventions. (`CONTRIBUTING.md`.)
+- [x] Add architecture and product documentation directories.
+  (`docs/product`, `docs/architecture`, `docs/adr`, `docs/testing` from
+  Phase 1; `docs/development` added.)
+- [x] Verify clean local bootstrap. (Verified from a fresh clone: clone →
+  `cp .env.example .env` → `make setup` → `make lint` → `make test` (14
+  passed) → `make bootstrap-check` (passed). Service health activates in
+  Phase 3.)
+- [x] Ship the test-data-strategy foundations (see Cross-Cutting
+  Requirements): deterministic CYR3NT seed fixture content
+  (`tests/fixtures/cyr3nt/seed.json` with validation tests) and the factory
+  and reset conventions (`docs/testing/test-data-strategy.md`,
+  `docs/development/conventions.md`). Working entity factories and database
+  reset tooling land in Phase 5 with the real schema.
+- [x] Define the clean bootstrap protocol and add a scripted bootstrap
+  check that runs in CI. (`docs/development/bootstrap.md` with AC-001
+  failure-class troubleshooting; `scripts/bootstrap_check.py` names the
+  failing step; wired into the CI workflow.)
+- [x] Record the CI platform choice as a Phase 2 decision. (GitHub
+  Actions; see Decisions below.)
+- [x] Document the environment matrix (local, test, ci, optional
+  development-hosted) per the Environment Strategy. (Authoritative matrix
+  in Technical Design Section 8, referenced from
+  `docs/development/bootstrap.md`; `MC_ENV` in `.env.example`.)
 - [x] Governance files committed (commit
   `bdd6ac54678fe16fc02f2fba93c5933392a09feb`, 2026-07-18).
-- [ ] Define the approval-record location convention.
-- [ ] Create the glossary structure (seeded with the Governance Definitions
-  in this plan).
-- [ ] Define the traceability convention linking requirements, tasks, and
-  tests.
+- [x] Define the approval-record location convention. (`CONTRIBUTING.md`
+  Approval Records section, pointing at the plan's Governance
+  Definitions.)
+- [x] Create the glossary structure (seeded with the Governance Definitions
+  in this plan). (`knowledge/glossary.md`.)
+- [x] Define the traceability convention linking requirements, tasks, and
+  tests. (`CONTRIBUTING.md` commit rules plus AGENT.md duties; enforced by
+  `tests/docs/test_traceability.py` in `make test`.)
 
 ### Deliverable
 
@@ -450,14 +475,30 @@ A documented repository skeleton with automated validation
 ### Risks
 
 - Over-engineering the skeleton before real code exists; keep it minimal.
+- CI workflow drift while unverified: the workflow cannot execute until a
+  GitHub remote exists, so its commands are pinned to the same Make
+  targets verified locally.
 
 ### Decisions
 
-- None recorded yet.
+- 2026-07-18: CI platform is GitHub Actions
+  (`.github/workflows/ci.yml`) — matches the `gh`-based tooling already in
+  use and requires no additional service. Revisit only if the repository
+  is hosted elsewhere.
+- 2026-07-18: The Phase 2 "automated validation" deliverable is a
+  documentation-validation test suite (`tests/docs/`): link resolution,
+  canonical golden-path identity, governance-file presence and approval
+  metadata, ambiguity-language ban, and traceability coverage. Governance
+  drift now fails `make test` like a code defect.
 
 ### Completion Notes
 
-- None.
+- 2026-07-18 (commit `b5eeb7e`): all authoring tasks complete. Validation
+  executed: `make lint` clean; `make test` 14 passed; `make
+  bootstrap-check` passed; full fresh-clone bootstrap verified (clone,
+  env copy, setup, lint, test, bootstrap-check, exit 0). The new
+  ambiguity test caught and fixed one real defect (AC-025 wording).
+  Remaining before COMPLETE: first verified CI run on a GitHub remote.
 
 ---
 
@@ -1746,3 +1787,38 @@ this phase must not begin.
 - Risks: None new; the unfalsifiable-AC risk is retired.
 - Next recommended step: Begin Phase 2 implementation on the dev side; the
   test lead stands by to review increments against the rescoped criteria.
+
+### 2026-07-18 (Phase 2 — repository and development foundation)
+
+- Phase: 2
+- Increment: Repository skeleton with automated validation
+- Status: IN PROGRESS (authoring complete; first verified CI run pending a
+  GitHub remote)
+- Work completed (commit `b5eeb7e`): monorepo structure with app
+  placeholders; root README; CONTRIBUTING with branch, commit,
+  approval-record, and traceability conventions; `.env.example` grouped by
+  phase; Makefile (setup, lint, format, test, bootstrap-check; build/run
+  guarded until Phase 3); pdm-managed ruff and pytest tooling;
+  documentation-validation suite under `tests/docs` (links, golden-path
+  identity, governance files and approval metadata, ambiguity ban,
+  traceability coverage); deterministic CYR3NT seed fixture with
+  validation tests; `scripts/bootstrap_check.py` naming the failing step
+  per the AC-001 failure branch; bootstrap protocol with troubleshooting
+  and conventions docs under `docs/development`; GitHub Actions CI
+  workflow. The ambiguity test caught one real defect (a banned quality
+  adjective in AC-025), fixed in the same increment.
+- Tests run: `make lint` (ruff check and format check) clean;
+  `make test` — 14 passed; `make bootstrap-check` passed; full
+  fresh-clone bootstrap executed in an isolated directory: clone,
+  `cp .env.example .env`, `make setup`, `make lint`, `make test` (14
+  passed), `make bootstrap-check` (passed), exit 0.
+- Decisions: CI platform GitHub Actions; documentation-validation suite is
+  the Phase 2 automated-validation deliverable (recorded in Phase 2
+  Decisions).
+- Risks: CI workflow unverified until a remote exists; pinned to the same
+  Make targets verified locally.
+- Next recommended step: Either add a GitHub remote and verify the first
+  CI run to close Phase 2, or proceed to Phase 3 (Docker runtime
+  foundation: stub web/api/worker containers, PostgreSQL, Redis, health
+  checks, single startup command) and close the CI item when a remote
+  exists.
