@@ -399,8 +399,10 @@ Phase 1 closes only when:
 
 ### Tasks
 
-- [x] Initialize monorepo structure. (`apps/web`, `apps/api`, `apps/worker`
-  placeholders with per-phase notes; `scripts/`, `tests/`.)
+- [x] Initialize monorepo structure. (`apps/web`, `apps/api`,
+  `services/worker`, `packages/` placeholders with per-phase notes;
+  `scripts/`, `tests/`. Worker placed under `services/` and `packages/`
+  added 2026-07-18 per the Product Owner's Phase 2 layout guidance.)
 - [x] Add root README. (`README.md`, quickstart plus structure table.)
 - [x] Add environment example file. (`.env.example`, variables grouped by
   the phase that starts using them.)
@@ -447,6 +449,18 @@ Phase 1 closes only when:
 - [x] Define the traceability convention linking requirements, tasks, and
   tests. (`CONTRIBUTING.md` commit rules plus AGENT.md duties; enforced by
   `tests/docs/test_traceability.py` in `make test`.)
+- [x] Provide `make check` as the single local quality gate; CI runs the
+  same target so local and CI validation cannot diverge.
+- [x] Repository hygiene gates (`tests/repo/test_hygiene.py`): prohibited
+  tracked files, credential-shaped tokens, machine-specific absolute
+  paths, config-file parseability (JSON/TOML/YAML), and empty secret
+  values in `.env.example`.
+- [x] Test-foundation placeholders and conventions: mock LLM response
+  location (`tests/fixtures/llm/`), future Playwright structure
+  (`tests/e2e/`), test-result and evidence locations (gitignored
+  `test-results/`, `playwright-report/`; durable evidence in the Test
+  Commander workspace), and the requirement-ID tagging convention
+  (Traceability docstring lines, applied to all existing test modules).
 
 ### Deliverable
 
@@ -467,6 +481,44 @@ A documented repository skeleton with automated validation
   exist (rescoped 2026-07-18, Phase 2 readiness review: Phase 2 has no
   services to answer health checks).
 
+### Exit Gate (Phase 2 → Phase 3)
+
+Status recorded 2026-07-18; every unmet item is named:
+
+- [x] A new contributor can bootstrap from documented instructions
+  (verified from a fresh clone).
+- [x] No undocumented manual setup is required.
+- [x] `make check` passes (lint, 18 tests, bootstrap check).
+- [x] CI performs the same essential validation (workflow runs
+  `make check`; first hosted execution still requires a GitHub remote —
+  the one open item on this gate).
+- [x] Local, test, and CI environments are defined (Technical Design
+  Section 8; `MC_ENV`).
+- [x] No secrets or machine-specific paths are committed (enforced by
+  `tests/repo/test_hygiene.py`).
+- [x] Documentation links resolve (enforced by
+  `tests/docs/test_governance.py`).
+- [x] Governance documents reference the current project artifacts.
+- [x] Test directories and conventions exist (`tests/docs`, `tests/repo`,
+  `tests/fixtures`, `tests/e2e`, `tests/fixtures/llm`).
+- [x] Mock LLM use is the default for tests (REQ-049; `.env.example`).
+- [ ] Test Commander has no open Major findings against Phase 2 (its
+  review of this increment has not run yet).
+- [x] `plan/plan.md` contains actual commands run and results (progress
+  log).
+- [x] The repository is clean and committed.
+
+### Test Commander Review Loop (Phase 2 onward)
+
+Per increment: Claude implements → runs `make check` locally → Test
+Commander reviews evidence and repository changes → records findings →
+Claude remediates → Test Commander verifies → increment closes. Test
+Commander's Phase 2 responsibilities: detect divergence from the approved
+plan, review bootstrap and CI acceptance criteria, identify untraceable
+scaffolding, verify claims match commands actually run, record risks and
+defects, keep Phase 2 from leaking into Phase 3, and maintain the
+requirements-to-test map.
+
 ### Tests
 
 - CI pipeline executes successfully on a clean checkout.
@@ -476,8 +528,8 @@ A documented repository skeleton with automated validation
 
 - Over-engineering the skeleton before real code exists; keep it minimal.
 - CI workflow drift while unverified: the workflow cannot execute until a
-  GitHub remote exists, so its commands are pinned to the same Make
-  targets verified locally.
+  GitHub remote exists, so CI now runs the same `make check` target used
+  locally.
 
 ### Decisions
 
@@ -490,6 +542,13 @@ A documented repository skeleton with automated validation
   canonical golden-path identity, governance-file presence and approval
   metadata, ambiguity-language ban, and traceability coverage. Governance
   drift now fails `make test` like a code defect.
+- 2026-07-18: Layout per Product Owner guidance — worker under
+  `services/worker`, shared-library placeholder at `packages/`. Recorded
+  interpretation: the guidance's Phase 2 tree shows `docker-compose.yml`,
+  but it is deliberately NOT created in Phase 2 — the approved plan, the
+  Test Commander readiness rescope, and the guidance's own trap warning
+  all place the compose stack in Phase 3. The Makefile guard and
+  bootstrap-check wording already encode this.
 
 ### Completion Notes
 
@@ -1822,3 +1881,32 @@ this phase must not begin.
   foundation: stub web/api/worker containers, PostgreSQL, Redis, health
   checks, single startup command) and close the CI item when a remote
   exists.
+
+### 2026-07-18 (Phase 2 — exit-gate alignment increment)
+
+- Phase: 2
+- Increment: Alignment with the Product Owner's Phase 2 guidance
+- Status: IN PROGRESS (open items: first hosted CI run; Test Commander
+  review of this increment)
+- Work completed: moved the worker placeholder to `services/worker` and
+  added `packages/` per the recommended layout (recorded interpretation:
+  `docker-compose.yml` remains Phase 3); added `make check` as the single
+  local quality gate and pointed CI at the same target; added repository
+  hygiene gates (`tests/repo/test_hygiene.py`: prohibited tracked files,
+  credential-shaped tokens, machine-specific paths, config parseability,
+  empty secret values in `.env.example`); added test-foundation
+  placeholders (`tests/fixtures/llm/`, `tests/e2e/`) and the test-result
+  and evidence location convention; defined and applied the requirement-ID
+  tagging convention (Traceability docstring lines in every test module);
+  recorded the Phase 2 exit gate with per-item status and the Test
+  Commander review loop in the Phase 2 section.
+- Tests run: `make check` — ruff lint and format check clean, pytest 18
+  passed, bootstrap check passed. The new secret-value gate caught and
+  fixed one of its own overmatches (token-cap variables) before commit.
+- Decisions: layout decision and compose-file interpretation recorded in
+  Phase 2 Decisions.
+- Risks: None new.
+- Next recommended step: Have Test Commander review the actual bootstrap
+  experience from an empty environment (clean-room bootstrap test) and
+  record findings; add a GitHub remote to execute the first hosted CI
+  run; both close the remaining exit-gate items, then Phase 3 begins.

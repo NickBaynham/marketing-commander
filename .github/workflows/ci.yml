@@ -15,11 +15,7 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: pdm install
-      - name: Lint
-        run: make lint
-      - name: Test
-        run: make test
-      - name: Bootstrap check
-        run: |
-          cp .env.example .env
-          make bootstrap-check
+      - name: Prepare environment file
+        run: cp .env.example .env
+      - name: Check (same gate as local "make check")
+        run: make check

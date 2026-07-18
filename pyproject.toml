@@ -5,13 +5,11 @@ description = "Autonomous marketing intelligence platform. Root workspace: devel
 requires-python = ">=3.12"
 authors = [{ name = "Nick Baynham" }]
 
-[tool.pdm]
-distribution = false
-
 [dependency-groups]
 dev = [
     "ruff>=0.14",
     "pytest>=8.3",
+    "pyyaml>=6",
 ]
 
 [tool.ruff]
@@ -25,3 +23,7 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.pdm]
+distribution = false
+

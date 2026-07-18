@@ -35,7 +35,9 @@ make bootstrap-check  # verify the environment
 | `docs/testing/` | AI testing, test data, golden-path, review-handoff strategies |
 | `docs/development/` | Bootstrap protocol and development conventions |
 | `knowledge/` | Glossary, requirements, user stories, acceptance criteria, traceability |
-| `apps/web`, `apps/api`, `apps/worker` | Application placeholders (code arrives per phase) |
+| `apps/web`, `apps/api` | Application placeholders (code arrives per phase) |
+| `services/worker` | Worker placeholder (container stub in Phase 3, jobs in Phase 10) |
+| `packages/` | Shared libraries (empty until a real shared need exists) |
 | `scripts/`, `tests/` | Developer tooling and the documentation-validation suite |
 
 ## Development

@@ -1,5 +1,8 @@
 """Validates the deterministic CYR3NT seed fixture against DEC-01/DEC-03
-rules: stable IDs, seeded owner identity, workspace ownership everywhere."""
+rules: stable IDs, seeded owner identity, workspace ownership everywhere.
+
+Traceability: REQ-001, REQ-002, REQ-003; DEC-01, DEC-03; BR-001, BR-020.
+"""
 
 import json
 from pathlib import Path

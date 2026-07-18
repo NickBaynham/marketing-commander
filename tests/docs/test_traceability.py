@@ -1,5 +1,9 @@
 """Traceability-register validation: every stable ID exists, cross-references
-resolve, and the matrix covers every requirement (REQ -> US/AC linkage)."""
+resolve, and the matrix covers every requirement (REQ -> US/AC linkage).
+
+Traceability: AGENT.md traceability duties; CONTRIBUTING.md commit rules;
+Phase 2 task "traceability convention" (plan/plan.md).
+"""
 
 import re
 from pathlib import Path

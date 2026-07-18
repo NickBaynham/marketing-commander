@@ -17,6 +17,10 @@ build/
 node_modules/
 .next/
 
+# Test results and evidence (convention: docs/development/conventions.md)
+test-results/
+playwright-report/
+
 # OS and editors
 .DS_Store
 .idea/

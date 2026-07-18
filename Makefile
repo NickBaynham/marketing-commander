@@ -1,7 +1,7 @@
 # Marketing Commander developer commands.
 # Requires: pdm (Python package manager), Docker (from Phase 3).
 
-.PHONY: help setup lint format test bootstrap-check build run clean
+.PHONY: help setup lint format test check bootstrap-check build run clean
 
 help:
 	@echo "Marketing Commander"
@@ -9,7 +9,8 @@ help:
 	@echo "  make setup            Install development dependencies (pdm)"
 	@echo "  make lint             Run ruff checks on scripts and tests"
 	@echo "  make format           Apply ruff formatting"
-	@echo "  make test             Run the test suite (documentation validation)"
+	@echo "  make test             Run the test suite (documentation and repo validation)"
+	@echo "  make check            Full local quality gate (what CI runs)"
 	@echo "  make bootstrap-check  Verify the local environment bootstrap"
 	@echo "  make build            Build service containers (available from Phase 3)"
 	@echo "  make run              Start the local stack (available from Phase 3)"
@@ -28,6 +29,9 @@ format:
 
 test:
 	pdm run pytest
+
+check: lint test bootstrap-check
+	@echo "All checks passed."
 
 bootstrap-check:
 	pdm run python scripts/bootstrap_check.py

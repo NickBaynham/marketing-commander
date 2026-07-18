@@ -1,6 +1,10 @@
 """Governance-document validation: links, golden path, required files,
 ambiguity rules. This suite is the 'automated validation' part of the
-Phase 2 deliverable (plan/plan.md)."""
+Phase 2 deliverable (plan/plan.md).
+
+Traceability: REQ-050 (canonical golden path pinned); governance integrity
+rules in CLAUDE.md (single source of truth, requirements-quality rules).
+"""
 
 import re
 from pathlib import Path

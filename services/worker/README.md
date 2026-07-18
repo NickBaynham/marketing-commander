@@ -1,4 +1,4 @@
-# apps/worker
+# services/worker
 
 Python worker for agent and generation jobs. Placeholder only.
 

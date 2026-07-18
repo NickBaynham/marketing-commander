@@ -29,6 +29,26 @@ operating procedure in [AGENT.md](../../AGENT.md).
   [test data strategy](../testing/test-data-strategy.md); no test depends
   on another test's leftovers.
 - `test` and `ci` environments use the mock LLM provider only (REQ-049).
+- Mock LLM responses and recorded fixtures live under `tests/fixtures/llm/`
+  (populated from Phase 9); the Playwright project lives under `tests/e2e/`
+  (from Phase 5).
+- Test results and evidence: local runner output goes to `test-results/`
+  and `playwright-report/` (both gitignored, never committed); durable
+  review evidence lives in the Test Commander workspace repository, not
+  here.
+
+## Traceability Tagging
+
+Tests carry their traceability IDs so Test Commander can maintain the
+requirements-to-test map:
+
+- Reference REQ-xxx, US-xxx, AC-xxx, or DEC-xx IDs in the module docstring
+  (a `Traceability:` line) or in the test function docstring.
+- Where no requirement ID applies (pure repo hygiene, governance
+  integrity), name the governing rule and document instead.
+- Example: `"""Traceability: REQ-002, DEC-03, AC-024."""`
+- The traceability matrix's Test type column is the authoritative
+  assignment; tags in tests must agree with it.
 
 ## Documentation Validation
 
