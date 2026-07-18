@@ -1,0 +1,27 @@
+[project]
+name = "marketing-commander"
+version = "0.1.0"
+description = "Autonomous marketing intelligence platform. Root workspace: developer tooling and documentation validation."
+requires-python = ">=3.12"
+authors = [{ name = "Nick Baynham" }]
+
+[tool.pdm]
+distribution = false
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14",
+    "pytest>=8.3",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+include = ["scripts/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

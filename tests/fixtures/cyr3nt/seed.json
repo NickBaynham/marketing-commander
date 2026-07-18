@@ -1,0 +1,24 @@
+{
+  "workspace": {
+    "id": "00000000-0000-7000-8000-000000000001",
+    "name": "CYR3NT Workspace"
+  },
+  "user": {
+    "id": "local-owner",
+    "display_name": "Nick",
+    "identity_source": "local_seed"
+  },
+  "membership": {
+    "id": "00000000-0000-7000-8000-000000000002",
+    "user_id": "local-owner",
+    "workspace_id": "00000000-0000-7000-8000-000000000001",
+    "role": "owner"
+  },
+  "artist": {
+    "id": "00000000-0000-7000-8000-000000000003",
+    "workspace_id": "00000000-0000-7000-8000-000000000001",
+    "name": "CYR3NT",
+    "genre": "melodic techno",
+    "state": "active"
+  }
+}

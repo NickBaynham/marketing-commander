@@ -1,0 +1,24 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pdm-python
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+
+# Node (apps/web, from Phase 3)
+node_modules/
+.next/
+
+# OS and editors
+.DS_Store
+.idea/
+.vscode/
+*.swp

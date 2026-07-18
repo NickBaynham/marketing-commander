@@ -209,5 +209,5 @@ Phase 5–14, full path Phase 14)
 Given an active artist with an approved AIP version and campaign history,
 when the artist is archived, then new campaign creation and generation are
 blocked with the archived state stated as the reason, all approved versions
-and approval records remain readable and unchanged, and when the artist is
+and approval records remain retrievable and unchanged, and when the artist is
 restored, then the blocks are lifted with no data loss. (REQ-005; Phase 5)
