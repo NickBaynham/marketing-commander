@@ -6,8 +6,8 @@
   ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
   and confirmed closed with zero unresolved Major findings. Next: Phase 2.
 - Current phase: Phase 2 — Repository and Development Foundation
-  (IN PROGRESS — authoring complete; first verified CI run pending a
-  GitHub remote)
+  (IN REVIEW — all tasks complete, CI verified on GitHub Actions;
+  awaiting Test Commander Phase 2 review)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -212,7 +212,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | Phase | Title | Status |
 |-------|-------|--------|
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
-| 2 | Repository and Development Foundation | IN PROGRESS |
+| 2 | Repository and Development Foundation | IN REVIEW |
 | 3 | Docker Runtime Foundation | NOT STARTED |
 | 4 | Backend Application Foundation | NOT STARTED |
 | 5 | Workspace and Artist Domain | NOT STARTED |
@@ -391,8 +391,9 @@ Phase 1 closes only when:
 
 ## Phase 2 — Repository and Development Foundation
 
-- Status: IN PROGRESS — all authoring tasks complete (commit `b5eeb7e`);
-  open: first verified CI run, which requires a GitHub remote.
+- Status: IN REVIEW — all tasks complete and the first hosted CI run
+  passed; the only open exit-gate item is the Test Commander review of
+  Phase 2 (no open Major findings required).
 - Objective: Establish a documented repository skeleton with automated
   validation.
 - Dependencies: Phase 1 (product vocabulary and scope inform structure).
@@ -412,9 +413,9 @@ Phase 1 closes only when:
 - [x] Establish formatting, linting, and testing conventions.
   (`docs/development/conventions.md`; ruff and pytest configured in
   `pyproject.toml`; `.editorconfig`.)
-- [ ] Establish CI. (Workflow authored at `.github/workflows/ci.yml` and
-  its exact commands verified locally; the first hosted run requires a
-  GitHub remote, which does not exist yet.)
+- [x] Establish CI. (`.github/workflows/ci.yml` runs `make check`; first
+  hosted run executed successfully on GitHub Actions after the initial
+  push — run 29662440145, status success, 2026-07-18.)
 - [x] Define branch and contribution conventions. (`CONTRIBUTING.md`.)
 - [x] Add architecture and product documentation directories.
   (`docs/product`, `docs/architecture`, `docs/adr`, `docs/testing` from
@@ -490,8 +491,8 @@ Status recorded 2026-07-18; every unmet item is named:
 - [x] No undocumented manual setup is required.
 - [x] `make check` passes (lint, 18 tests, bootstrap check).
 - [x] CI performs the same essential validation (workflow runs
-  `make check`; first hosted execution still requires a GitHub remote —
-  the one open item on this gate).
+  `make check`; verified on GitHub Actions run 29662440145, success,
+  2026-07-18).
 - [x] Local, test, and CI environments are defined (Technical Design
   Section 8; `MC_ENV`).
 - [x] No secrets or machine-specific paths are committed (enforced by
@@ -1910,3 +1911,24 @@ this phase must not begin.
   experience from an empty environment (clean-room bootstrap test) and
   record findings; add a GitHub remote to execute the first hosted CI
   run; both close the remaining exit-gate items, then Phase 3 begins.
+
+### 2026-07-18 (First push and verified CI run)
+
+- Phase: 2
+- Increment: Remote publication and CI verification
+- Status: IN REVIEW (Phase 2)
+- Work completed: Pushed main to git@github.com:NickBaynham/
+  marketing-commander.git (empty remote, clean first push, upstream
+  tracking set). The push triggered the first hosted CI run (GitHub
+  Actions run 29662440145), which completed with status success, running
+  the same `make check` gate used locally. Exit-gate item "CI performs
+  the same essential validation" is closed.
+- Tests run: GitHub Actions run 29662440145 (pdm install, cp .env.example
+  .env, make check) — success. `make check` also green locally (lint
+  clean, 18 passed, bootstrap check passed).
+- Decisions: None new.
+- Risks: None new.
+- Next recommended step: Test Commander Phase 2 review, including the
+  clean-room bootstrap test from an empty environment. With no open Major
+  findings, Phase 2 closes and Phase 3 (Docker runtime foundation)
+  begins.
