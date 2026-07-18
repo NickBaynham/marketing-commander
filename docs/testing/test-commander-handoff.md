@@ -1,8 +1,12 @@
 # Test Commander Handoff
 
-- Status: EXECUTED 2026-07-18; remediation applied 2026-07-18 (MAJ-1 and
-  MIN-1..MIN-5 fixed in the authoritative documents; confirmation re-run of
-  /tc:review-requirements against the remediated register not yet executed)
+- Status: CLOSED 2026-07-18 — review executed, remediation applied
+  (commit 657767e), and the confirmation re-run executed against the
+  remediated register: 51 requirements, 18 stories, 25 acceptance criteria;
+  MAJ-1 and MIN-1..MIN-5 verified closed; no unresolved Major findings.
+  Residual mechanical flags (story-template "As the artist" phrasing,
+  AC-025 flat-ID orphan) are dispositioned false positives in the Test
+  Commander workspace disposition.
 - Owner: Nick Baynham
 - Updated: 2026-07-18
 
