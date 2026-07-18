@@ -143,7 +143,7 @@ changes.
 These named requirements apply across phases and are referenced from the
 phases that implement them.
 
-### Test Data Strategy (implemented in Phases 2 and 5)
+### Test Data Strategy (foundations in Phase 2; schema-dependent tooling in Phase 5)
 
 - Deterministic CYR3NT seed fixture.
 - Entity factories.
@@ -406,11 +406,13 @@ Phase 1 closes only when:
 - [ ] Define branch and contribution conventions.
 - [ ] Add architecture and product documentation directories.
 - [ ] Verify clean local bootstrap.
-- [ ] Implement the test data strategy (see Cross-Cutting Requirements):
-  deterministic CYR3NT seed fixture, entity factories, database reset
-  tooling.
-- [ ] Define the clean bootstrap protocol and add a CI or scripted bootstrap
-  check where feasible.
+- [ ] Ship the test-data-strategy foundations (see Cross-Cutting
+  Requirements): deterministic CYR3NT seed fixture content and the factory
+  and reset conventions. Working entity factories and database reset
+  tooling land in Phase 5 with the real schema.
+- [ ] Define the clean bootstrap protocol and add a scripted bootstrap
+  check that runs in CI.
+- [ ] Record the CI platform choice as a Phase 2 decision.
 - [ ] Document the environment matrix (local, test, ci, optional
   development-hosted) per the Environment Strategy.
 - [x] Governance files committed (commit
@@ -429,13 +431,16 @@ A documented repository skeleton with automated validation
 
 ### Acceptance Criteria
 
-- On a clean supported machine with Docker installed, a contributor can
-  clone the repository, copy `.env.example` to `.env`, run the documented
-  bootstrap command, and receive successful health responses from all
-  configured services without undocumented manual steps.
 - CI runs formatting, linting, and tests on every change.
-- A CI or scripted bootstrap check validates the bootstrap path where
-  feasible.
+- The bootstrap protocol is documented, and the scripted bootstrap check
+  passes against everything the repository defines at Phase 2 close.
+- The full clean-bootstrap criterion (REQ-048) — a contributor on a clean
+  supported machine with Docker installed clones, copies `.env.example` to
+  `.env`, runs the documented bootstrap command, and receives successful
+  health responses from all configured services without undocumented
+  manual steps — is verified at Phase 3 close, when the service containers
+  exist (rescoped 2026-07-18, Phase 2 readiness review: Phase 2 has no
+  services to answer health checks).
 
 ### Tests
 
@@ -494,6 +499,10 @@ Docker Compose development environment
 
 - `docker compose up --build` brings up all services healthy.
 - Code changes hot-reload in web and API containers during development.
+- The full clean-bootstrap criterion (REQ-048) transferred from Phase 2 is
+  verified here on a clean machine: clone, copy `.env.example` to `.env`,
+  run the documented command, all configured services healthy with no
+  undocumented manual steps.
 
 ### Tests
 
@@ -589,7 +598,9 @@ Tested backend foundation
 - [ ] Artist creation UI.
 - [ ] Artist overview UI.
 - [ ] Validation and authorization rules.
-- [ ] Entity factories and CYR3NT seed fixture (Test Data Strategy).
+- [ ] Entity factories, database reset tooling, and the CYR3NT seed
+  fixture wired to the real schema (Test Data Strategy; fixture content
+  and conventions arrive from Phase 2).
 - [ ] Unit, API, and Playwright tests.
 - [ ] Start the golden-path Playwright test with: Open application → Create
   CYR3NT → View artist. The test grows in each later phase toward the full
@@ -1715,3 +1726,23 @@ this phase must not begin.
   conventions, CI, test-data tooling, environment matrix, bootstrap
   protocol). Per AGENT.md, identify the related requirement IDs (REQ-048,
   REQ-049) before implementation.
+
+### 2026-07-18 (Phase 2 readiness repairs applied)
+
+- Phase: 2
+- Increment: Readiness repairs from the Test Commander Phase 2 review
+- Status: COMPLETE
+- Work completed: Rescoped the Phase 2 bootstrap acceptance criterion —
+  Phase 2 verifies CI plus the documented bootstrap protocol and scripted
+  check; the full all-services-healthy clean-bootstrap criterion (REQ-048)
+  is verified at Phase 3 close, where the service containers exist (Phase 2
+  has no services to answer health checks). Split the test-data strategy:
+  Phase 2 ships fixture content and factory/reset conventions; Phase 5
+  wires factories, reset tooling, and the seed fixture to the real schema.
+  Removed both "where feasible" hedges from the scripted bootstrap check.
+  Added a task to record the CI platform choice as a Phase 2 decision.
+- Tests run: None (plan edit).
+- Decisions: None (CI platform decision deferred to the new Phase 2 task).
+- Risks: None new; the unfalsifiable-AC risk is retired.
+- Next recommended step: Begin Phase 2 implementation on the dev side; the
+  test lead stands by to review increments against the rescoped criteria.
