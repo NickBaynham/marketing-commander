@@ -244,7 +244,7 @@ These defaults apply to every screen unless a screen overrides them:
   selected; count; each item expandable to full content; items generated
   after the set loaded are excluded and marked; stale versions flagged.
 - Main actions: approve selected (confirmation restates the exact count and
-  versions); add shared review note. Secondary: clear selection.
+  versions); add shared review note. Secondary: deselect all.
 - Failure state: any stale version in the selection blocks that item with
   an explanation; the rest proceed only after the user confirms the reduced
   set.

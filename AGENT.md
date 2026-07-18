@@ -23,14 +23,23 @@ Every agent must:
 
 ## Planning Work
 
-Before meaningful implementation, the agent must:
+Before implementation of anything on the "When Tests Are Required" list in
+`plan/plan.md`, the agent must:
 
 - Identify the relevant phase and increment.
+- Identify the related requirement IDs (REQ-xxx) in
+  `knowledge/requirements/requirements.md` before writing code; a change
+  with no related requirement is either untraceable (do not build it) or
+  evidence that a requirement must be added first.
+- Identify the affected acceptance criteria (AC-xxx).
 - Record or update tasks in `plan/plan.md`.
 - State dependencies.
 - Define acceptance criteria.
 - Identify tests needed.
-- Note assumptions and unresolved decisions.
+- Note assumptions and unresolved decisions. Record assumptions in the
+  plan or the affected document, never only in the conversation.
+- Never resolve vague language silently: if a requirement or instruction is
+  ambiguous, record the interpretation chosen and why, or stop and ask.
 - Prefer the smallest coherent vertical slice.
 
 ## During Implementation
@@ -49,6 +58,18 @@ The agent must:
   dependency directories, or temporary files.
 - Use typed schemas at system boundaries.
 - Keep business logic separate from transport and persistence details.
+- Update `knowledge/requirements/traceability-matrix.md` in the same change
+  when adding behavior or altering REQ/US/AC relationships; do not create
+  untraceable features.
+- Distinguish logical agent runs from provider attempts in any generation
+  work (BR-017 in the MVP Product Brief); never conflate the two in code,
+  data, or reporting.
+- Respect cost caps (DEC-06) and privacy constraints (DEC-10): no code path
+  may dispatch a provider call without cost-service reservation, and no
+  prompt may include data outside the disclosed, redacted scope.
+- Stop and document the conflict when requested work contradicts an
+  approved product decision (DEC-xx), business rule (BR-xxx), or
+  requirement; do not implement around it.
 - Record significant decisions in an architecture decision record directory:
 
 ```text
@@ -72,7 +93,8 @@ Before declaring a task complete, the agent must:
 9. Summarize files changed and validation performed.
 
 The agent must never claim tests passed unless they were actually executed
-successfully.
+successfully, and must report exactly which tests were run (command and
+scope), not a summary that implies broader coverage than executed.
 
 ## Subagent Rules
 

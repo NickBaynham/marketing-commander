@@ -1,16 +1,26 @@
 # Marketing Commander Development Plan
 
-- Document version: 1.1
-- Current status: Governance baseline committed; remediation increments R1–R6
-  drafted; Decisions DEC-01..DEC-10 approved 2026-07-18; MVP Product Brief
-  v1.0 document-level approval and remaining Phase 1 tasks outstanding (R7)
-- Current phase: Phase 1 — Product Boundary and MVP Definition (IN PROGRESS)
+- Document version: 1.2
+- Current status: All Phase 1 design artifacts exist (Product Brief, Domain
+  Model, UX Specification, Technical Design, ADRs, requirements, stories,
+  acceptance criteria, traceability, test strategies); Decisions
+  DEC-01..DEC-10 approved 2026-07-18; outstanding for Phase 1 closure:
+  Test Commander requirements review and document-level Product Owner
+  approval of the MVP Product Brief
+- Current phase: Phase 1 — Product Boundary and MVP Definition (IN REVIEW)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
 
 Related documents: [CLAUDE.md](../CLAUDE.md) | [AGENT.md](../AGENT.md) |
-[MVP Product Brief](../docs/product/mvp-product-brief.md)
+[MVP Product Brief](../docs/product/mvp-product-brief.md) |
+[Domain Model](../docs/product/domain-model.md) |
+[UX Specification](../docs/product/ux-specification.md) |
+[Technical Design](../docs/architecture/technical-design.md) |
+[ADRs](../docs/adr/README.md) |
+[Requirements](../knowledge/requirements/requirements.md) |
+[Traceability Matrix](../knowledge/requirements/traceability-matrix.md) |
+[Testing strategies](../docs/testing/ai-testing-strategy.md)
 
 ## Product Objective
 
@@ -119,10 +129,15 @@ Explicit status markers for phases and increments:
 ```text
 NOT STARTED
 IN PROGRESS
+IN REVIEW
 BLOCKED
 COMPLETE
 DEFERRED
 ```
+
+IN REVIEW: all work products exist and the phase awaits recorded review or
+approval; no further authoring is expected unless review findings require
+changes.
 
 ## Cross-Cutting Requirements
 
@@ -196,7 +211,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 
 | Phase | Title | Status |
 |-------|-------|--------|
-| 1 | Product Boundary and MVP Definition | IN PROGRESS |
+| 1 | Product Boundary and MVP Definition | IN REVIEW |
 | 2 | Repository and Development Foundation | NOT STARTED |
 | 3 | Docker Runtime Foundation | NOT STARTED |
 | 4 | Backend Application Foundation | NOT STARTED |
@@ -221,7 +236,10 @@ The default `ci` and `test` environments use the mock LLM provider.
 
 ## Phase 1 — Product Boundary and MVP Definition
 
-- Status: IN PROGRESS
+- Status: IN REVIEW — all design artifacts exist and DEC-01..DEC-10 are
+  approved; closure requires (1) Test Commander requirements review with no
+  unresolved Major finding and (2) document-level Product Owner approval of
+  the MVP Product Brief (`status: approved`, `approved_at` recorded).
 - Objective: A formal decision-and-testability phase, not merely a
   product-summary exercise. Define the MVP precisely enough that repository
   and schema design can begin, with all ten Required Product and Architecture
@@ -238,31 +256,44 @@ The default `ci` and `test` environments use the mock LLM provider.
 | R4 — AI quality and economics | Quality rubric, numeric quality gate, retry limits, cost ceilings, at-cap behavior, review-loop metrics | COMPLETE (recorded as PROPOSED in brief) |
 | R5 — NFR and security baseline | Accessibility, browser matrix, performance budgets, payload limits, privacy, prompt injection, security checklist, concurrency | COMPLETE (recorded as PROPOSED in brief and plan) |
 | R6 — Test architecture | Test data strategy, fault library, recorded responses, live smoke suite, golden-path growth strategy, traceability | COMPLETE (recorded in plan; implemented in Phases 2, 5, 9) |
-| R7 — Plan rewrite and review | Update all phases, remove vague wording, requirements review, approve MVP Product Brief v1.0 | IN PROGRESS — plan updated; awaiting Product Owner approval of the brief |
+| R7 — Plan rewrite and review | Update all phases, remove vague wording, requirements review, approve MVP Product Brief v1.0 | IN REVIEW — plan updated and DEC approvals recorded; Test Commander review and document-level brief approval outstanding |
+
+### Phase 1 Design Increments (2026-07-18)
+
+| Increment | Deliverable | Status |
+|-----------|-------------|--------|
+| 1 — Product Decisions | MVP Product Brief v1.0 draft (all 11 sections, DEC-01..DEC-10) — `docs/product/mvp-product-brief.md` | COMPLETE (decisions APPROVED; document-level approval pending) |
+| 2 — Domain Design | Domain Model v1 (23 entities, lifecycle diagrams) — `docs/product/domain-model.md` | COMPLETE (draft) |
+| 3 — UX Specification | UX Specification v1 (SCR-01..SCR-25, UX decisions) — `docs/product/ux-specification.md` | COMPLETE (draft) |
+| 4 — Technical Contracts | Technical Design v1 (API-01..API-36, events, AI contract) + ADR-001..ADR-006 — `docs/architecture/`, `docs/adr/` | COMPLETE (draft; ADRs Proposed) |
+| 5 — Requirements and Traceability | REQ-001..REQ-050, US-001..US-018, AC-001..AC-024, traceability matrix, glossary, knowledge tree — `knowledge/` | COMPLETE (draft) |
+| 6 — Test Commander Review Preparation | AI testing strategy, test data strategy, golden-path test plan, handoff — `docs/testing/` | COMPLETE (review itself not executed) |
+| 7 — Governance and Plan Closure | CLAUDE.md, AGENT.md, plan updates; Phase 1 → IN REVIEW | COMPLETE |
 
 ### Tasks
 
-- [ ] Define the MVP outcome. (Drafted in MVP Product Brief; approval pending.)
-- [ ] Define the golden-path workflow. (Canonical path drafted and unified
-  across documents; approval pending.)
-- [ ] Identify the primary MVP user. (Drafted in brief; approval pending.)
-- [ ] Define in-scope capabilities.
-- [ ] Define explicit exclusions.
-- [ ] Finalize domain vocabulary.
-- [ ] Define lifecycle states.
-- [ ] Define approval rules. (Drafted in brief, Decisions 3 and 8; approval
-  pending.)
-- [ ] Define AIP minimum completeness. (Drafted in brief, Decision 2;
-  approval pending.)
-- [ ] Define campaign-generation inputs and outputs. (Drafted in brief,
-  Decision 4; approval pending.)
-- [ ] Define export formats. (Drafted in brief, Decision 7; approval
-  pending.)
-- [ ] Define nonfunctional requirements. (Drafted in brief, Decision 9;
-  approval pending.)
-- [ ] Write acceptance scenarios.
-- [ ] Produce and approve the MVP Product Brief v1.0. (Draft exists at
-  `docs/product/mvp-product-brief.md`; Product Owner approval pending.)
+- [x] Define the MVP outcome. (Brief §1; one-sentence MVP recorded.)
+- [x] Define the golden-path workflow. (Brief §5, canonical and identical
+  everywhere; per-step contracts defined.)
+- [x] Identify the primary MVP user. (Brief §3 persona.)
+- [x] Define in-scope capabilities. (Brief §4 goals G-1..G-6.)
+- [x] Define explicit exclusions. (Brief §4 exclusion list.)
+- [x] Finalize domain vocabulary. (`knowledge/glossary.md`; Domain Model v1
+  definitions.)
+- [x] Define lifecycle states. (Domain Model v1 entity lifecycles and
+  diagrams.)
+- [x] Define approval rules. (DEC-03, DEC-08, BR-004, BR-010 — APPROVED.)
+- [x] Define AIP minimum completeness. (DEC-02 — APPROVED.)
+- [x] Define campaign-generation inputs and outputs. (DEC-04 — APPROVED.)
+- [x] Define export formats. (DEC-07 — APPROVED.)
+- [x] Define nonfunctional requirements. (DEC-09 — APPROVED; REQ-041..049.)
+- [x] Write acceptance scenarios. (AC-001..AC-024 in
+  `knowledge/requirements/acceptance-criteria.md`; Brief §6 failure
+  workflows.)
+- [ ] Produce and approve the MVP Product Brief v1.0. (Full draft exists at
+  `docs/product/mvp-product-brief.md`; all ten decisions APPROVED;
+  document-level approval — `status: approved`, `approved_at` — pending
+  after Test Commander review.)
 
 ### Required Product and Architecture Decisions
 
@@ -327,10 +358,10 @@ Phase 1 closes only when:
 
 ### Risks
 
-- Scope creep during definition; mitigate by writing explicit exclusions
-  early.
-- Decisions remaining PROPOSED indefinitely; mitigate by treating Product
-  Owner review of the brief as the single blocking next step.
+- Scope creep during definition; mitigated by the Brief §4 exclusion list.
+- Document-level approval stalling after decision approval; mitigate by
+  treating the Test Commander review plus brief approval as the single
+  blocking next step before Phase 2.
 
 ### Decisions
 
@@ -343,8 +374,12 @@ Phase 1 closes only when:
 ### Completion Notes
 
 - Governance baseline committed as
-  `bdd6ac54678fe16fc02f2fba93c5933392a09feb`. Remediation R1–R6 drafted; R7
-  awaiting Product Owner approval.
+  `bdd6ac54678fe16fc02f2fba93c5933392a09feb`.
+- 2026-07-18: DEC-01..DEC-10 approved (commit `7a1495c`). Phase 1 design
+  increments 1–7 complete: brief, domain model, UX specification, technical
+  design, ADRs, requirements/traceability, and test strategies exist as
+  drafts. Phase 1 is IN REVIEW pending Test Commander requirements review
+  and document-level brief approval.
 
 ---
 
@@ -478,7 +513,7 @@ Docker Compose development environment
 
 - Status: NOT STARTED
 - Objective: A tested FastAPI foundation with migrations, configuration,
-  logging, and clear domain boundaries.
+  logging, and explicit domain-service boundaries.
 - Dependencies: Phase 3.
 
 ### Tasks
@@ -1151,7 +1186,7 @@ Operational Marketing Commander dashboard
 - [ ] Generation-failure and retry test.
 - [ ] Campaign review and export test.
 - [ ] Accessibility review.
-- [ ] Responsive review.
+- [ ] Viewport-matrix review (DEC-09 browsers and sizes; AC-020).
 - [ ] Security baseline.
 - [ ] Manual local backup and restore: document and verify a manual local
   backup and restore procedure for PostgreSQL application data using
@@ -1316,8 +1351,9 @@ Marketing Commander MVP
 - Objective: Relationship-driven intelligence, only if justified.
 - Dependencies: MVP release (Phase 14); an approved ADR.
 
-Graph introduction requires an ADR and evidence that it provides meaningful
-value beyond PostgreSQL. Without that ADR, this phase must not begin.
+Graph introduction requires an ADR with evidence that PostgreSQL cannot
+adequately support the required use cases (per ADR-006). Without that ADR,
+this phase must not begin.
 
 ### Tasks
 
@@ -1537,3 +1573,36 @@ value beyond PostgreSQL. Without that ADR, this phase must not begin.
   of truth; complete the remaining Phase 1 tasks (in-scope and
   out-of-scope confirmation, domain vocabulary, lifecycle states,
   acceptance scenarios); run the requirements review; then close Phase 1.
+
+### 2026-07-18 (Phase 1 design increments 1–7)
+
+- Phase: 1
+- Increment: Design increments 1–7 (brief, domain, UX, technical,
+  requirements, testing, governance)
+- Status: IN REVIEW
+- Work completed: Expanded the MVP Product Brief to the full v1.0 draft
+  (executive summary, principles, persona, goals and exclusions, per-step
+  golden-path contracts, 16 alternate/failure workflows, DEC-01..DEC-10
+  with rationale/alternatives/consequences, BR-001..BR-020, success
+  metrics, risks, Phase 1 DoD). Created Domain Model v1
+  (`docs/product/domain-model.md`), UX Specification v1
+  (`docs/product/ux-specification.md`, SCR-01..SCR-25), Technical Design v1
+  (`docs/architecture/technical-design.md`, API-01..API-36, 15 event
+  contracts, AI-generation contract, environment matrix), ADR-001..ADR-006
+  (`docs/adr/`, Proposed), the knowledge tree (`knowledge/`: glossary,
+  REQ-001..REQ-050, US-001..US-018, AC-001..AC-024, traceability matrix,
+  index files), and the testing set (`docs/testing/`: AI testing strategy
+  with 15-fault library, test data strategy, golden-path test plan, Test
+  Commander handoff). Updated CLAUDE.md and AGENT.md for the new
+  authoritative documents and traceability duties. Phase 1 set to
+  IN REVIEW.
+- Tests run: None (documentation only). Validation: link resolution check,
+  single-golden-path check, ambiguity-term scan, no-source-code check, git
+  status (results in the session report).
+- Decisions: None new; ADR-001..ADR-006 recorded as Proposed realizations
+  of approved DEC decisions.
+- Risks: None new.
+- Next recommended step: Submit the Phase 1 artifacts to Test Commander for
+  requirements review (`docs/testing/test-commander-handoff.md`); after
+  findings are resolved, record document-level approval of the brief and
+  close Phase 1; then begin Phase 2 repository foundation.
