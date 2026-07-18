@@ -1,8 +1,8 @@
 # ADR-005 — Append-Only Approved Artifact Versions
 
-- Status: Proposed
+- Status: Accepted (with MVP Product Brief v1.0 approval, 2026-07-18)
 - Date: 2026-07-18
-- Deciders: Nick Baynham (approval pending)
+- Deciders: Nick Baynham (Product Owner)
 - Realizes: BR-005, BR-006
 
 ## Context

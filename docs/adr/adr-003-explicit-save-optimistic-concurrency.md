@@ -1,8 +1,8 @@
 # ADR-003 — Explicit Save with Optimistic Concurrency
 
-- Status: Proposed
+- Status: Accepted (with MVP Product Brief v1.0 approval, 2026-07-18)
 - Date: 2026-07-18
-- Deciders: Nick Baynham (approval pending)
+- Deciders: Nick Baynham (Product Owner)
 - Realizes: BR-019 and the UX save model
 
 ## Context

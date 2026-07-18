@@ -1,6 +1,6 @@
 # Marketing Commander — Domain Model v1
 
-- Status: draft (approval follows the MVP Product Brief; see
+- Status: approved with MVP Product Brief v1.0 (2026-07-18; see
   [plan/plan.md](../../plan/plan.md))
 - Owner: Nick Baynham
 - Updated: 2026-07-18

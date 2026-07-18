@@ -1,6 +1,6 @@
 # Marketing Commander — Technical Design v1
 
-- Status: draft (approval follows the MVP Product Brief)
+- Status: approved with MVP Product Brief v1.0 (2026-07-18)
 - Owner: Nick Baynham
 - Updated: 2026-07-18
 
@@ -289,5 +289,5 @@ materially affect the system:
 - [ADR-005 — Append-only approved artifact versions](../adr/adr-005-append-only-approved-versions.md)
 - [ADR-006 — Graph database deferred](../adr/adr-006-graph-database-deferred.md)
 
-All six are Proposed pending Product Owner approval of the MVP Product
-Brief, whose decisions they realize.
+All six were Accepted with the MVP Product Brief v1.0 document-level
+approval (2026-07-18).

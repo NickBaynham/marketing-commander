@@ -1,6 +1,6 @@
 # Acceptance Criteria
 
-- Status: DRAFT (pending document-level approval of the MVP Product Brief)
+- Status: APPROVED with MVP Product Brief v1.0 (2026-07-18)
 - Updated: 2026-07-18
 
 Stable IDs AC-001 upward, Given/When/Then where useful. Requirements:

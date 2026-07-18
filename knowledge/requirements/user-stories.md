@@ -1,6 +1,6 @@
 # User Stories
 
-- Status: DRAFT (pending document-level approval of the MVP Product Brief)
+- Status: APPROVED with MVP Product Brief v1.0 (2026-07-18)
 - Updated: 2026-07-18
 
 Persona for all stories: the independent electronic-music artist managing

@@ -1,13 +1,12 @@
 # Marketing Commander Development Plan
 
-- Document version: 1.3
-- Current status: All Phase 1 design artifacts exist; Decisions
-  DEC-01..DEC-10 approved 2026-07-18; Test Commander requirements review
-  executed 2026-07-18 (1 Major, 5 Minor — all remediated in the
-  authoritative documents); outstanding for Phase 1 closure: confirmation
-  re-run of the requirements review and document-level Product Owner
-  approval of the MVP Product Brief
-- Current phase: Phase 1 — Product Boundary and MVP Definition (IN REVIEW)
+- Document version: 1.4
+- Current status: Phase 1 COMPLETE (2026-07-18). MVP Product Brief v1.0
+  approved at document level by Nick Baynham; DEC-01..DEC-10 approved;
+  ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
+  and confirmed closed with zero unresolved Major findings. Next: Phase 2.
+- Current phase: Phase 2 — Repository and Development Foundation
+  (NOT STARTED)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -211,7 +210,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 
 | Phase | Title | Status |
 |-------|-------|--------|
-| 1 | Product Boundary and MVP Definition | IN REVIEW |
+| 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
 | 2 | Repository and Development Foundation | NOT STARTED |
 | 3 | Docker Runtime Foundation | NOT STARTED |
 | 4 | Backend Application Foundation | NOT STARTED |
@@ -236,10 +235,11 @@ The default `ci` and `test` environments use the mock LLM provider.
 
 ## Phase 1 — Product Boundary and MVP Definition
 
-- Status: IN REVIEW — all design artifacts exist and DEC-01..DEC-10 are
-  approved; closure requires (1) Test Commander requirements review with no
-  unresolved Major finding and (2) document-level Product Owner approval of
-  the MVP Product Brief (`status: approved`, `approved_at` recorded).
+- Status: COMPLETE (2026-07-18). Both closure conditions are met: the Test
+  Commander requirements review was executed, remediated (MAJ-1,
+  MIN-1..MIN-5), and confirmed closed with zero unresolved Major findings;
+  and document-level Product Owner approval of the MVP Product Brief is
+  recorded (`status: approved`, `approved_at: 2026-07-18`).
 - Objective: A formal decision-and-testability phase, not merely a
   product-summary exercise. Define the MVP precisely enough that repository
   and schema design can begin, with all ten Required Product and Architecture
@@ -256,16 +256,16 @@ The default `ci` and `test` environments use the mock LLM provider.
 | R4 — AI quality and economics | Quality rubric, numeric quality gate, retry limits, cost ceilings, at-cap behavior, review-loop metrics | COMPLETE (recorded as PROPOSED in brief) |
 | R5 — NFR and security baseline | Accessibility, browser matrix, performance budgets, payload limits, privacy, prompt injection, security checklist, concurrency | COMPLETE (recorded as PROPOSED in brief and plan) |
 | R6 — Test architecture | Test data strategy, fault library, recorded responses, live smoke suite, golden-path growth strategy, traceability | COMPLETE (recorded in plan; implemented in Phases 2, 5, 9) |
-| R7 — Plan rewrite and review | Update all phases, remove vague wording, requirements review, approve MVP Product Brief v1.0 | IN REVIEW — plan updated and DEC approvals recorded; Test Commander review and document-level brief approval outstanding |
+| R7 — Plan rewrite and review | Update all phases, remove vague wording, requirements review, approve MVP Product Brief v1.0 | COMPLETE — review executed and confirmed closed; brief approved at document level 2026-07-18 |
 
 ### Phase 1 Design Increments (2026-07-18)
 
 | Increment | Deliverable | Status |
 |-----------|-------------|--------|
-| 1 — Product Decisions | MVP Product Brief v1.0 draft (all 11 sections, DEC-01..DEC-10) — `docs/product/mvp-product-brief.md` | COMPLETE (decisions APPROVED; document-level approval pending) |
+| 1 — Product Decisions | MVP Product Brief v1.0 (all 11 sections, DEC-01..DEC-10) — `docs/product/mvp-product-brief.md` | COMPLETE (decisions and document both APPROVED 2026-07-18) |
 | 2 — Domain Design | Domain Model v1 (23 entities, lifecycle diagrams) — `docs/product/domain-model.md` | COMPLETE (draft) |
 | 3 — UX Specification | UX Specification v1 (SCR-01..SCR-25, UX decisions) — `docs/product/ux-specification.md` | COMPLETE (draft) |
-| 4 — Technical Contracts | Technical Design v1 (API-01..API-36, events, AI contract) + ADR-001..ADR-006 — `docs/architecture/`, `docs/adr/` | COMPLETE (draft; ADRs Proposed) |
+| 4 — Technical Contracts | Technical Design v1 (API-01..API-36, events, AI contract) + ADR-001..ADR-006 — `docs/architecture/`, `docs/adr/` | COMPLETE (ADRs Accepted with brief approval) |
 | 5 — Requirements and Traceability | REQ-001..REQ-050, US-001..US-018, AC-001..AC-024, traceability matrix, glossary, knowledge tree — `knowledge/` | COMPLETE (draft) |
 | 6 — Test Commander Review Preparation | AI testing strategy, test data strategy, golden-path test plan, handoff — `docs/testing/` | COMPLETE (review itself not executed) |
 | 7 — Governance and Plan Closure | CLAUDE.md, AGENT.md, plan updates; Phase 1 → IN REVIEW | COMPLETE |
@@ -290,10 +290,12 @@ The default `ci` and `test` environments use the mock LLM provider.
 - [x] Write acceptance scenarios. (AC-001..AC-024 in
   `knowledge/requirements/acceptance-criteria.md`; Brief §6 failure
   workflows.)
-- [ ] Produce and approve the MVP Product Brief v1.0. (Full draft exists at
-  `docs/product/mvp-product-brief.md`; all ten decisions APPROVED;
-  document-level approval — `status: approved`, `approved_at` — pending
-  after Test Commander review.)
+- [x] Produce and approve the MVP Product Brief v1.0.
+  (`docs/product/mvp-product-brief.md`: all ten decisions APPROVED and
+  document-level approval recorded — `status: approved`,
+  `approved_at: 2026-07-18`, approver Nick Baynham — after the Test
+  Commander confirmation re-run closed with zero unresolved Major
+  findings.)
 
 ### Required Product and Architecture Decisions
 
@@ -377,9 +379,12 @@ Phase 1 closes only when:
   `bdd6ac54678fe16fc02f2fba93c5933392a09feb`.
 - 2026-07-18: DEC-01..DEC-10 approved (commit `7a1495c`). Phase 1 design
   increments 1–7 complete: brief, domain model, UX specification, technical
-  design, ADRs, requirements/traceability, and test strategies exist as
-  drafts. Phase 1 is IN REVIEW pending Test Commander requirements review
-  and document-level brief approval.
+  design, ADRs, requirements/traceability, and test strategies.
+- 2026-07-18: Test Commander review executed, remediated (commit
+  `657767e`), and confirmed closed with zero unresolved Major findings.
+- 2026-07-18: MVP Product Brief v1.0 approved at document level by Nick
+  Baynham (Product Owner); ADR-001..ADR-006 Accepted with it. Phase 1
+  COMPLETE — every Definition of Done item is satisfied.
 
 ---
 
@@ -1684,3 +1689,29 @@ this phase must not begin.
 - Next recommended step: Record document-level Product Owner approval of
   the MVP Product Brief (front matter status/approved_at), complete any
   remaining Phase 1 checklist items, close Phase 1, and begin Phase 2.
+
+### 2026-07-18 (Brief approval and Phase 1 closure)
+
+- Phase: 1 → 2 transition
+- Increment: Document-level approval
+- Status: COMPLETE
+- Work completed: Recorded document-level approval of the MVP Product Brief
+  v1.0 on behalf of Nick Baynham (Product Owner), per his explicit written
+  instruction following the Test Commander confirmation re-run (zero
+  unresolved Major findings; handoff document CLOSED). Front matter now
+  reads `status: approved`, `approved_by: Nick Baynham`,
+  `approved_at: 2026-07-18`. ADR-001..ADR-006 moved from Proposed to
+  Accepted per the recorded acceptance rule. Dependent document status
+  lines (domain model, UX specification, technical design, requirements,
+  user stories, acceptance criteria) updated from draft to approved-with-
+  brief. Phase 1 marked COMPLETE; current phase advanced to Phase 2
+  (NOT STARTED).
+- Tests run: None (documentation only). Validation: link check, status
+  cross-check, git status.
+- Decisions: Brief v1.0 approved; ADR-001..ADR-006 Accepted.
+- Risks: None new.
+- Next recommended step: Begin Phase 2 — Repository and Development
+  Foundation (monorepo skeleton, README, environment example, Makefile,
+  conventions, CI, test-data tooling, environment matrix, bootstrap
+  protocol). Per AGENT.md, identify the related requirement IDs (REQ-048,
+  REQ-049) before implementation.

@@ -1,6 +1,6 @@
 # Marketing Commander — UX Specification v1
 
-- Status: draft (approval follows the MVP Product Brief)
+- Status: approved with MVP Product Brief v1.0 (2026-07-18)
 - Owner: Nick Baynham
 - Updated: 2026-07-18
 

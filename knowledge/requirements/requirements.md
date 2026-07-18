@@ -1,7 +1,10 @@
 # Requirements
 
-- Status: DRAFT (pending Product Owner approval of the MVP Product Brief)
+- Status: APPROVED with MVP Product Brief v1.0 (2026-07-18)
 - Updated: 2026-07-18
+- Per-requirement `Status: DRAFT` is the implementation-lifecycle state
+  (approved for implementation, not yet built); it advances to IMPLEMENTED
+  and VERIFIED as later phases deliver and test the behavior.
 
 Stable IDs REQ-001 upward. Sources: [MVP Product Brief](../../docs/product/mvp-product-brief.md)
 (sections and DEC-xx), [Domain Model](../../docs/product/domain-model.md),
@@ -18,8 +21,7 @@ check), Inspection (document or configuration review).
 Priorities: Must (MVP release-blocking), Should (MVP intended, deferrable
 with Product Owner agreement).
 
-All requirements target status DRAFT until the brief is approved; none is
-implemented.
+No requirement is implemented yet; every entry is at lifecycle state DRAFT.
 
 ## Functional Requirements
 

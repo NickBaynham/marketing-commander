@@ -1,20 +1,23 @@
 ---
 title: Marketing Commander MVP Product Brief
 version: 1.0
-status: draft
+status: approved
 owner: Nick Baynham
 approver: Nick Baynham
+approved_by: Nick Baynham
 created_at: 2026-07-18
 updated_at: 2026-07-18
-approved_at:
+approved_at: 2026-07-18
 ---
 
 # Marketing Commander — MVP Product Brief v1.0
 
-This document is the authoritative source for MVP product behavior. Phase 1 of
-[plan/plan.md](../../plan/plan.md) cannot close until this brief is approved by
-the Product Owner (`status: approved`, `approved_at` recorded). No approval
-record from Nick Baynham exists in the repository yet, so status is `draft`.
+This document is the authoritative source for MVP product behavior.
+Document-level approval was recorded by Nick Baynham (Product Owner) on
+2026-07-18, by explicit written instruction after the Test Commander
+requirements review confirmed zero unresolved Major findings against the
+remediated register. Changes to approved content now require a recorded
+change (and a version bump) per [CLAUDE.md](../../CLAUDE.md).
 
 Related documents: [CLAUDE.md](../../CLAUDE.md) | [AGENT.md](../../AGENT.md) |
 [plan/plan.md](../../plan/plan.md) | [Domain Model](domain-model.md) |
