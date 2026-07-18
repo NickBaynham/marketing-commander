@@ -212,7 +212,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | Phase | Title | Status |
 |-------|-------|--------|
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
-| 2 | Repository and Development Foundation | IN REVIEW |
+| 2 | Repository and Development Foundation | COMPLETE |
 | 3 | Docker Runtime Foundation | NOT STARTED |
 | 4 | Backend Application Foundation | NOT STARTED |
 | 5 | Workspace and Artist Domain | NOT STARTED |
@@ -391,9 +391,9 @@ Phase 1 closes only when:
 
 ## Phase 2 — Repository and Development Foundation
 
-- Status: IN REVIEW — all tasks complete and the first hosted CI run
-  passed; the only open exit-gate item is the Test Commander review of
-  Phase 2 (no open Major findings required).
+- Status: COMPLETE — all tasks complete, first hosted CI run passed, and
+  the Test Commander review of Phase 2 closed 2026-07-18 with zero
+  findings (exit gate fully checked below).
 - Objective: Establish a documented repository skeleton with automated
   validation.
 - Dependencies: Phase 1 (product vocabulary and scope inform structure).
@@ -503,8 +503,12 @@ Status recorded 2026-07-18; every unmet item is named:
 - [x] Test directories and conventions exist (`tests/docs`, `tests/repo`,
   `tests/fixtures`, `tests/e2e`, `tests/fixtures/llm`).
 - [x] Mock LLM use is the default for tests (REQ-049; `.env.example`).
-- [ ] Test Commander has no open Major findings against Phase 2 (its
-  review of this increment has not run yet).
+- [x] Test Commander has no open Major findings against Phase 2 (review
+  executed 2026-07-18: increments b5eeb7e and 6f31427 reviewed; `make
+  check` verified independently on the working copy and again on a fresh
+  clone from the GitHub remote — clone, copy `.env.example` to `.env`,
+  `make setup`, `make check`, all green with no undocumented steps; hosted
+  CI runs 29662440145 and 29662475797 confirmed successful; zero findings).
 - [x] `plan/plan.md` contains actual commands run and results (progress
   log).
 - [x] The repository is clean and committed.
@@ -1932,3 +1936,24 @@ this phase must not begin.
   clean-room bootstrap test from an empty environment. With no open Major
   findings, Phase 2 closes and Phase 3 (Docker runtime foundation)
   begins.
+
+### 2026-07-18 (Test Commander Phase 2 review — zero findings; phase closed)
+
+- Phase: 2
+- Increment: Test Commander exit-gate review
+- Status: COMPLETE
+- Work completed: Reviewed increments b5eeb7e and 6f31427. Verified
+  independently: `make check` green on the working copy (lint clean, 18
+  tests passed, bootstrap check passed) and again from a fresh clone of
+  the GitHub remote (clone, copy `.env.example` to `.env`, `make setup`,
+  `make check` — no undocumented steps). Hosted CI runs 29662440145 and
+  29662475797 confirmed successful; CI executes the identical `make
+  check` gate. Repo-hygiene suite, requirement-ID tagging, seed-fixture
+  conformance to DEC-01/DEC-03, and secret hygiene all inspected. Zero
+  findings. Exit-gate item checked; Phase 2 marked COMPLETE.
+- Tests run: `make check` twice (working copy and fresh clone), both green.
+- Decisions: None.
+- Risks: None new.
+- Next recommended step: Begin Phase 3 (Docker runtime foundation). The
+  transferred full clean-bootstrap criterion (REQ-048) verifies at Phase 3
+  close; the Test Commander review loop continues per increment.
