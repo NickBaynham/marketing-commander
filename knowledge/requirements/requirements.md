@@ -57,14 +57,16 @@ implemented.
   API, E2E.
 - Related: US-003; AC-002. Phase: 5. Status: DRAFT.
 
-### REQ-005 — Artist archival and deletion
+### REQ-005 — Artist archival
 
-- Statement: Archival is reversible and blocks new campaigns and generation
-  while preserving approved history; deletion removes the artist aggregate
-  after explicit confirmation naming what is lost.
-- Rationale: BR-014, BR-015, DEC-10 deletion right. Source: Brief §6.
-  Priority: Should. Verification: API, Unit.
-- Related: BR-014, BR-015; US-003; AC-021. Phase: 5. Status: DRAFT.
+- Statement: Archival is reversible, blocks new campaigns and generation
+  while archived, and preserves all approved history; restore returns the
+  artist to `active`.
+- Rationale: BR-014. Source: Brief §6. Priority: Should. Verification: API,
+  Unit.
+- Related: BR-014; US-003; AC-025. Phase: 5. Status: DRAFT.
+- Note: deletion was split out to REQ-051 (Must) on 2026-07-18 to resolve
+  Test Commander finding MAJ-1 (priority inversion against REQ-038).
 
 ### REQ-006 — AIP draft editing with explicit save
 
@@ -286,8 +288,10 @@ implemented.
 ### REQ-032 — Progress events
 
 - Statement: Job state transitions emit progress events delivered to the UI
-  (SSE or WebSockets); successful completion updates the relevant review
-  surface without manual refresh.
+  (SSE or WebSockets — this references the open SSE-vs-WebSockets decision
+  in plan/plan.md Open Decisions; either transport satisfies this
+  requirement, and closing that decision updates this statement); successful
+  completion updates the relevant review surface without manual refresh.
 - Rationale: Job UX. Priority: Must. Verification: Integration, E2E.
 - Related: US-015; AC-009. Phase: 10. Status: DRAFT.
 
@@ -348,7 +352,8 @@ implemented.
   documentation, local deletion, explicit consent action, minimal provider
   metadata storage, defined processing boundaries.
 - Rationale: DEC-10. Priority: Must. Verification: API, Manual, Inspection.
-- Related: BR-015; US-009; AC-021. Phase: 9. Status: DRAFT.
+- Related: BR-015; US-009; AC-021; depends on REQ-051 (deletion capability
+  must exist before the first live call). Phase: 9. Status: DRAFT.
 
 ### REQ-039 — Dashboard
 
@@ -465,3 +470,17 @@ implemented.
   13-step path across the DEC-09 browser matrix in Phase 14.
 - Rationale: Phase 14 release gate. Priority: Must. Verification: E2E.
 - Related: BR-004–BR-013; US-014; AC-024. Phase: 5–14. Status: DRAFT.
+
+### REQ-051 — Artist and generation data deletion
+
+- Statement: Deletion removes the artist aggregate (AIP, campaigns, content,
+  and local generation data including prompts and provider responses) after
+  explicit confirmation naming what is lost; approval records within a
+  surviving aggregate are never deleted selectively.
+- Rationale: BR-015 and the DEC-10 deletion right; REQ-038 requires this
+  capability before the first live provider call, so it cannot be
+  deferrable (Test Commander finding MAJ-1, 2026-07-18; split from
+  REQ-005).
+- Source: Brief §6, DEC-10. Priority: Must. Verification: API, Unit.
+- Related: BR-015; US-003; AC-021; required by REQ-038. Phase: 5
+  (implemented), hard deadline before Phase 9 live calls. Status: DRAFT.

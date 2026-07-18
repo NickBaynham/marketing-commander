@@ -15,7 +15,14 @@ Given a supported machine with Docker installed and a fresh clone, when the
 contributor copies `.env.example` to `.env` and runs the documented bootstrap
 command, then all configured services return successful health responses with
 no undocumented manual steps, and the scripted bootstrap check (where
-present) passes. (REQ-048; Phase 2–3)
+present) passes.
+
+Failure branch: given a bootstrap that fails (a service does not become
+healthy, a port is occupied, or the environment file is missing a required
+value), when the bootstrap command finishes, then its output names the
+failing step or service and the missing or conflicting configuration, and
+the setup documentation's troubleshooting section covers each of these
+failure classes with the recovery action. (REQ-048; Phase 2–3)
 
 ### AC-002 — Artist creation
 
@@ -196,3 +203,11 @@ executes the canonical 13-step sequence (Brief §5) with the mock provider,
 then every step succeeds, every approval and audit record exists, and in
 Phase 14 the test passes across the DEC-09 browser matrix. (REQ-050;
 Phase 5–14, full path Phase 14)
+
+### AC-025 — Artist archival
+
+Given an active artist with an approved AIP version and campaign history,
+when the artist is archived, then new campaign creation and generation are
+blocked with the archived state stated as the reason, all approved versions
+and approval records remain readable and unchanged, and when the artist is
+restored, then the blocks are lifted with no data loss. (REQ-005; Phase 5)

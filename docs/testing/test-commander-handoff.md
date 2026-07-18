@@ -1,7 +1,8 @@
 # Test Commander Handoff
 
-- Status: EXECUTED 2026-07-18 (disposition pending remediation of one Major
-  finding)
+- Status: EXECUTED 2026-07-18; remediation applied 2026-07-18 (MAJ-1 and
+  MIN-1..MIN-5 fixed in the authoritative documents; confirmation re-run of
+  /tc:review-requirements against the remediated register not yet executed)
 - Owner: Nick Baynham
 - Updated: 2026-07-18
 

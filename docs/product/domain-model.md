@@ -162,7 +162,8 @@ erDiagram
   generation data) after explicit confirmation (BR-015, DEC-10 deletion
   right).
 - Versioning: none (identity content versions live on the AIP).
-- Requirements: REQ-003, REQ-004, REQ-005. Business rules: BR-001, BR-014,
+- Requirements: REQ-003, REQ-004, REQ-005, REQ-051. Business rules: BR-001,
+  BR-014,
   BR-015.
 
 ### ArtistIdentityProfile (AIP)

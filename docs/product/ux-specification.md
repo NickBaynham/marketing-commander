@@ -111,7 +111,8 @@ These defaults apply to every screen unless a screen overrides them:
   approved AIP exists, with the reason shown, BR-007). Secondary: archive
   or restore artist (confirmation states consequences, BR-014); delete
   artist (confirmation names all data removed, BR-015).
-- Requirements: REQ-004, REQ-005. AC: AC-002.
+- Requirements: REQ-004, REQ-005 (archival), REQ-051 (deletion).
+  AC: AC-002, AC-025.
 
 ### SCR-07 — AIP Editor
 

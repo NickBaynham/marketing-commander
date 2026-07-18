@@ -1,11 +1,11 @@
 # Marketing Commander Development Plan
 
-- Document version: 1.2
-- Current status: All Phase 1 design artifacts exist (Product Brief, Domain
-  Model, UX Specification, Technical Design, ADRs, requirements, stories,
-  acceptance criteria, traceability, test strategies); Decisions
-  DEC-01..DEC-10 approved 2026-07-18; outstanding for Phase 1 closure:
-  Test Commander requirements review and document-level Product Owner
+- Document version: 1.3
+- Current status: All Phase 1 design artifacts exist; Decisions
+  DEC-01..DEC-10 approved 2026-07-18; Test Commander requirements review
+  executed 2026-07-18 (1 Major, 5 Minor — all remediated in the
+  authoritative documents); outstanding for Phase 1 closure: confirmation
+  re-run of the requirements review and document-level Product Owner
   approval of the MVP Product Brief
 - Current phase: Phase 1 — Product Boundary and MVP Definition (IN REVIEW)
 - Last updated: 2026-07-18
@@ -1137,6 +1137,8 @@ A campaign can be reviewed, approved, and exported
 - [ ] Upcoming content.
 - [ ] Recent artifacts.
 - [ ] Outstanding unknowns.
+- [ ] Budget summary panel (REQ-039; data from the Phase 9 cost ledger —
+  added 2026-07-18 per Test Commander finding MIN-2).
 - [ ] MVP timestamps: last saved, last generated, last approved, last
   agent-run attempt, current prompt version, current AIP version. (External
   platform-data freshness indicators are deferred to Phase 16.)
@@ -1633,3 +1635,32 @@ this phase must not begin.
   update the traceability matrix if IDs change, re-run
   /tc:review-requirements to confirm closure, then record document-level
   approval of the MVP Product Brief and close Phase 1.
+
+### 2026-07-18 (Test Commander review remediation)
+
+- Phase: 1
+- Increment: Requirements-review remediation
+- Status: COMPLETE (remediation); Phase 1 remains IN REVIEW
+- Work completed: Applied the Test Commander review disposition
+  (`.test-commander/requirements/review-disposition-2026-07-18.md` in the
+  marketing-commander-test workspace; review ran against commit a2aedfe).
+  MAJ-1 (priority inversion): split REQ-005 — archival stays Should
+  (AC-025 added for archival), deletion became REQ-051 (Must, Phase 5,
+  required before Phase 9 live calls); REQ-038 now names the REQ-051
+  dependency. MIN-1: REQ-032 explicitly references the open
+  SSE-vs-WebSockets decision. MIN-2: budget summary panel added to
+  Phase 13 tasks. MIN-3: flat AC-ID convention divergence recorded in the
+  traceability matrix. MIN-4: AC-001 gained a bootstrap failure branch.
+  MIN-5: all 18 user stories reworded to the role/want/benefit template.
+  Traceability matrix updated (REQ-005 row narrowed, REQ-051 row added).
+- Tests run: None (documentation only). Validation: link check, ID
+  cross-reference check, git status.
+- Decisions: None new.
+- Risks: None new. The five false-positive classes (FP-1..FP-5) are
+  recorded in the disposition; feeding FP-1..FP-3 to
+  /tc:learn-from-feedback in the test workspace is recommended tuning, not
+  a product change.
+- Next recommended step: Re-run /tc:review-requirements in the test
+  workspace against the remediated register to confirm zero unresolved
+  Major findings, then record document-level approval of the MVP Product
+  Brief and close Phase 1.

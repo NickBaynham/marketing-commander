@@ -10,7 +10,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-001 — Enter the application as the seeded owner
 
-- Story: As the artist, I enter the application as the seeded local owner so
+- Story: As the artist, I want to enter the application as the seeded local owner so
   that my actions and approvals are attributed to a stable identity.
 - Business value: non-null provenance from day one without waiting for
   authentication.
@@ -22,7 +22,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-002 — Set up the workspace
 
-- Story: As the artist, I create my workspace so that all my data lives in
+- Story: As the artist, I want to create my workspace so that all my data lives in
   one owned, isolated boundary.
 - Business value: DEC-01 boundary for authorization, budget, and data.
 - Preconditions: US-001. Main flow: SCR-02 → name → create → dashboard.
@@ -32,18 +32,19 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-003 — Create and manage CYR3NT
 
-- Story: As the artist, I create CYR3NT and see its overview so that all
+- Story: As the artist, I want to create CYR3NT and see its overview so that all
   identity and campaign work hangs off one artist record.
 - Business value: golden path anchor.
 - Preconditions: US-002. Main flow: SCR-05 → create → SCR-06 overview.
 - Alternate flow: archive and restore the artist (BR-014).
 - Failure flow: duplicate or invalid name → 422; deletion requires
   confirmation naming what is lost (BR-015).
-- Related: REQ-003, REQ-004, REQ-005. AC: AC-002, AC-003. Phase: 5.
+- Related: REQ-003, REQ-004, REQ-005 (archival), REQ-051 (deletion).
+  AC: AC-002, AC-003, AC-025. Phase: 5.
 
 ### US-004 — Complete the AIP
 
-- Story: As the artist, I fill in my identity profile section by section
+- Story: As the artist, I want to fill in my identity profile section by section
   with explicit saves so that the platform has a validated identity source
   for generation.
 - Business value: the AIP is the grounding for all generated content.
@@ -57,7 +58,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-005 — See completeness and eligibility
 
-- Story: As the artist, I see per-section completeness and binary approval
+- Story: As the artist, I want to see per-section completeness and binary approval
   eligibility so that I know exactly what blocks approval.
 - Business value: makes the DEC-02 rule visible and actionable.
 - Preconditions: US-004. Main flow: SCR-08 → review states → jump to
@@ -67,7 +68,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-006 — Preview the AIP as Markdown
 
-- Story: As the artist, I preview my profile as rendered Markdown so that I
+- Story: As the artist, I want to preview my profile as rendered Markdown so that I
   can read it as the portable document it will become.
 - Preconditions: draft exists. Main flow: SCR-09 → preview → copy/download.
 - Failure flow: render failure shows error with retry; draft unaffected.
@@ -75,7 +76,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-007 — Approve AIP version 1.0
 
-- Story: As the artist, I approve my profile as version 1.0 so that
+- Story: As the artist, I want to approve my profile as version 1.0 so that
   campaign generation has one immutable, authoritative identity source.
 - Business value: immutable grounding record; unlocks campaigns (BR-007).
 - Preconditions: eligibility 100% (US-005). Main flow: SCR-10 → approve →
@@ -88,7 +89,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-008 — Create a campaign
 
-- Story: As the artist, I create a campaign with objective, window,
+- Story: As the artist, I want to create a campaign with objective, window,
   platforms, and cadence so that generation is bounded by my real intent.
 - Preconditions: US-007. Main flow: SCR-12 → create (bound to approved AIP
   version).
@@ -98,7 +99,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-009 — Generate and review the campaign brief
 
-- Story: As the artist, I generate a campaign brief and review it so that
+- Story: As the artist, I want to generate a campaign brief and review it so that
   strategy is proposed by the platform but decided by me.
 - Business value: first AI proposal in the loop; consent and cost visible.
 - Preconditions: US-008; budget available. Main flow: SCR-13 disclosure and
@@ -111,7 +112,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-010 — Generate the 30-day content plan
 
-- Story: As the artist, I generate a 30-day content plan from the accepted
+- Story: As the artist, I want to generate a 30-day content plan from the accepted
   brief so that a month of content exists to review in one sitting.
 - Preconditions: brief accepted. Main flow: SCR-15 → queued job → items on
   SCR-16 calendar.
@@ -123,7 +124,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-011 — Review and edit content items
 
-- Story: As the artist, I review each item with the rubric, edit where
+- Story: As the artist, I want to review each item with the rubric, edit where
   necessary, and record outcomes so that only content I stand behind gets
   approved — and the platform learns from my decisions.
 - Business value: DEC-05 telemetry is the learning loop's input.
@@ -136,7 +137,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-012 — Regenerate a content item
 
-- Story: As the artist, I regenerate an unsatisfying item so that I get a
+- Story: As the artist, I want to regenerate an unsatisfying item so that I get a
   new proposal without losing approved work.
 - Preconditions: item unapproved or rejected. Main flow: SCR-17 →
   regenerate (cost shown) → new version.
@@ -146,7 +147,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-013 — Bulk-approve selected items
 
-- Story: As the artist, I select multiple reviewed items and approve them
+- Story: As the artist, I want to select multiple reviewed items and approve them
   together so that a 20-item month does not require 20 separate flows.
 - Preconditions: items reviewed and visible. Main flow: SCR-19 → select →
   confirm exact versions → per-item approval records.
@@ -156,7 +157,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-014 — Approve and export the campaign
 
-- Story: As the artist, I approve the campaign and export it in Markdown,
+- Story: As the artist, I want to approve the campaign and export it in Markdown,
   CSV, and JSON so that I can use the plan wherever I work.
 - Preconditions: all items approved or excluded. Main flow: approve →
   SCR-23 → export formats → download.
@@ -167,7 +168,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-015 — Monitor agent activity and failures
 
-- Story: As the artist, I see what the platform is doing, what failed, and
+- Story: As the artist, I want to see what the platform is doing, what failed, and
   what it cost so that automation never becomes invisible.
 - Main flow: SCR-20 activity → SCR-21 failure detail → explicit retry with
   cost shown.
@@ -178,7 +179,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-016 — Watch the budget
 
-- Story: As the artist, I see budget state, warnings, and per-item cost so
+- Story: As the artist, I want to see budget state, warnings, and per-item cost so
   that spend never surprises me.
 - Main flow: SCR-22 → thresholds, ledger, cost per approved item.
 - Failure flow: at cap, generation blocked with owner action stated.
@@ -186,7 +187,7 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
 
 ### US-017 — Browse version history
 
-- Story: As the artist, I browse versions and approvals of any artifact so
+- Story: As the artist, I want to browse versions and approvals of any artifact so
   that I can trust what was approved, when, and by whom.
 - Main flow: SCR-24 → versions, approvals, compare.
 - Related: REQ-014, REQ-015, REQ-016, REQ-040, REQ-047. AC: AC-007.

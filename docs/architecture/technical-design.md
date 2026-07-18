@@ -129,7 +129,7 @@ the Phase 8 target role; pre-Phase-8 all resolve to the seeded owner.
 | API-05 | GET | /api/v1/artists/{id} | Read artist | — | Artist | viewer | n/a | — | REQ-004 |
 | API-06 | PATCH | /api/v1/artists/{id} | Update artist | ArtistUpdate + version | Artist | editor | version token | BR-003 | REQ-004 |
 | API-07 | POST | /api/v1/artists/{id}/archive | Archive/restore | { archived } | Artist | admin | state-idempotent | BR-014 | REQ-005 |
-| API-08 | DELETE | /api/v1/artists/{id} | Delete aggregate | confirmation token | 204 | owner | n/a | BR-015 | REQ-005 |
+| API-08 | DELETE | /api/v1/artists/{id} | Delete aggregate | confirmation token | 204 | owner | n/a | BR-015 | REQ-051 |
 | API-09 | GET | /api/v1/artists/{id}/aip | Read AIP draft + completeness | — | AIPDraft | viewer | n/a | — | REQ-006 |
 | API-10 | PUT | /api/v1/artists/{id}/aip | Save AIP draft | AIPDraftUpdate + version | AIPDraft | editor | version token; 409 stale | DEC-02 schemas, size limits | REQ-006, REQ-017 |
 | API-11 | GET | /api/v1/artists/{id}/aip/preview | Markdown preview | — | { markdown } | viewer | n/a | — | REQ-012 |

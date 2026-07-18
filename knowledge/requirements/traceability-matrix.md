@@ -23,7 +23,7 @@ implemented.
 | REQ-002 | BR-020 | US-001 | AC-024 | User, WorkspaceMembership | seed process | SCR-01 | — | Unit, API | 5 |
 | REQ-003 | BR-001 | US-003 | AC-002, AC-003 | Artist, ArtistIdentityProfile | API-03 | SCR-05 | — | Unit, API, E2E | 5 |
 | REQ-004 | — | US-003 | AC-002 | Artist | API-04, API-05, API-06 | SCR-04, SCR-06 | — | API, E2E | 5 |
-| REQ-005 | BR-014, BR-015 | US-003 | AC-021 | Artist | API-07, API-08 | SCR-06 | — | API, Unit | 5 |
+| REQ-005 | BR-014 | US-003 | AC-025 | Artist | API-07 | SCR-06 | — | API, Unit | 5 |
 | REQ-006 | BR-003 | US-004 | AC-003, AC-008 | ArtistIdentityProfile | API-09, API-10 | SCR-07 | — | API, E2E | 6 |
 | REQ-007 | — | US-004 | AC-003 | (validation contract) | all mutating APIs | all form screens | — | API, E2E | 5–6 |
 | REQ-008 | BR-002 | US-004 | AC-004 | ArtistIdentityProfile | API-09, API-10 | SCR-07 | — | Unit, API | 6 |
@@ -69,11 +69,19 @@ implemented.
 | REQ-048 | — | US-001 | AC-001 | — | health endpoints (TBD, Phase 3) | — | — | Integration, Manual | 2–3 |
 | REQ-049 | BR-011 | US-015 | AC-012 | — | — | — | mock adapter | Inspection, Integration | 2–3 |
 | REQ-050 | BR-004–BR-013 | US-014 | AC-024 | (all golden-path entities) | golden-path APIs | golden-path screens | AGC-BRIEF, AGC-PLAN (TBD) | E2E | 5–14 |
+| REQ-051 | BR-015 | US-003 | AC-021 | Artist (aggregate), AgentRun data | API-08 | SCR-06, SCR-25 | — | API, Unit | 5 (required before Phase 9 live calls) |
 
 Coverage notes:
 
 - Every REQ has at least one US and one AC; REQ-036/REQ-037 have no UX
   screen because they are provider-layer requirements.
+- AC ID convention: this register uses flat AC-001..AC-025 IDs linked
+  directly to requirements, with the story→criterion direction recorded in
+  each user story — it does not use the AC-NNN-MM sub-numbering (criterion
+  derived from parent story) that Test Commander's parser expects by
+  default. This divergence is deliberate (criteria often serve multiple
+  stories); reviewers and future Test Commander runs should expect it
+  (recorded per finding MIN-3, 2026-07-18).
 - Prompt/agent contracts are TBD by design: prompts are authored in Phase 9
   (registry) and Phase 11 (AGC-BRIEF, AGC-PLAN).
 - Nothing in the API, Test type, or Prompt columns implies existing
