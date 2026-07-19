@@ -5,9 +5,24 @@ installed, a contributor can clone the repository, copy `.env.example` to
 `.env`, run the documented commands below, and reach a verified working
 state without undocumented manual steps.
 
-Service containers arrive in Phase 3; until then the bootstrap covers the
-development tooling and documentation-validation suite, and
-`make bootstrap-check` reports the service step as skipped.
+From Phase 3 the bootstrap covers the full five-service development stack;
+`make bootstrap-check` verifies every service reports healthy and probes
+the published API and web endpoints from the host.
+
+## Services
+
+| Service | Source | Host port (default) | Health |
+|---------|--------|---------------------|--------|
+| web | `apps/web` (Next.js, node:24-alpine) | `WEB_PORT` (3000) | `GET /api/healthz` |
+| api | `apps/api` (FastAPI, python:3.14-slim) | `API_PORT` (8000) | `GET /healthz` |
+| worker | `services/worker` (Python, python:3.14-slim) | none | Redis heartbeat freshness (D3-2) |
+| postgres | `postgres:18-alpine` | `POSTGRES_PORT` (5432) | `pg_isready` |
+| redis | `redis:8-alpine` | `REDIS_PORT` (6379) | `redis-cli ping` |
+
+All host ports bind to `127.0.0.1` only. PostgreSQL data lives on the
+named volume `postgres-data` and survives `docker compose down` (it is
+removed only by `docker compose down -v`). The web and API containers
+hot-reload source edits without a rebuild.
 
 ## Prerequisites
 
@@ -34,7 +49,8 @@ make run              # docker compose up --build
 ```
 
 `make bootstrap-check` then also verifies that every service reports
-healthy.
+healthy and that the API (`/healthz`) and web (`/api/healthz`) endpoints
+answer 200 on their published ports.
 
 ## Environment Matrix
 
@@ -64,5 +80,19 @@ Each failure class the bootstrap can hit, per the AC-001 failure branch.
   with `docker compose logs <service>`. A port conflict appears here as a
   bind error; change the conflicting `*_PORT` value in `.env` or stop the
   process occupying the port.
+- Step "api endpoint" or "web endpoint" fails while service health
+  passes: the port publish is blocked or overridden. Confirm the
+  `API_PORT`/`WEB_PORT` values in `.env` match what you are probing and
+  that no local process holds the port.
+- `docker compose up --build` fails during an image build: read the build
+  output for the failing stage. Python images install from committed
+  `pdm.lock` exports and the web image from `package-lock.json`
+  (`npm ci`) — a lockfile/manifest mismatch fails the build; regenerate
+  the lockfile (`pdm lock` / `npm install --package-lock-only`) and
+  commit it.
+- PostgreSQL healthy but data unexpectedly empty after an image change:
+  `postgres:18` images mount `/var/lib/postgresql` (not `.../data`); a
+  volume targeting the old path is invisible to 18. See the compose file
+  comment and plan decision D3-1.
 - Step "repository files" fails: the clone is incomplete or files were
   deleted; re-clone.

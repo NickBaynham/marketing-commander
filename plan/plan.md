@@ -5,8 +5,9 @@
   approved at document level by Nick Baynham; DEC-01..DEC-10 approved;
   ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
   and confirmed closed with zero unresolved Major findings. Next: Phase 2.
-- Current phase: Phase 3 — Docker Runtime Foundation (IN PROGRESS —
-  Increments 3.1–3.4 complete; next: 3.5 orchestration verification)
+- Current phase: Phase 3 — Docker Runtime Foundation (IN REVIEW —
+  all increments complete and acceptance criteria verified; awaiting
+  Test Commander Phase 3 review)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -212,7 +213,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 |-------|-------|--------|
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
 | 2 | Repository and Development Foundation | COMPLETE |
-| 3 | Docker Runtime Foundation | IN PROGRESS |
+| 3 | Docker Runtime Foundation | IN REVIEW |
 | 4 | Backend Application Foundation | NOT STARTED |
 | 5 | Workspace and Artist Domain | NOT STARTED |
 | 6 | Artist Identity Profile | NOT STARTED |
@@ -567,8 +568,10 @@ requirements-to-test map.
 
 ## Phase 3 — Docker Runtime Foundation
 
-- Status: IN PROGRESS (Increments 3.1–3.4 COMPLETE; next:
-  Increment 3.5 orchestration verification and documentation)
+- Status: IN REVIEW — all five increments COMPLETE and all acceptance
+  criteria verified (including the clean-machine AC-001 run); the only
+  open exit item is the Test Commander Phase 3 review (no open Major
+  findings required)
 - Objective: A complete Docker Compose development environment started by a
   single documented command.
 - Dependencies: Phase 2.
@@ -684,23 +687,32 @@ Each increment follows the Test Commander review loop: implement → run
   `docker compose up --build`; source edit hot-reloads.
 - Tests: web health assertion in bootstrap-check (Traceability: REQ-048).
 
-#### Increment 3.5 — Orchestration verification and documentation
+#### Increment 3.5 — Orchestration verification and documentation — COMPLETE
 
-- [ ] Single documented startup command verified end to end:
-  `docker compose up --build` from a clean clone with only
-  `cp .env.example .env` beforehand (AC-001 full criterion, transferred
-  from Phase 2).
-- [ ] Health endpoint verification across all five services recorded in
-  the Progress Log with actual commands and output.
-- [ ] Documentation updates: README quickstart, `docs/development/
-  bootstrap.md` (service table, ports, troubleshooting per failure class),
-  `.env.example` (any new variables).
-- [ ] CI: evaluate a compose smoke job on GitHub Actions (boot stack,
-  poll health, tear down); adopt if runtime is acceptable on the hosted
-  runner, otherwise record the constraint and keep the check local.
-- [ ] Clean-room bootstrap evidence for Test Commander review.
+- [x] Single documented startup command verified end to end from a clean
+  clone (AC-001 full criterion): fresh `git clone` of commit `4ea382f`
+  into an empty directory, `cp .env.example .env`, `make setup`,
+  `docker compose up -d --build --wait` — all five services Healthy,
+  zero undocumented steps (2026-07-19 Progress Log entry has the
+  commands and output).
+- [x] Health endpoint verification across all five services recorded in
+  the Progress Log (bootstrap-check output: five services healthy, api
+  and web endpoints 200).
+- [x] Documentation updates: README status/quickstart/structure updated
+  to the running Phase 3 stack; bootstrap.md gained the service table
+  (sources, ports, health mechanisms), volume-persistence note, and new
+  troubleshooting entries (endpoint failures, image-build/lockfile
+  mismatches, postgres:18 volume path); `.env.example` was already
+  current (REDIS_PORT added in 3.1).
+- [x] CI compose smoke: D3-3 decided (see Decisions) — adopted as the
+  existing CI compose step; full five-service run measured at 1m12s on
+  the hosted runner (run 29693790253), no caching needed.
+- [x] Clean-room bootstrap evidence for Test Commander review (Progress
+  Log entry with commands and results; `.env` port-override path also
+  verified by running a second stack on alternate ports).
 - Acceptance: Phase 3 acceptance criteria below all verified; TC review
-  of the phase records no open Major findings.
+  of the phase records no open Major findings (pending — the one open
+  Phase 3 exit item).
 
 ### Deliverable
 
@@ -755,11 +767,12 @@ AGENT.md):
   dead worker loop and a stopped Redis flip the container unhealthy
   (verified by execution). Phase 10 replaces the heartbeat with real
   queue liveness when the job model arrives.
-- D3-3 — Whether the CI compose smoke job is adopted (3.5) or deferred
-  with a recorded constraint. Partially decided 2026-07-18: CI now starts
-  the infrastructure services with `docker compose up -d --wait` before
-  `make check`, so the hosted gate verifies real service health; the
-  full-stack (web, API, worker) smoke evaluation remains at 3.5.
+- D3-3 — CI compose smoke job. Decided 2026-07-19: adopted. The CI
+  compose step (`docker compose up -d --wait` before `make check`) grew
+  with each increment and now boots the full five-service stack with all
+  three image builds; measured at 1m12s on the hosted runner (run
+  29693790253). At that duration no build caching is warranted; revisit
+  only if the step exceeds roughly 4 minutes.
 - D3-1 infrastructure pins (recorded 2026-07-18 at implementation, per
   the decision): `postgres:18-alpine` (PostgreSQL 18.4 verified) and
   `redis:8-alpine` (Redis 8.8.0 verified). Major-version pin with
@@ -2318,3 +2331,38 @@ this phase must not begin.
 - Next recommended step: Increment 3.5 — orchestration verification and
   documentation (clean-machine AC-001 run, docs, CI smoke decision
   D3-3, TC evidence package).
+
+### 2026-07-19 (Increment 3.5 complete: orchestration verification; Phase 3 to IN REVIEW)
+
+- Phase: 3
+- Increment: 3.5 — Orchestration verification and documentation
+- Status: COMPLETE (Phase 3 IN REVIEW)
+- Work completed: README and bootstrap.md updated to the running stack
+  (service table, ports, volume note, expanded troubleshooting); D3-3
+  decided (CI compose smoke adopted; 1m12s full-stack hosted run);
+  clean-machine AC-001 verification executed and recorded below.
+- Tests run (all executed, all passing):
+  - Clean room: fresh git clone of 4ea382f into an empty directory;
+    cp .env.example .env; make setup; docker compose up -d --build
+    --wait -> all five containers Healthy in dependency order;
+    make bootstrap-check -> every step [ok]: repository files,
+    environment file, pdm, docker, dependencies, service health
+    ("all services healthy: api, postgres, redis, web, worker"),
+    api endpoint (GET http://127.0.0.1:8000/healthz -> 200), web
+    endpoint (GET http://127.0.0.1:3000/api/healthz -> 200);
+    make check -> "All checks passed." Zero undocumented steps.
+    Clean room torn down with docker compose down -v.
+  - Port-override path verified: with an external stack holding the
+    default ports, the dev stack ran concurrently via .env overrides
+    (API_PORT=8001, WEB_PORT=3001, POSTGRES_PORT=5433, REDIS_PORT=6380);
+    bootstrap-check followed .env and passed against the alternate
+    ports.
+  - Hosted CI: full five-service compose step green (run 29693790253,
+    1m12s).
+- Decisions: D3-3 decided (adopted, threshold for revisiting recorded).
+  D3-1 and D3-2 were closed in earlier increments; no Phase 3 decision
+  remains open.
+- Risks: None new.
+- Next recommended step: Test Commander Phase 3 review (evidence: this
+  entry plus the increment records). With no open Major findings,
+  Phase 3 closes and Phase 4 (backend application foundation) begins.

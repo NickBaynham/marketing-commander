@@ -5,20 +5,23 @@ Goals → Strategy → Campaigns → Content → Publishing → Analytics → Le
 Better Strategy. CYR3NT, a melodic techno artist, is the first customer and
 reference implementation.
 
-Status: Phase 2 (repository and development foundation). The application is
-not runnable yet; service containers arrive in Phase 3. See
-[plan/plan.md](plan/plan.md) for the phased plan and current state.
+Status: Phase 3 (Docker runtime foundation). The five-service development
+stack (web, API, worker, PostgreSQL, Redis) runs locally through Docker
+Compose; the services are orchestration stubs until Phase 4+ delivers
+application behavior. See [plan/plan.md](plan/plan.md) for the phased plan
+and current state.
 
 ## Quickstart
 
-Prerequisites: Python 3.12+, [pdm](https://pdm-project.org), Docker (from
-Phase 3).
+Prerequisites: Python 3.14 (pinned; see plan decision D3-1),
+[pdm](https://pdm-project.org), Docker with the Compose plugin.
 
 ```bash
 cp .env.example .env
 make setup            # install development dependencies
+make run              # docker compose up --build (the whole stack)
+make bootstrap-check  # verify services healthy and endpoints responding
 make test             # run the test suite
-make bootstrap-check  # verify the environment
 ```
 
 `make help` lists all commands. Full protocol and troubleshooting:
@@ -35,8 +38,9 @@ make bootstrap-check  # verify the environment
 | `docs/testing/` | AI testing, test data, golden-path, review-handoff strategies |
 | `docs/development/` | Bootstrap protocol and development conventions |
 | `knowledge/` | Glossary, requirements, user stories, acceptance criteria, traceability |
-| `apps/web`, `apps/api` | Application placeholders (code arrives per phase) |
-| `services/worker` | Worker placeholder (container stub in Phase 3, jobs in Phase 10) |
+| `apps/web` | Next.js frontend (Phase 3 stub: status page and health route) |
+| `apps/api` | FastAPI backend (Phase 3 stub: `/healthz`; foundation in Phase 4) |
+| `services/worker` | Python worker (Phase 3 stub: Redis heartbeat; jobs in Phase 10) |
 | `packages/` | Shared libraries (empty until a real shared need exists) |
 | `scripts/`, `tests/` | Developer tooling and the documentation-validation suite |
 
