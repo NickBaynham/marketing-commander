@@ -4,6 +4,10 @@ Checks the local environment step by step and names the failing step on
 error, per the AC-001 failure branch. Service health checks activate
 automatically once docker-compose.yml exists (Phase 3).
 
+Health contract (plan/plan.md Phase 3): every service defined in
+docker-compose.yml must declare a container healthcheck. A running service
+with no reported health state counts as unhealthy and fails this check.
+
 Exit code 0 means every applicable check passed.
 """
 
@@ -85,13 +89,16 @@ def check_services() -> bool:
     if result.returncode != 0:
         return step("service health", False, result.stderr.strip())
     lines = [line for line in result.stdout.splitlines() if line.strip()]
-    unhealthy = [line for line in lines if "healthy" not in line]
     if not lines:
         return step(
             "service health",
             False,
             "no services running - run: make run",
         )
+    # A service is healthy only when its Health field reports exactly
+    # "healthy"; an empty field means no healthcheck is declared, which
+    # violates the Phase 3 health contract and fails here by design.
+    unhealthy = [line for line in lines if line.split(maxsplit=1)[1:] != ["healthy"]]
     return step(
         "service health",
         not unhealthy,

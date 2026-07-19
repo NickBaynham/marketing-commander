@@ -70,7 +70,7 @@ def test_no_secret_tokens_or_machine_paths_committed():
         if SECRET_TOKEN_RE.search(text):
             problems.append(f"{f}: credential-shaped token")
         for i, line in enumerate(text.splitlines(), 1):
-            if re.search(r"/Users/[a-z]+/|C:\\\\Users", line):
+            if re.search(r"/Users/[a-z]+/|C:\\\\Users|/home/[a-z_][a-z0-9_-]*/", line):
                 problems.append(f"{f}:{i}: machine-specific absolute path")
     assert not problems, f"hygiene violations: {problems}"
 

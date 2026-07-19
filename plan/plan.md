@@ -605,6 +605,10 @@ Each increment follows the Test Commander review loop: implement → run
 - [ ] Extend `scripts/bootstrap_check.py`: when `docker-compose.yml`
   exists, verify configured services report healthy, naming the failing
   service and step on failure (AC-001 failure branch).
+- Health contract: every service defined in `docker-compose.yml` must
+  declare a container healthcheck; a running service with no reported
+  health state counts as unhealthy and `make bootstrap-check` fails
+  (Test Commander Phase 2 review, improvement note 2).
 - Acceptance: `docker compose up --build` starts PostgreSQL and Redis
   healthy; `make bootstrap-check` passes with services up and names the
   failing service when one is stopped.
@@ -714,6 +718,9 @@ AGENT.md):
 
 Recorded now:
 
+- Every compose service declares a container healthcheck; absence of a
+  reported health state is a bootstrap-check failure by design (TC
+  Phase 2 review, note 2).
 - Containers install Python dependencies system-wide via pdm; no virtual
   environment inside containers (repository directive; single-app
   containers have no interpreter conflict).
@@ -2088,3 +2095,26 @@ this phase must not begin.
 - Next recommended step: Test Commander Phase 2 review (clean-room
   bootstrap). On closure with no open Major findings, mark Phase 2
   COMPLETE and begin Increment 3.1.
+
+### 2026-07-18 (TC Phase 2 improvement notes applied)
+
+- Phase: 2 (COMPLETE) / 3 (planning)
+- Increment: Post-review hardening from TC Phase 2 improvement notes
+- Status: COMPLETE
+- Work completed: Applied both non-blocking notes from the Test Commander
+  Phase 2 review (phase2-review-2026-07-18.md, zero findings): (1) the
+  hygiene machine-path gate now also catches Linux `/home/<user>/` paths
+  alongside macOS and Windows patterns; (2) the every-service-declares-a-
+  healthcheck rule is now an explicit contract in the Phase 3 plan and the
+  bootstrap_check docstring. While making note 2 explicit, fixed a latent
+  substring defect in bootstrap_check service parsing: the previous
+  `"healthy" not in line` test would have accepted a service reporting
+  "unhealthy" (substring match); health now requires the Health field to
+  equal "healthy" exactly, and an empty field fails by design.
+- Tests run: `make check` — ruff lint and format check clean, pytest 18
+  passed, bootstrap check passed.
+- Decisions: Health contract recorded in Phase 3 Decisions.
+- Risks: None new; the substring defect was in Phase 3-activated logic
+  and never ran in anger.
+- Next recommended step: Begin Increment 3.1 (infrastructure services) —
+  the Phase 2 gate is fully closed.
