@@ -619,7 +619,7 @@ Each increment follows the Test Commander review loop: implement → run
 
 - [ ] `apps/api`: minimal FastAPI application exposing `GET /healthz`
   returning `{"status": "ok"}`; no other route, no database access.
-- [ ] API Dockerfile (Python 3.13 slim base, pdm-managed dependencies
+- [ ] API Dockerfile (Python 3.14 slim base per D3-1, pdm-managed dependencies
   installed system-wide in the container — no virtual environment inside
   the container per repository directive).
 - [ ] Compose service with dependency-aware startup (waits for healthy
@@ -709,8 +709,15 @@ Pending decisions to record at implementation time (each becomes a
 Decisions entry here; an ADR only if architecturally material per
 AGENT.md):
 
-- D3-1 — Exact pinned versions for base images (PostgreSQL, Redis, Python,
-  Node) chosen as latest stable at implementation and recorded here.
+- D3-1 — Exact pinned versions for base images (PostgreSQL, Redis, Node)
+  chosen as latest stable at implementation and recorded here.
+  Partially decided 2026-07-18 (TC Minor on version skew): the Python
+  runtime is pinned to 3.14 in one place per surface — CI
+  `python-version: "3.14"`, `pyproject.toml`
+  `requires-python = ">=3.14,<3.15"`, `.python-version` file, container
+  base `python:3.14-slim` at implementation. Local, CI, and container
+  toolchains must agree on this single minor version; any future skew
+  must be a recorded deliberate choice here.
 - D3-2 — Worker health-check mechanism for a queue-less stub (candidate:
   Redis heartbeat key freshness checked by the container health command).
 - D3-3 — Whether the CI compose smoke job is adopted (3.5) or deferred
@@ -2118,3 +2125,25 @@ this phase must not begin.
   and never ran in anger.
 - Next recommended step: Begin Increment 3.1 (infrastructure services) —
   the Phase 2 gate is fully closed.
+
+### 2026-07-18 (D3-1 partial: Python runtime pinned to 3.14)
+
+- Phase: 3 (planning)
+- Increment: D3-1 partial decision (TC Minor: version skew)
+- Status: COMPLETE
+- Work completed: Resolved the Python version skew (CI 3.12, pyproject
+  >=3.12, docs "3.12 or later", plan draft 3.13-slim, local 3.14.6) by
+  pinning Python 3.14 as the single version across surfaces: CI
+  python-version "3.14", pyproject requires-python ">=3.14,<3.15", new
+  .python-version file, bootstrap docs updated, Increment 3.2 container
+  base changed to python:3.14-slim. Rationale: latest stable, already the
+  locally verified runtime, per the latest-tools directive. Remaining
+  D3-1 items (PostgreSQL, Redis, Node image pins) stay at implementation
+  time.
+- Tests run: `make check` locally on Python 3.14.6 — lint clean, 18
+  passed, bootstrap check passed; pdm lock refreshed for the new
+  requires-python. Hosted CI on 3.14 verifies with this commit's run.
+- Decisions: D3-1 partial decision recorded in Phase 3 Decisions.
+- Risks: None new; future runtime skew requires a recorded deliberate
+  choice under D3-1.
+- Next recommended step: Begin Increment 3.1 (infrastructure services).

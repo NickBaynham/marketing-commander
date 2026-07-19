@@ -11,7 +11,8 @@ development tooling and documentation-validation suite, and
 
 ## Prerequisites
 
-- Python 3.12 or later
+- Python 3.14 — the single pinned version across local, CI, and (from
+  Phase 3) containers; see plan decision D3-1
 - [pdm](https://pdm-project.org)
 - Docker with the Compose plugin (used from Phase 3)
 
