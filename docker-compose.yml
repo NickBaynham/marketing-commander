@@ -1,0 +1,53 @@
+# Marketing Commander local development stack (plan/plan.md Phase 3).
+# Increment 3.1 delivers infrastructure services (PostgreSQL, Redis);
+# application stubs (api, worker, web) arrive in Increments 3.2-3.4.
+#
+# Phase 3 health contract: every service here declares a healthcheck;
+# scripts/bootstrap_check.py fails any service without a healthy state.
+# Image pins are recorded under decision D3-1 in plan/plan.md.
+#
+# Start: docker compose up --build   (or: make run)
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-marketing_commander}
+      POSTGRES_USER: ${POSTGRES_USER:-mc_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # postgres:18 images mount /var/lib/postgresql (not .../data).
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER:-mc_app} -d $${POSTGRES_DB:-marketing_commander}",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - marketing-commander
+
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+    networks:
+      - marketing-commander
+
+networks:
+  marketing-commander:
+
+volumes:
+  postgres-data:

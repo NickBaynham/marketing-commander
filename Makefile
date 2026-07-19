@@ -12,8 +12,8 @@ help:
 	@echo "  make test             Run the test suite (documentation and repo validation)"
 	@echo "  make check            Full local quality gate (what CI runs)"
 	@echo "  make bootstrap-check  Verify the local environment bootstrap"
-	@echo "  make build            Build service containers (available from Phase 3)"
-	@echo "  make run              Start the local stack (available from Phase 3)"
+	@echo "  make build            Build service containers"
+	@echo "  make run              Start the local stack (docker compose up --build)"
 	@echo "  make clean            Remove caches and build output"
 
 setup:
@@ -37,22 +37,10 @@ bootstrap-check:
 	pdm run python scripts/bootstrap_check.py
 
 build:
-	@if [ -f docker-compose.yml ]; then \
-		docker compose build; \
-	else \
-		echo "ERROR: docker-compose.yml does not exist yet."; \
-		echo "Service containers are delivered in Phase 3 (plan/plan.md)."; \
-		exit 1; \
-	fi
+	docker compose build
 
 run:
-	@if [ -f docker-compose.yml ]; then \
-		docker compose up --build; \
-	else \
-		echo "ERROR: docker-compose.yml does not exist yet."; \
-		echo "The runnable stack is delivered in Phase 3 (plan/plan.md)."; \
-		exit 1; \
-	fi
+	docker compose up --build
 
 clean:
 	rm -rf .pytest_cache .ruff_cache

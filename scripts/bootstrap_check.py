@@ -11,6 +11,7 @@ with no reported health state counts as unhealthy and fails this check.
 Exit code 0 means every applicable check passed.
 """
 
+import json
 import shutil
 import subprocess
 import sys
@@ -80,16 +81,39 @@ def check_services() -> bool:
             True,
             "skipped - docker-compose.yml arrives in Phase 3 (plan/plan.md)",
         )
+    config = subprocess.run(
+        ["docker", "compose", "config", "--services"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if config.returncode != 0:
+        return step("service health", False, config.stderr.strip())
+    expected = sorted(s for s in config.stdout.split() if s)
     result = subprocess.run(
-        ["docker", "compose", "ps", "--format", "{{.Name}} {{.Health}}"],
+        ["docker", "compose", "ps", "-a", "--format", "json"],
         cwd=ROOT,
         capture_output=True,
         text=True,
     )
     if result.returncode != 0:
         return step("service health", False, result.stderr.strip())
-    lines = [line for line in result.stdout.splitlines() if line.strip()]
-    if not lines:
+    # `ps --format json` emits one JSON object per line on current
+    # Compose releases and a single JSON array on older ones.
+    observed: dict[str, str] = {}
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        data = json.loads(line)
+        for item in data if isinstance(data, list) else [data]:
+            health = item.get("Health", "")
+            state = item.get("State", "")
+            # Prefer the health state; fall back to the container state so
+            # an exited service reads "state=exited", not just "no health".
+            observed[item.get("Service", "")] = health or (
+                f"state={state}" if state and state != "running" else ""
+            )
+    if not observed:
         return step(
             "service health",
             False,
@@ -98,11 +122,19 @@ def check_services() -> bool:
     # A service is healthy only when its Health field reports exactly
     # "healthy"; an empty field means no healthcheck is declared, which
     # violates the Phase 3 health contract and fails here by design.
-    unhealthy = [line for line in lines if line.split(maxsplit=1)[1:] != ["healthy"]]
+    failing = []
+    for svc in expected:
+        health = observed.get(svc)
+        if health is None:
+            failing.append(f"{svc}: not running")
+        elif health != "healthy":
+            failing.append(f"{svc}: {health or 'no health state reported'}")
     return step(
         "service health",
-        not unhealthy,
-        "all services healthy" if not unhealthy else f"unhealthy: {unhealthy}",
+        not failing,
+        f"all services healthy: {', '.join(expected)}"
+        if not failing
+        else f"failing: {'; '.join(failing)}",
     )
 
 

@@ -5,9 +5,8 @@
   approved at document level by Nick Baynham; DEC-01..DEC-10 approved;
   ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
   and confirmed closed with zero unresolved Major findings. Next: Phase 2.
-- Current phase: Phase 2 — Repository and Development Foundation
-  (IN REVIEW — all tasks complete, CI verified on GitHub Actions;
-  awaiting Test Commander Phase 2 review)
+- Current phase: Phase 3 — Docker Runtime Foundation (IN PROGRESS —
+  Increment 3.1 complete; Phase 2 COMPLETE with zero TC findings)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -213,7 +212,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 |-------|-------|--------|
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
 | 2 | Repository and Development Foundation | COMPLETE |
-| 3 | Docker Runtime Foundation | NOT STARTED |
+| 3 | Docker Runtime Foundation | IN PROGRESS |
 | 4 | Backend Application Foundation | NOT STARTED |
 | 5 | Workspace and Artist Domain | NOT STARTED |
 | 6 | Artist Identity Profile | NOT STARTED |
@@ -568,9 +567,8 @@ requirements-to-test map.
 
 ## Phase 3 — Docker Runtime Foundation
 
-- Status: NOT STARTED (increment plan drafted 2026-07-18; implementation
-  gated on Phase 2 closure — Test Commander review with no open Major
-  findings)
+- Status: IN PROGRESS (Increment 3.1 COMPLETE 2026-07-18; next:
+  Increment 3.2 FastAPI stub container)
 - Objective: A complete Docker Compose development environment started by a
   single documented command.
 - Dependencies: Phase 2.
@@ -591,20 +589,26 @@ requirements-to-test map.
 Each increment follows the Test Commander review loop: implement → run
 `make check` locally → TC reviews evidence → remediate → verify → close.
 
-#### Increment 3.1 — Infrastructure services (PostgreSQL, Redis)
+#### Increment 3.1 — Infrastructure services (PostgreSQL, Redis) — COMPLETE
 
-- [ ] `docker-compose.yml` with PostgreSQL and Redis services only.
-- [ ] PostgreSQL container (persistent named volume, credentials from
-  `.env`, container health check).
-- [ ] Redis container (container health check).
-- [ ] Docker networking (one project network; services addressed by name).
-- [ ] Persistent volumes (PostgreSQL data survives `docker compose down`
-  without `-v`).
-- [ ] `make run` and `make build` guards go live (compose file now exists;
+- [x] `docker-compose.yml` with PostgreSQL and Redis services only.
+- [x] PostgreSQL container (persistent named volume, credentials from
+  `.env`, container health check). Note: `postgres:18` images mount
+  `/var/lib/postgresql` (not `.../data`); the volume targets that path.
+- [x] Redis container (container health check).
+- [x] Docker networking (one project network; services addressed by name).
+- [x] Persistent volumes (verified: table created, `docker compose down`
+  without `-v`, re-up, table still present).
+- [x] `make run` and `make build` guards go live (compose file now exists;
   guard message removed).
-- [ ] Extend `scripts/bootstrap_check.py`: when `docker-compose.yml`
-  exists, verify configured services report healthy, naming the failing
-  service and step on failure (AC-001 failure branch).
+- [x] Extend `scripts/bootstrap_check.py`: expected services come from
+  `docker compose config --services`, observed health from
+  `docker compose ps -a --format json`; the failing service is named with
+  its state (verified: stopped redis reports "redis: state=exited").
+- [x] Static compose-contract tests (`tests/repo/test_compose.py`): every
+  service declares a healthcheck, every image is version-pinned, postgres
+  data is on a named volume — the health contract enforced in CI without
+  Docker.
 - Health contract: every service defined in `docker-compose.yml` must
   declare a container healthcheck; a running service with no reported
   health state counts as unhealthy and `make bootstrap-check` fails
@@ -721,7 +725,15 @@ AGENT.md):
 - D3-2 — Worker health-check mechanism for a queue-less stub (candidate:
   Redis heartbeat key freshness checked by the container health command).
 - D3-3 — Whether the CI compose smoke job is adopted (3.5) or deferred
-  with a recorded constraint.
+  with a recorded constraint. Partially decided 2026-07-18: CI now starts
+  the infrastructure services with `docker compose up -d --wait` before
+  `make check`, so the hosted gate verifies real service health; the
+  full-stack (web, API, worker) smoke evaluation remains at 3.5.
+- D3-1 infrastructure pins (recorded 2026-07-18 at implementation, per
+  the decision): `postgres:18-alpine` (PostgreSQL 18.4 verified) and
+  `redis:8-alpine` (Redis 8.8.0 verified). Major-version pin with
+  floating patch inside the alpine variant is the deliberate choice for
+  local development images; Python and Node pins are exact per D3-1.
 
 Recorded now:
 
@@ -2147,3 +2159,39 @@ this phase must not begin.
 - Risks: None new; future runtime skew requires a recorded deliberate
   choice under D3-1.
 - Next recommended step: Begin Increment 3.1 (infrastructure services).
+
+### 2026-07-18 (Increment 3.1 complete: infrastructure services)
+
+- Phase: 3
+- Increment: 3.1 — Infrastructure services (PostgreSQL, Redis)
+- Status: COMPLETE
+- Work completed: docker-compose.yml with postgres:18-alpine (18.4) and
+  redis:8-alpine (8.8.0), one project network, named postgres-data volume
+  at /var/lib/postgresql (postgres:18 mount point), healthchecks on both
+  services, ports bound to 127.0.0.1 with .env overrides (REDIS_PORT
+  added to .env.example). Makefile run/build guards removed (targets now
+  call docker compose directly). bootstrap_check service health rewritten
+  to compare expected services (docker compose config --services) against
+  observed health (docker compose ps -a --format json), naming each
+  failing service with its state. New static compose-contract tests
+  enforce the health contract, D3-1 image pins, and the named volume in
+  CI without Docker. CI workflow now starts the services with
+  docker compose up -d --wait before make check and dumps service logs
+  on failure.
+- Tests run (all executed, all passing): docker compose up -d --wait
+  (both services Healthy); make bootstrap-check with services up
+  ("all services healthy: postgres, redis"); failure branch verified
+  (docker compose stop redis -> "[FAIL] service health: failing: redis:
+  state=exited", make exits nonzero); volume persistence verified
+  (row written, docker compose down, up -d --wait, row still present);
+  make check green (ruff clean, pytest 22 passed, bootstrap check
+  passed). Hosted CI verification with this commit's run.
+- Decisions: D3-1 infrastructure pins recorded (postgres:18-alpine,
+  redis:8-alpine, major-pin rationale); D3-3 partially decided (infra
+  services in CI now; full-stack smoke at 3.5).
+- Risks: None new. postgres:18 volume-path change is recorded in the
+  compose file and increment notes to prevent a silent data-loss
+  surprise on future image bumps.
+- Next recommended step: Increment 3.2 — FastAPI stub container
+  (python:3.14-slim per D3-1, /healthz, hot reload, service_healthy
+  dependencies).
