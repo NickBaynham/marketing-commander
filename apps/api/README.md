@@ -1,10 +1,12 @@
 # apps/api
 
-FastAPI and Python backend. Placeholder only.
+Marketing Commander API service (FastAPI).
 
-- Phase 3 delivers the container with a stub health endpoint.
-- Phase 4 delivers the application foundation (structure, configuration,
-  Alembic migrations, conventions) per the
-  [Technical Design](../../docs/architecture/technical-design.md).
+Phase 3 status: orchestration stub only — `GET /healthz` and nothing
+else. The backend application foundation (configuration, sessions,
+migrations, versioned API, error conventions, test harness) is Phase 4
+scope per [plan/plan.md](../../plan/plan.md).
 
-Do not add application code here before its phase (plan/plan.md).
+Dependencies are managed with pdm (`pyproject.toml` + `pdm.lock`); the
+container installs them system-wide with no virtual environment (see the
+Phase 3 recorded decisions).

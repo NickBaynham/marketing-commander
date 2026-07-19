@@ -138,6 +138,43 @@ def check_services() -> bool:
     )
 
 
+def env_value(name: str, default: str) -> str:
+    """Read a variable from .env (compose does the same substitution)."""
+    env_file = ROOT / ".env"
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            if line.strip().startswith(f"{name}="):
+                value = line.split("=", 1)[1].strip()
+                if value:
+                    return value
+    return default
+
+
+def check_api_endpoint() -> bool:
+    """Host-level check of the published API health endpoint.
+
+    The container healthcheck already probes /healthz from inside; this
+    verifies the port publish on the host (Traceability: REQ-048, AC-001).
+    """
+    if not (ROOT / "docker-compose.yml").exists():
+        return step("api endpoint", True, "skipped - no docker-compose.yml")
+    import urllib.error
+    import urllib.request
+
+    port = env_value("API_PORT", "8000")
+    url = f"http://127.0.0.1:{port}/healthz"
+    try:
+        with urllib.request.urlopen(url, timeout=3) as response:
+            ok = response.status == 200
+            return step(
+                "api endpoint",
+                ok,
+                f"GET {url} -> {response.status}",
+            )
+    except (urllib.error.URLError, OSError) as exc:
+        return step("api endpoint", False, f"GET {url} failed: {exc}")
+
+
 def main() -> int:
     checks = [
         check_required_files(),
@@ -148,6 +185,7 @@ def main() -> int:
         ),
         check_pdm_install(),
         check_services(),
+        check_api_endpoint(),
     ]
     if all(checks):
         print("Bootstrap check passed.")

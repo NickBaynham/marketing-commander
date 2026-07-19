@@ -6,7 +6,7 @@
   ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
   and confirmed closed with zero unresolved Major findings. Next: Phase 2.
 - Current phase: Phase 3 — Docker Runtime Foundation (IN PROGRESS —
-  Increment 3.1 complete; Phase 2 COMPLETE with zero TC findings)
+  Increments 3.1 and 3.2 complete; next: 3.3 worker stub)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -567,8 +567,8 @@ requirements-to-test map.
 
 ## Phase 3 — Docker Runtime Foundation
 
-- Status: IN PROGRESS (Increment 3.1 COMPLETE 2026-07-18; next:
-  Increment 3.2 FastAPI stub container)
+- Status: IN PROGRESS (Increments 3.1 and 3.2 COMPLETE; next:
+  Increment 3.3 worker stub container)
 - Objective: A complete Docker Compose development environment started by a
   single documented command.
 - Dependencies: Phase 2.
@@ -619,17 +619,29 @@ Each increment follows the Test Commander review loop: implement → run
 - Tests: bootstrap-check service assertions (Traceability: REQ-048,
   AC-001); hygiene tests still green (no credentials committed).
 
-#### Increment 3.2 — FastAPI stub container
+#### Increment 3.2 — FastAPI stub container — COMPLETE
 
-- [ ] `apps/api`: minimal FastAPI application exposing `GET /healthz`
-  returning `{"status": "ok"}`; no other route, no database access.
-- [ ] API Dockerfile (Python 3.14 slim base per D3-1, pdm-managed dependencies
-  installed system-wide in the container — no virtual environment inside
-  the container per repository directive).
-- [ ] Compose service with dependency-aware startup (waits for healthy
-  PostgreSQL and Redis via `depends_on: condition: service_healthy`).
-- [ ] Development hot reload (bind mount plus `uvicorn --reload`).
-- [ ] Container health check hitting `/healthz`.
+- [x] `apps/api`: minimal FastAPI application exposing `GET /healthz`
+  returning `{"status": "ok"}`; no other route, no database access
+  (FastAPI 0.139.2, uvicorn 0.51.0 per `apps/api/pdm.lock`).
+- [x] API Dockerfile (Python 3.14 slim base per D3-1). Implementation
+  note: pdm resolves and locks; the container installs the exported pins
+  system-wide via pip, because `pdm sync` with `use_venv=false` does not
+  target system site-packages (verified empirically). No virtual
+  environment inside the container.
+- [x] Compose service with dependency-aware startup (waits for healthy
+  PostgreSQL and Redis via `depends_on: condition: service_healthy`;
+  observed in startup ordering).
+- [x] Development hot reload (bind mount of `app/` only plus
+  `uvicorn --reload`; verified via WatchFiles reload log on source edit,
+  no rebuild).
+- [x] Container health check hitting `/healthz` (stdlib urllib probe —
+  curl is not in the slim image).
+- [x] Host-level endpoint assertion added to bootstrap-check
+  (`api endpoint: GET http://127.0.0.1:8000/healthz -> 200`), reading
+  `API_PORT` from `.env` like compose does.
+- [x] `make lint`/`make format` now cover `apps/` alongside scripts and
+  tests.
 - Acceptance: `curl http://localhost:8000/healthz` returns 200 after
   `docker compose up --build`; editing the stub source reloads without
   rebuild.
@@ -2195,3 +2207,34 @@ this phase must not begin.
 - Next recommended step: Increment 3.2 — FastAPI stub container
   (python:3.14-slim per D3-1, /healthz, hot reload, service_healthy
   dependencies).
+
+### 2026-07-19 (Increment 3.2 complete: FastAPI stub container)
+
+- Phase: 3
+- Increment: 3.2 — FastAPI stub container
+- Status: COMPLETE
+- Work completed: apps/api stub (FastAPI 0.139.2, uvicorn 0.51.0,
+  GET /healthz only) with its own pdm project and lockfile; Dockerfile on
+  python:3.14-slim per D3-1 — pdm resolves and locks, and the container
+  installs the exported pins system-wide via pip after verifying that
+  pdm sync with use_venv=false does not reach system site-packages; no
+  in-container venv. Compose api service with service_healthy
+  dependencies on postgres and redis, localhost port bind on API_PORT,
+  source-only bind mount with uvicorn --reload, and a stdlib-urllib
+  container healthcheck. bootstrap_check gained a host-level api-endpoint
+  step reading API_PORT from .env. Lint/format now cover apps/.
+- Tests run (all executed, all passing): docker compose up -d --build
+  --wait (api waited for healthy postgres and redis, then reported
+  Healthy); curl http://127.0.0.1:8000/healthz -> HTTP 200
+  {"status":"ok"}; hot reload verified (WatchFiles "detected changes in
+  'app/main.py'. Reloading..." after a source touch, no rebuild);
+  make bootstrap-check green including the new api endpoint step;
+  make check green (ruff clean incl. apps/, pytest 22 passed, bootstrap
+  check passed). Hosted CI verification with this commit's run (CI now
+  also builds the api image in its compose step).
+- Decisions: Dockerfile install pattern recorded in the increment task
+  note (pdm-locked, pip-materialized, system-wide).
+- Risks: None new. CI duration grows with the api image build; evaluate
+  caching at 3.5 if it becomes noticeable.
+- Next recommended step: Increment 3.3 — worker stub container (D3-2
+  worker health mechanism decided at implementation).

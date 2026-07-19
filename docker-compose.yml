@@ -33,6 +33,36 @@ services:
     networks:
       - marketing-commander
 
+  api:
+    build: apps/api
+    environment:
+      MC_ENV: ${MC_ENV:-local}
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      # Bind-mount source only; installed dependencies stay in the image.
+      # uvicorn --reload picks up edits without a rebuild.
+      - ./apps/api/app:/app/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=2).status == 200 else 1)",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - marketing-commander
+
   redis:
     image: redis:8-alpine
     ports:

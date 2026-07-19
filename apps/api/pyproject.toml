@@ -1,0 +1,12 @@
+[project]
+name = "marketing-commander-api"
+version = "0.1.0"
+description = "Marketing Commander API (Phase 3 stub: /healthz only)"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+]
+
+[tool.pdm]
+distribution = false
