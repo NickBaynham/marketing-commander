@@ -76,6 +76,24 @@ services:
     networks:
       - marketing-commander
 
+  worker:
+    build: services/worker
+    environment:
+      MC_ENV: ${MC_ENV:-local}
+      # In-network address; the .env REDIS_URL is the host's view.
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-m", "worker.health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - marketing-commander
+
 networks:
   marketing-commander:
 

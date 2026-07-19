@@ -20,12 +20,12 @@ setup:
 	pdm install
 
 lint:
-	pdm run ruff check scripts tests apps
-	pdm run ruff format --check scripts tests apps
+	pdm run ruff check scripts tests apps services
+	pdm run ruff format --check scripts tests apps services
 
 format:
-	pdm run ruff format scripts tests apps
-	pdm run ruff check --fix scripts tests apps
+	pdm run ruff format scripts tests apps services
+	pdm run ruff check --fix scripts tests apps services
 
 test:
 	pdm run pytest

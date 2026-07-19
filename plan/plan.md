@@ -6,7 +6,7 @@
   ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
   and confirmed closed with zero unresolved Major findings. Next: Phase 2.
 - Current phase: Phase 3 — Docker Runtime Foundation (IN PROGRESS —
-  Increments 3.1 and 3.2 complete; next: 3.3 worker stub)
+  Increments 3.1–3.3 complete; next: 3.4 web stub)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -567,8 +567,8 @@ requirements-to-test map.
 
 ## Phase 3 — Docker Runtime Foundation
 
-- Status: IN PROGRESS (Increments 3.1 and 3.2 COMPLETE; next:
-  Increment 3.3 worker stub container)
+- Status: IN PROGRESS (Increments 3.1–3.3 COMPLETE; next:
+  Increment 3.4 Next.js web stub container)
 - Objective: A complete Docker Compose development environment started by a
   single documented command.
 - Dependencies: Phase 2.
@@ -648,13 +648,19 @@ Each increment follows the Test Commander review loop: implement → run
 - Tests: health endpoint check added to bootstrap-check (Traceability:
   REQ-048, AC-001).
 
-#### Increment 3.3 — Worker stub container
+#### Increment 3.3 — Worker stub container — COMPLETE
 
-- [ ] `services/worker`: minimal Python process that connects to Redis and
-  writes a heartbeat key on an interval; no job logic.
-- [ ] Worker Dockerfile (same base and no-venv rule as the API).
-- [ ] Compose service depending on healthy Redis.
-- [ ] Worker health check (decision D3-2 below).
+- [x] `services/worker`: minimal Python process that connects to Redis and
+  writes `mc:worker:heartbeat` every 5s with a 15s TTL; no job logic
+  (redis-py 8.0.1 per `services/worker/pdm.lock`).
+- [x] Worker Dockerfile (python:3.14-slim per D3-1, same pdm-locked
+  pip-materialized system-wide pattern as the API, no in-container venv).
+- [x] Compose service depending on healthy Redis (in-network REDIS_URL
+  set in compose; the `.env` value is the host's view).
+- [x] Worker health check per D3-2 (decided — see Decisions): container
+  health command runs `python -m worker.health`, asserting the heartbeat
+  key exists, is under 15s old, and Redis is reachable.
+- [x] `make lint`/`make format` now cover `services/` as well.
 - Acceptance: worker container reports healthy; heartbeat observable in
   Redis; stopping Redis flips the worker to unhealthy.
 - Tests: bootstrap-check asserts worker health (Traceability: REQ-048).
@@ -734,8 +740,13 @@ AGENT.md):
   base `python:3.14-slim` at implementation. Local, CI, and container
   toolchains must agree on this single minor version; any future skew
   must be a recorded deliberate choice here.
-- D3-2 — Worker health-check mechanism for a queue-less stub (candidate:
-  Redis heartbeat key freshness checked by the container health command).
+- D3-2 — Worker health-check mechanism for a queue-less stub.
+  Decided 2026-07-19: Redis heartbeat key freshness checked by the
+  container health command (`worker.health`): unhealthy when the key is
+  missing, older than 15 seconds, or Redis is unreachable — so both a
+  dead worker loop and a stopped Redis flip the container unhealthy
+  (verified by execution). Phase 10 replaces the heartbeat with real
+  queue liveness when the job model arrives.
 - D3-3 — Whether the CI compose smoke job is adopted (3.5) or deferred
   with a recorded constraint. Partially decided 2026-07-18: CI now starts
   the infrastructure services with `docker compose up -d --wait` before
@@ -2238,3 +2249,31 @@ this phase must not begin.
   caching at 3.5 if it becomes noticeable.
 - Next recommended step: Increment 3.3 — worker stub container (D3-2
   worker health mechanism decided at implementation).
+
+### 2026-07-19 (Increment 3.3 complete: worker stub container)
+
+- Phase: 3
+- Increment: 3.3 — Worker stub container
+- Status: COMPLETE
+- Work completed: services/worker stub (redis-py 8.0.1) writing
+  mc:worker:heartbeat every 5s with a 15s TTL; Dockerfile on
+  python:3.14-slim with the same pdm-locked, pip-materialized,
+  system-wide install pattern as the API; compose service with
+  service_healthy dependency on Redis and in-network REDIS_URL;
+  healthcheck runs python -m worker.health asserting key freshness and
+  Redis reachability (D3-2 decided and recorded). Lint/format now cover
+  services/.
+- Tests run (all executed, all passing): docker compose up -d --build
+  --wait (worker Healthy); heartbeat observed in Redis (GET returned a
+  timestamp, TTL 13); failure branch verified by execution:
+  docker compose stop redis flipped the worker container to unhealthy
+  and bootstrap-check reported "failing: redis: state=exited; worker:
+  unhealthy"; recovery verified (restart, all four services healthy);
+  make bootstrap-check green (service health names api, postgres, redis,
+  worker; api endpoint 200); make check green (ruff clean incl.
+  services/, pytest 22 passed, bootstrap check passed). Hosted CI
+  verification with this commit's run.
+- Decisions: D3-2 decided and recorded (heartbeat freshness health;
+  Phase 10 supersedes with queue liveness).
+- Risks: None new.
+- Next recommended step: Increment 3.4 — Next.js web stub container.
