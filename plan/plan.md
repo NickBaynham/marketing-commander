@@ -568,31 +568,105 @@ requirements-to-test map.
 
 ## Phase 3 — Docker Runtime Foundation
 
-- Status: NOT STARTED
+- Status: NOT STARTED (increment plan drafted 2026-07-18; implementation
+  gated on Phase 2 closure — Test Commander review with no open Major
+  findings)
 - Objective: A complete Docker Compose development environment started by a
   single documented command.
 - Dependencies: Phase 2.
+- Traceability: REQ-048 (clean bootstrap, AC-001, transferred from
+  Phase 2), REQ-049 (environment strategy — the `local` environment
+  activates on Docker in this phase; mock provider remains the default).
 - Scope clarification: Phase 3 uses minimal stub web, API, and worker
   applications. The API and web containers expose minimal health endpoints
   sufficient to validate orchestration. The full backend health and
   readiness design is completed in Phase 4. From Phase 3 onward, the
   repository must remain runnable through the documented Docker Compose
-  command.
+  command. No domain behavior, database schema, or product endpoint is
+  built in Phase 3; anything beyond stubs-plus-orchestration is phase
+  leakage and a stop condition.
 
-### Tasks
+### Increment Plan (drafted 2026-07-18)
 
-- [ ] Next.js web container.
-- [ ] FastAPI container.
-- [ ] Worker container.
-- [ ] PostgreSQL container.
-- [ ] Redis container.
-- [ ] Docker networking.
-- [ ] Persistent volumes.
-- [ ] Health checks.
-- [ ] Dependency-aware startup.
-- [ ] Development hot reload.
-- [ ] Single documented startup command.
-- [ ] Health endpoint verification.
+Each increment follows the Test Commander review loop: implement → run
+`make check` locally → TC reviews evidence → remediate → verify → close.
+
+#### Increment 3.1 — Infrastructure services (PostgreSQL, Redis)
+
+- [ ] `docker-compose.yml` with PostgreSQL and Redis services only.
+- [ ] PostgreSQL container (persistent named volume, credentials from
+  `.env`, container health check).
+- [ ] Redis container (container health check).
+- [ ] Docker networking (one project network; services addressed by name).
+- [ ] Persistent volumes (PostgreSQL data survives `docker compose down`
+  without `-v`).
+- [ ] `make run` and `make build` guards go live (compose file now exists;
+  guard message removed).
+- [ ] Extend `scripts/bootstrap_check.py`: when `docker-compose.yml`
+  exists, verify configured services report healthy, naming the failing
+  service and step on failure (AC-001 failure branch).
+- Acceptance: `docker compose up --build` starts PostgreSQL and Redis
+  healthy; `make bootstrap-check` passes with services up and names the
+  failing service when one is stopped.
+- Tests: bootstrap-check service assertions (Traceability: REQ-048,
+  AC-001); hygiene tests still green (no credentials committed).
+
+#### Increment 3.2 — FastAPI stub container
+
+- [ ] `apps/api`: minimal FastAPI application exposing `GET /healthz`
+  returning `{"status": "ok"}`; no other route, no database access.
+- [ ] API Dockerfile (Python 3.13 slim base, pdm-managed dependencies
+  installed system-wide in the container — no virtual environment inside
+  the container per repository directive).
+- [ ] Compose service with dependency-aware startup (waits for healthy
+  PostgreSQL and Redis via `depends_on: condition: service_healthy`).
+- [ ] Development hot reload (bind mount plus `uvicorn --reload`).
+- [ ] Container health check hitting `/healthz`.
+- Acceptance: `curl http://localhost:8000/healthz` returns 200 after
+  `docker compose up --build`; editing the stub source reloads without
+  rebuild.
+- Tests: health endpoint check added to bootstrap-check (Traceability:
+  REQ-048, AC-001).
+
+#### Increment 3.3 — Worker stub container
+
+- [ ] `services/worker`: minimal Python process that connects to Redis and
+  writes a heartbeat key on an interval; no job logic.
+- [ ] Worker Dockerfile (same base and no-venv rule as the API).
+- [ ] Compose service depending on healthy Redis.
+- [ ] Worker health check (decision D3-2 below).
+- Acceptance: worker container reports healthy; heartbeat observable in
+  Redis; stopping Redis flips the worker to unhealthy.
+- Tests: bootstrap-check asserts worker health (Traceability: REQ-048).
+
+#### Increment 3.4 — Next.js web stub container
+
+- [ ] `apps/web`: minimal Next.js (TypeScript) application whose root page
+  renders a static status line; a health route returns 200.
+- [ ] Web Dockerfile (Node LTS base) with hot reload via bind mount and
+  `next dev`.
+- [ ] Compose service and container health check.
+- Acceptance: root page reachable on the documented port after
+  `docker compose up --build`; source edit hot-reloads.
+- Tests: web health assertion in bootstrap-check (Traceability: REQ-048).
+
+#### Increment 3.5 — Orchestration verification and documentation
+
+- [ ] Single documented startup command verified end to end:
+  `docker compose up --build` from a clean clone with only
+  `cp .env.example .env` beforehand (AC-001 full criterion, transferred
+  from Phase 2).
+- [ ] Health endpoint verification across all five services recorded in
+  the Progress Log with actual commands and output.
+- [ ] Documentation updates: README quickstart, `docs/development/
+  bootstrap.md` (service table, ports, troubleshooting per failure class),
+  `.env.example` (any new variables).
+- [ ] CI: evaluate a compose smoke job on GitHub Actions (boot stack,
+  poll health, tear down); adopt if runtime is acceptable on the hosted
+  runner, otherwise record the constraint and keep the check local.
+- [ ] Clean-room bootstrap evidence for Test Commander review.
+- Acceptance: Phase 3 acceptance criteria below all verified; TC review
+  of the phase records no open Major findings.
 
 ### Deliverable
 
@@ -611,16 +685,47 @@ Docker Compose development environment
 
 ### Tests
 
-- Health endpoint checks for each service after startup.
+- Health endpoint checks for each service after startup (scripted in
+  `scripts/bootstrap_check.py`; each assertion carries Traceability IDs).
 
 ### Risks
 
 - Startup ordering issues between services; mitigate with health checks and
   dependency conditions.
+- Hosted-runner limits may make a CI compose smoke job slow or flaky;
+  mitigated by the 3.5 evaluate-then-decide task rather than assuming CI
+  parity.
+- Image-version drift between draft and implementation; mitigated by
+  decision D3-1 (versions pinned at implementation time, not in this
+  draft).
 
 ### Decisions
 
-- None recorded yet.
+Pending decisions to record at implementation time (each becomes a
+Decisions entry here; an ADR only if architecturally material per
+AGENT.md):
+
+- D3-1 — Exact pinned versions for base images (PostgreSQL, Redis, Python,
+  Node) chosen as latest stable at implementation and recorded here.
+- D3-2 — Worker health-check mechanism for a queue-less stub (candidate:
+  Redis heartbeat key freshness checked by the container health command).
+- D3-3 — Whether the CI compose smoke job is adopted (3.5) or deferred
+  with a recorded constraint.
+
+Recorded now:
+
+- Containers install Python dependencies system-wide via pdm; no virtual
+  environment inside containers (repository directive; single-app
+  containers have no interpreter conflict).
+- Phase 3 stubs live in `apps/api`, `apps/web`, `services/worker` per the
+  Phase 2 layout decision; placeholder READMEs are replaced by the stubs.
+
+### Assumptions
+
+- Docker Desktop on the reference machine (Docker 23+) supports the
+  compose `service_healthy` dependency conditions used here.
+- Ports 3000 (web), 8000 (API), 5432 (PostgreSQL), 6379 (Redis) are the
+  documented defaults, overridable via `.env`.
 
 ### Completion Notes
 
@@ -1957,3 +2062,29 @@ this phase must not begin.
 - Next recommended step: Begin Phase 3 (Docker runtime foundation). The
   transferred full clean-bootstrap criterion (REQ-048) verifies at Phase 3
   close; the Test Commander review loop continues per increment.
+
+### 2026-07-18 (Phase 3 increment plan drafted)
+
+- Phase: 3 (planning only; Phase 2 remains IN REVIEW)
+- Increment: Increment plan draft (3.1–3.5)
+- Status: NOT STARTED (implementation gated on Phase 2 TC closure)
+- Work completed: Drafted the Phase 3 increment plan: 3.1 infrastructure
+  services (PostgreSQL, Redis, network, volumes, live make guards,
+  bootstrap-check service assertions), 3.2 FastAPI stub container with
+  hot reload, 3.3 worker stub with Redis heartbeat, 3.4 Next.js stub with
+  hot reload, 3.5 orchestration verification, documentation, CI smoke-job
+  evaluation, and clean-room evidence for TC. Recorded traceability
+  (REQ-048/AC-001 transferred criterion, REQ-049 local environment),
+  phase-leakage stop condition, pending decisions D3-1..D3-3, recorded
+  decisions (no venv in containers; stub locations per Phase 2 layout),
+  and assumptions (compose health conditions, default ports).
+- Tests run: `make check` — ruff lint and format check clean, pytest 18
+  passed, bootstrap check passed (documentation-only change; docs test
+  suite validates plan structure, links, and vocabulary).
+- Decisions: D3-1..D3-3 identified as pending; two decisions recorded in
+  the Phase 3 section.
+- Risks: CI compose smoke-job feasibility; image-version drift — both
+  recorded in the Phase 3 Risks list.
+- Next recommended step: Test Commander Phase 2 review (clean-room
+  bootstrap). On closure with no open Major findings, mark Phase 2
+  COMPLETE and begin Increment 3.1.
