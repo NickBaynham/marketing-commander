@@ -1,9 +1,12 @@
 # apps/web
 
-Next.js and TypeScript frontend. Placeholder only.
+Marketing Commander web frontend (Next.js, TypeScript).
 
-- Phase 3 delivers the container with a stub health endpoint.
-- Phase 5 onward delivers screens per the
-  [UX Specification](../../docs/product/ux-specification.md).
+Phase 3 status: orchestration stub only — a static status page and
+`GET /api/healthz`. Product screens (SCR-01..SCR-25 in the
+[UX Specification](../../docs/product/ux-specification.md)) arrive per
+phase from Phase 5 onward, per [plan/plan.md](../../plan/plan.md).
 
-Do not add application code here before its phase (plan/plan.md).
+Dependencies are locked with `package-lock.json` and installed in the
+container with `npm ci`; the compose service bind-mounts the source for
+`next dev` hot reload.

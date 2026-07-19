@@ -150,29 +150,25 @@ def env_value(name: str, default: str) -> str:
     return default
 
 
-def check_api_endpoint() -> bool:
-    """Host-level check of the published API health endpoint.
+def check_http_endpoint(label: str, port_var: str, default: str, path: str) -> bool:
+    """Host-level check of a published service health endpoint.
 
-    The container healthcheck already probes /healthz from inside; this
-    verifies the port publish on the host (Traceability: REQ-048, AC-001).
+    Container healthchecks probe from inside; this verifies the port
+    publish on the host (Traceability: REQ-048, AC-001).
     """
     if not (ROOT / "docker-compose.yml").exists():
-        return step("api endpoint", True, "skipped - no docker-compose.yml")
+        return step(label, True, "skipped - no docker-compose.yml")
     import urllib.error
     import urllib.request
 
-    port = env_value("API_PORT", "8000")
-    url = f"http://127.0.0.1:{port}/healthz"
+    port = env_value(port_var, default)
+    url = f"http://127.0.0.1:{port}{path}"
     try:
-        with urllib.request.urlopen(url, timeout=3) as response:
+        with urllib.request.urlopen(url, timeout=5) as response:
             ok = response.status == 200
-            return step(
-                "api endpoint",
-                ok,
-                f"GET {url} -> {response.status}",
-            )
+            return step(label, ok, f"GET {url} -> {response.status}")
     except (urllib.error.URLError, OSError) as exc:
-        return step("api endpoint", False, f"GET {url} failed: {exc}")
+        return step(label, False, f"GET {url} failed: {exc}")
 
 
 def main() -> int:
@@ -185,7 +181,8 @@ def main() -> int:
         ),
         check_pdm_install(),
         check_services(),
-        check_api_endpoint(),
+        check_http_endpoint("api endpoint", "API_PORT", "8000", "/healthz"),
+        check_http_endpoint("web endpoint", "WEB_PORT", "3000", "/api/healthz"),
     ]
     if all(checks):
         print("Bootstrap check passed.")

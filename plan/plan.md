@@ -6,7 +6,7 @@
   ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
   and confirmed closed with zero unresolved Major findings. Next: Phase 2.
 - Current phase: Phase 3 — Docker Runtime Foundation (IN PROGRESS —
-  Increments 3.1–3.3 complete; next: 3.4 web stub)
+  Increments 3.1–3.4 complete; next: 3.5 orchestration verification)
 - Last updated: 2026-07-18
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -567,8 +567,8 @@ requirements-to-test map.
 
 ## Phase 3 — Docker Runtime Foundation
 
-- Status: IN PROGRESS (Increments 3.1–3.3 COMPLETE; next:
-  Increment 3.4 Next.js web stub container)
+- Status: IN PROGRESS (Increments 3.1–3.4 COMPLETE; next:
+  Increment 3.5 orchestration verification and documentation)
 - Objective: A complete Docker Compose development environment started by a
   single documented command.
 - Dependencies: Phase 2.
@@ -665,13 +665,21 @@ Each increment follows the Test Commander review loop: implement → run
   Redis; stopping Redis flips the worker to unhealthy.
 - Tests: bootstrap-check asserts worker health (Traceability: REQ-048).
 
-#### Increment 3.4 — Next.js web stub container
+#### Increment 3.4 — Next.js web stub container — COMPLETE
 
-- [ ] `apps/web`: minimal Next.js (TypeScript) application whose root page
-  renders a static status line; a health route returns 200.
-- [ ] Web Dockerfile (Node LTS base) with hot reload via bind mount and
-  `next dev`.
-- [ ] Compose service and container health check.
+- [x] `apps/web`: minimal Next.js (TypeScript) application whose root page
+  renders a static status line; `GET /api/healthz` returns 200
+  (Next 16.2.10, React 19.2.7, TypeScript 5.9.3 per `package-lock.json`,
+  installed with `npm ci`).
+- [x] Web Dockerfile (`node:24-alpine` — active Node LTS line, recorded
+  under D3-1) with hot reload via source bind mount plus an anonymous
+  `node_modules` volume and `next dev` (verified: source edit served
+  within seconds, no rebuild).
+- [x] Compose service (localhost bind on `WEB_PORT`, `service_healthy`
+  dependency on the API for chain-ordered startup) and container health
+  check via node `fetch` against `/api/healthz`.
+- [x] Host-level `web endpoint` assertion added to bootstrap-check
+  alongside the API one (shared `check_http_endpoint` helper).
 - Acceptance: root page reachable on the documented port after
   `docker compose up --build`; source edit hot-reloads.
 - Tests: web health assertion in bootstrap-check (Traceability: REQ-048).
@@ -756,7 +764,9 @@ AGENT.md):
   the decision): `postgres:18-alpine` (PostgreSQL 18.4 verified) and
   `redis:8-alpine` (Redis 8.8.0 verified). Major-version pin with
   floating patch inside the alpine variant is the deliberate choice for
-  local development images; Python and Node pins are exact per D3-1.
+  local development images. Node pin recorded 2026-07-19:
+  `node:24-alpine` (active Node LTS line), same major-pin rationale.
+  The Python pin is exact (3.14) per the earlier D3-1 partial decision.
 
 Recorded now:
 
@@ -2277,3 +2287,34 @@ this phase must not begin.
   Phase 10 supersedes with queue liveness).
 - Risks: None new.
 - Next recommended step: Increment 3.4 — Next.js web stub container.
+
+### 2026-07-19 (Increment 3.4 complete: Next.js web stub container)
+
+- Phase: 3
+- Increment: 3.4 — Next.js web stub container
+- Status: COMPLETE
+- Work completed: apps/web Next.js stub (Next 16.2.10, React 19.2.7,
+  TypeScript 5.9.3, npm ci from package-lock.json) with a static status
+  page and GET /api/healthz; Dockerfile on node:24-alpine (Node LTS,
+  recorded under D3-1); compose service with localhost WEB_PORT bind,
+  service_healthy dependency on the API, source bind mount plus
+  anonymous node_modules volume, and a node-fetch container healthcheck;
+  bootstrap-check endpoint checks generalized into a shared helper now
+  asserting both api and web endpoints from the host.
+- Tests run (all executed, all passing): docker compose up -d --build
+  --wait brought all five services to Healthy in dependency order
+  (postgres/redis, then api, then web; worker on redis);
+  curl http://127.0.0.1:3000/api/healthz -> HTTP 200 {"status":"ok"};
+  root page served the status line; hot reload verified by editing
+  page.tsx and seeing the changed text served within seconds without a
+  rebuild (edit then reverted); make bootstrap-check green (five
+  services healthy, api and web endpoints 200); make check green (ruff
+  clean, pytest 22 passed, bootstrap check passed). Hosted CI
+  verification with this commit's run (CI compose step now builds the
+  web image too).
+- Decisions: D3-1 Node pin recorded (node:24-alpine, active LTS line).
+- Risks: CI compose step duration grows with the web image build;
+  evaluate caching at 3.5 (already flagged there).
+- Next recommended step: Increment 3.5 — orchestration verification and
+  documentation (clean-machine AC-001 run, docs, CI smoke decision
+  D3-3, TC evidence package).
