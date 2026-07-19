@@ -1,14 +1,12 @@
 # Marketing Commander Development Plan
 
 - Document version: 1.4
-- Current status: Phase 1 COMPLETE (2026-07-18). MVP Product Brief v1.0
-  approved at document level by Nick Baynham; DEC-01..DEC-10 approved;
-  ADR-001..ADR-006 Accepted; Test Commander review executed, remediated,
-  and confirmed closed with zero unresolved Major findings. Next: Phase 2.
-- Current phase: Phase 3 — Docker Runtime Foundation (IN REVIEW —
-  all increments complete and acceptance criteria verified; awaiting
-  Test Commander Phase 3 review)
-- Last updated: 2026-07-18
+- Current status: Phases 1-3 COMPLETE. Phase 3 closed 2026-07-19 by the
+  Test Commander exit review with zero product findings (clean-room
+  bootstrap, five healthy services, hot reload, negative and recovery
+  cases, CI compose smoke all verified). Next: Phase 4.
+- Current phase: Phase 4 — Backend Application Foundation (NOT STARTED)
+- Last updated: 2026-07-19
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
 
@@ -213,7 +211,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 |-------|-------|--------|
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
 | 2 | Repository and Development Foundation | COMPLETE |
-| 3 | Docker Runtime Foundation | IN REVIEW |
+| 3 | Docker Runtime Foundation | COMPLETE |
 | 4 | Backend Application Foundation | NOT STARTED |
 | 5 | Workspace and Artist Domain | NOT STARTED |
 | 6 | Artist Identity Profile | NOT STARTED |
@@ -568,10 +566,10 @@ requirements-to-test map.
 
 ## Phase 3 — Docker Runtime Foundation
 
-- Status: IN REVIEW — all five increments COMPLETE and all acceptance
-  criteria verified (including the clean-machine AC-001 run); the only
-  open exit item is the Test Commander Phase 3 review (no open Major
-  findings required)
+- Status: COMPLETE — all five increments closed and the Test Commander
+  Phase 3 review closed 2026-07-19 with zero product findings (review
+  evidence in the Progress Log; full report in the Test Commander
+  workspace, documents/phase3-review-2026-07-19.md)
 - Objective: A complete Docker Compose development environment started by a
   single documented command.
 - Dependencies: Phase 2.
@@ -2366,3 +2364,32 @@ this phase must not begin.
 - Next recommended step: Test Commander Phase 3 review (evidence: this
   entry plus the increment records). With no open Major findings,
   Phase 3 closes and Phase 4 (backend application foundation) begins.
+
+### 2026-07-19 (Test Commander Phase 3 exit review — zero product findings; phase closed)
+
+- Phase: 3
+- Increment: Test Commander exit review
+- Status: COMPLETE
+- Work completed: Full exit review executed against origin/main d627caa.
+  Verified first-hand: (1) clean-room bootstrap — fresh GitHub clone,
+  `cp .env.example .env`, one compose command, five services healthy,
+  api and web host endpoints 200, `make setup` + `make check` green, zero
+  undocumented steps; (2) hot reload — source edits in the clean clone
+  reflected in the running api and web containers within one poll each;
+  (3) negative case — stopping Redis flipped the worker unhealthy in
+  ~20 s and bootstrap-check named both failures with state; (4) recovery
+  — the worker returned to healthy ~15 s after Redis was restored;
+  (5) port-override path — the clean-room stack ran on fully alternate
+  ports (5434/6380/8002/3002); (6) volume persistence verified at 3.1;
+  (7) hosted CI green for all five Phase 3 commits with the adopted
+  compose smoke (D3-3). Decisions D3-1..D3-3 recorded. One transient
+  false alarm (worker "no recovery") was root-caused to a two-stack
+  collision on the default Redis port between the reviewer's clean-room
+  stack and the port-override verification stack, not a product defect.
+- Tests run: make check (clean clone); scripted health, reload, negative,
+  and recovery probes as described.
+- Decisions: None new.
+- Risks: None new. Note for operators: when running a second stack,
+  override all four ports including REDIS_PORT; the port-override
+  verification stack had left Redis on the default port.
+- Next recommended step: Begin Phase 4 (Backend Application Foundation).
