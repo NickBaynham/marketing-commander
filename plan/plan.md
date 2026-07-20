@@ -6,7 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 5 — Workspace and Artist Domain (NOT STARTED)
+- Current phase: Phase 5 — Workspace and Artist Domain (NOT STARTED —
+  increment plan drafted 2026-07-20)
 - Last updated: 2026-07-20
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -948,7 +949,8 @@ Tested backend foundation
 
 ## Phase 5 — Workspace and Artist Domain
 
-- Status: NOT STARTED
+- Status: NOT STARTED (increment plan drafted 2026-07-20; implementation
+  starts on Product Owner go)
 - Objective: A user can create and view the CYR3NT artist inside a
   workspace.
 - Dependencies: Phase 4. Before implementation begins, the following
@@ -957,25 +959,116 @@ Tested backend foundation
   accessibility baseline and browser matrix (Decision 9), test factories
   (Test Data Strategy), and optimistic concurrency.
 
-### Tasks
+- Traceability: REQ-001 (workspace), REQ-002 (seeded owner), REQ-003
+  (artist creation), REQ-004 (list/overview), REQ-005 (archival),
+  REQ-051 (deletion, Must — needed before Phase 9 live calls), REQ-040
+  (audit records), REQ-041/REQ-042 activate for the first product UI;
+  AC-002, AC-003, AC-025, AC-024 (first golden-path segment); US-001,
+  US-002, US-003; screens SCR-01, SCR-02, SCR-04, SCR-05, SCR-06.
+- Pre-implementation decision status: temporary local identity → DEC-03
+  and ADR-002 (approved); explicit save and optimistic concurrency →
+  ADR-003 and BR-019 (approved); accessibility baseline and browser
+  matrix → DEC-09 (approved); test factories → Test Data Strategy
+  (approved, implemented here). Residual concrete decisions are D5-1..
+  D5-4 below, settled at increment implementation and recorded.
+- Phase-leakage stop condition: no AIP editor (Phase 6), no artifact
+  versioning (Phase 7), no authentication (Phase 8), no dashboard
+  beyond a minimal navigation shell (Phase 13).
+
+### Increment Plan (drafted 2026-07-20)
+
+Each increment follows the Test Commander review loop and extends the
+reference layering (transport → domain → repositories) from Phase 4.
+
+#### Increment 5.1 — Domain schema, seed, and test data (backend)
 
 - [ ] Workspace entity (per Decision 1: `workspace_id` on every persisted
   record).
 - [ ] Seeded local-owner identity model per Decision 3 (documented
   limitation: no real access control before Phase 8).
 - [ ] Artist entity.
-- [ ] Artist lifecycle state.
-- [ ] Artist CRUD API.
-- [ ] Artist creation UI.
-- [ ] Artist overview UI.
-- [ ] Validation and authorization rules.
-- [ ] Entity factories, database reset tooling, and the CYR3NT seed
-  fixture wired to the real schema (Test Data Strategy; fixture content
-  and conventions arrive from Phase 2).
-- [ ] Unit, API, and Playwright tests.
-- [ ] Start the golden-path Playwright test with: Open application → Create
-  CYR3NT → View artist. The test grows in each later phase toward the full
-  canonical golden path.
+- [ ] Artist lifecycle state (`active`/`archived`, BR-014).
+- [ ] SQLAlchemy models (User, Workspace, WorkspaceMembership, Artist)
+  with audit timestamps and version tokens; first real Alembic
+  migration; the empty-baseline migration test now proves a non-trivial
+  schema.
+- [ ] Idempotent seed command (`make seed`): `local-owner` user, owner
+  membership, single workspace (golden path Step 1 semantics — a second
+  run returns the existing workspace).
+- [ ] Entity factories, database reset tooling (`make db-reset`), and the
+  CYR3NT seed fixture wired to the real schema (Test Data Strategy;
+  fixture content and conventions arrive from Phase 2).
+- Acceptance: migration up/down clean; seed idempotent (run twice, one
+  workspace); model invariants (name uniqueness per workspace,
+  workspace_id required) covered by unit tests.
+
+#### Increment 5.2 — Workspace and artist API
+
+- [ ] Artist CRUD API: create, list, get, update (optimistic concurrency
+  version token, HTTP 409 on stale, BR-019), archive/restore (BR-014,
+  REQ-005), delete (REQ-051, BR-015: response names what is removed).
+- [ ] Workspace endpoints (get/create with idempotent-create semantics,
+  REQ-001).
+- [ ] Validation and authorization rules: name 1–120 characters and
+  unique per workspace (422 per the AC-003 contract, D5-1); archived
+  artists reject mutation; single-local-owner authorization with the
+  Phase 8 limitation documented at the enforcement point.
+- [ ] Audit records for every state change (actor `local-owner`,
+  BR-020, REQ-040).
+- [ ] API tests: CRUD, validation shapes, 409 stale update, archival
+  blocking, deletion, audit presence; service unit tests with fakes.
+- Acceptance: all AC-002/AC-003 API clauses pass; layering test still
+  green with the new domain/repository modules.
+
+#### Increment 5.3 — Web application shell and screens
+
+- [ ] Application shell: navigation, API client (D5-2), error and
+  loading conventions from the UX specification's Common Screen
+  Behavior.
+- [ ] SCR-01 seeded-owner entry and SCR-02 workspace setup (idempotent;
+  golden path Steps 0–1).
+- [ ] SCR-04 artists list, SCR-05 create artist (validation display per
+  AC-003: adjacent messages, preserved input, focus management,
+  assistive-technology exposure), SCR-06 artist overview (archive/
+  restore/delete actions with BR-015 confirmation naming what is lost).
+- [ ] Accessibility baseline on these screens: labeled fields, keyboard
+  operability, visible focus (DEC-09; verified in 5.4 with axe).
+- Acceptance: create-and-view flow works end to end against the live
+  API; UI states (loading, empty, error, validation) match the UX
+  specification.
+
+#### Increment 5.4 — Playwright framework and golden-path start
+
+- [ ] Playwright project (TypeScript) with the DEC-09 browser matrix
+  (Chromium, Firefox, WebKit) and viewport set; axe-core integration
+  with zero serious/critical violations as a failing assertion.
+- [ ] Golden-path test, first segment: Open application → Create CYR3NT
+  → View artist (AC-024 start; the test grows each later phase toward
+  the full canonical golden path).
+- [ ] Validation-error scenario (AC-003 UI clauses) and archival/
+  deletion scenarios (AC-025, REQ-051).
+- [ ] `make test-e2e` target; CI wiring per D5-3 (matrix scope recorded
+  when measured); evidence conventions (test-results/ gitignored,
+  durable evidence to the Test Commander workspace).
+- Acceptance: golden-path segment green on the full browser matrix
+  locally; CI scope per D5-3 recorded and green; axe assertions active.
+
+### Decisions (Phase 5)
+
+- D5-1 — Concrete validation rule set (settled at 5.2, recorded here):
+  candidate — name required, 1–120 characters after trimming, unique
+  within workspace (case-insensitive); genre descriptor and summary
+  optional with length caps; all violations return the AC-003 422 shape.
+- D5-2 — Frontend data access: settled at 5.3; candidate is direct
+  fetch from the browser to the API's published localhost port via a
+  small typed client (no server-side proxy until a real need appears).
+- D5-3 — CI browser-matrix scope: settled at 5.4 after measuring
+  runtime; candidate is Chromium per push with the full matrix on a
+  scheduled or pre-review run — DEC-09 full-matrix coverage remains a
+  Phase 14 release gate either way.
+- D5-4 — Component-test approach: Playwright plus API tests only for
+  the MVP UI; a component-level framework is added only on concrete
+  evidence of a gap (avoid speculative infrastructure).
 
 ### Deliverable
 
@@ -1005,10 +1098,6 @@ A user can create and view CYR3NT
 
 - Ownership model ambiguity before Phase 8; mitigated by Decision 3 (seeded
   `local-owner` identity with stable ID, documented limitation).
-
-### Decisions
-
-- None recorded yet.
 
 ### Completion Notes
 
@@ -2631,3 +2720,29 @@ this phase must not begin.
 - Next recommended step: Begin Phase 5 (Workspace and Artist Domain) —
   the first product endpoints, the Playwright framework, and the start of
   the growing golden-path test.
+
+### 2026-07-20 (Phase 5 increment plan drafted)
+
+- Phase: 5 (planning only)
+- Increment: Increment plan draft (5.1–5.4)
+- Status: NOT STARTED (implementation on Product Owner go)
+- Work completed: Drafted the Phase 5 increment plan: 5.1 domain schema,
+  idempotent seed, factories and db-reset tooling; 5.2 workspace and
+  artist API with validation, optimistic concurrency, archival,
+  deletion (REQ-051), and audit records; 5.3 web shell and screens
+  SCR-01/02/04/05/06 with AC-003 validation display; 5.4 Playwright
+  framework with the DEC-09 matrix, axe assertions, and the first
+  golden-path segment (Open application → Create CYR3NT → View artist).
+  Recorded traceability (REQ-001..005, REQ-051, REQ-040..042, AC-002/
+  003/024/025, US-001..003, SCR IDs), pre-implementation decision
+  status (all gating items resolve to approved DEC/ADR records),
+  residual decisions D5-1..D5-4 with candidates, and the phase-leakage
+  stop condition (no AIP, versioning, auth, or dashboard).
+- Tests run: `make check` — green (documentation suite validates the
+  plan edits; root 22, api 22, bootstrap check all ok).
+- Decisions: D5-1..D5-4 identified with candidates; settled at their
+  increments.
+- Risks: None new beyond the existing ownership-model risk (mitigated
+  by DEC-03).
+- Next recommended step: Begin Increment 5.1 (domain schema, seed, and
+  test data).
