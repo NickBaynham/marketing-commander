@@ -1,13 +1,13 @@
 # Marketing Commander Development Plan
 
 - Document version: 1.4
-- Current status: Phases 1-3 COMPLETE. Phase 3 closed 2026-07-19 by the
-  Test Commander exit review with zero product findings (clean-room
-  bootstrap, five healthy services, hot reload, negative and recovery
-  cases, CI compose smoke all verified). Next: Phase 4.
-- Current phase: Phase 4 — Backend Application Foundation (IN REVIEW —
-  Increments 4.1–4.3 complete; awaiting Test Commander Phase 4 review)
-- Last updated: 2026-07-19
+- Current status: Phases 1-4 COMPLETE. Phase 4 closed 2026-07-20 by the
+  Test Commander exit review with zero product findings (harnesses green
+  locally, in hosted CI, and from a clean-room clone; migration cycle
+  empty-to-head and downgrade verified; readiness on the layered slice;
+  AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
+- Current phase: Phase 5 — Workspace and Artist Domain (NOT STARTED)
+- Last updated: 2026-07-20
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
 
@@ -213,7 +213,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
 | 2 | Repository and Development Foundation | COMPLETE |
 | 3 | Docker Runtime Foundation | COMPLETE |
-| 4 | Backend Application Foundation | IN REVIEW |
+| 4 | Backend Application Foundation | COMPLETE |
 | 5 | Workspace and Artist Domain | NOT STARTED |
 | 6 | Artist Identity Profile | NOT STARTED |
 | 7 | Artifact and Versioning System | NOT STARTED |
@@ -806,8 +806,10 @@ Recorded now:
 
 ## Phase 4 — Backend Application Foundation
 
-- Status: IN REVIEW — Increments 4.1–4.3 COMPLETE with acceptance
-  criteria verified; awaiting Test Commander Phase 4 review
+- Status: COMPLETE — Increments 4.1–4.3 closed and the Test Commander
+  Phase 4 exit review closed 2026-07-20 with zero product findings
+  (evidence in the Progress Log; full report in the Test Commander
+  workspace, documents/phase4-review-2026-07-20.md)
 - Objective: A tested FastAPI foundation with migrations, configuration,
   logging, and explicit domain-service boundaries.
 - Dependencies: Phase 3.
@@ -2602,3 +2604,30 @@ this phase must not begin.
   findings, Phase 4 closes and Phase 5 (workspace and artist domain —
   the first product vertical slice and the start of the golden-path
   Playwright test) begins.
+
+### 2026-07-20 (Test Commander Phase 4 exit review — zero product findings; phase closed)
+
+- Phase: 4
+- Increment: Test Commander exit review
+- Status: COMPLETE
+- Work completed: Full exit review against 3147229. Verified first-hand:
+  (1) both harnesses green locally (root gate all-checks; apps/api 22
+  tests including the AST layering test); (2) migration cycle — downgrade
+  to base and upgrade to head clean against compose PostgreSQL; (3)
+  readiness green on the layered three-tier slice; (4) hosted CI green
+  for 3147229 (run 29751129623, 1m29s) after the earlier 4.1/4.2 CI gap
+  was fixed by b5fafb5 and re-verified; (5) clean-room clone on isolated
+  ports — make setup, full stack healthy, make check 22+35 green,
+  make migrate to head, readiness ok, torn down; (6) decisions D4-1
+  (SQLAlchemy 2.x async + asyncpg), D4-2 (stdlib JSON logging +
+  X-Correlation-ID), D4-3 (explicit migrations) recorded; (7) layering
+  enforced mechanically — wrong-direction imports fail the build, domain
+  receives persistence via constructor injection.
+- Tests run: make check (dev tree and clean room); alembic cycle; live
+  readiness probes; hosted CI runs confirmed via the GitHub API.
+- Decisions: None new.
+- Risks: None new. The 4.1/4.2 hosted-CI failure window is recorded; the
+  20-minute job timeout now bounds any recurrence.
+- Next recommended step: Begin Phase 5 (Workspace and Artist Domain) —
+  the first product endpoints, the Playwright framework, and the start of
+  the growing golden-path test.
