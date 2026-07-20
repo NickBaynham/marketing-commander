@@ -1,7 +1,7 @@
 # Marketing Commander developer commands.
 # Requires: pdm (Python package manager), Docker (from Phase 3).
 
-.PHONY: help setup lint format test check bootstrap-check build run clean
+.PHONY: help setup lint format test check bootstrap-check build run clean migrate seed db-reset
 
 help:
 	@echo "Marketing Commander"
@@ -51,3 +51,9 @@ run:
 clean:
 	rm -rf .pytest_cache .ruff_cache
 	find . -type d -name __pycache__ -not -path './.git/*' -exec rm -rf {} +
+
+seed:
+	cd apps/api && pdm run python -m app.seed
+
+db-reset:
+	cd apps/api && pdm run alembic downgrade base && pdm run alembic upgrade head

@@ -6,8 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 5 — Workspace and Artist Domain (NOT STARTED —
-  increment plan drafted 2026-07-20)
+- Current phase: Phase 5 — Workspace and Artist Domain (IN PROGRESS —
+  Increment 5.1 complete; 5.2 workspace and artist API next)
 - Last updated: 2026-07-20
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -215,7 +215,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 2 | Repository and Development Foundation | COMPLETE |
 | 3 | Docker Runtime Foundation | COMPLETE |
 | 4 | Backend Application Foundation | COMPLETE |
-| 5 | Workspace and Artist Domain | NOT STARTED |
+| 5 | Workspace and Artist Domain | IN PROGRESS |
 | 6 | Artist Identity Profile | NOT STARTED |
 | 7 | Artifact and Versioning System | NOT STARTED |
 | 8 | Authentication and Authorization | NOT STARTED |
@@ -949,8 +949,8 @@ Tested backend foundation
 
 ## Phase 5 — Workspace and Artist Domain
 
-- Status: NOT STARTED (increment plan drafted 2026-07-20; implementation
-  starts on Product Owner go)
+- Status: IN PROGRESS — Product Owner go received 2026-07-20; Increment
+  5.1 COMPLETE; 5.2 next
 - Objective: A user can create and view the CYR3NT artist inside a
   workspace.
 - Dependencies: Phase 4. Before implementation begins, the following
@@ -988,24 +988,24 @@ Tested backend foundation
 Each increment follows the Test Commander review loop and extends the
 reference layering (transport → domain → repositories) from Phase 4.
 
-#### Increment 5.1 — Domain schema, seed, and test data (backend)
+#### Increment 5.1 — Domain schema, seed, and test data (backend) — COMPLETE
 
-- [ ] Workspace entity (per Decision 1: `workspace_id` on every persisted
+- [x] Workspace entity (per Decision 1: `workspace_id` on every persisted
   record).
-- [ ] Seeded local-owner identity model per Decision 3 (documented
+- [x] Seeded local-owner identity model per Decision 3 (documented
   limitation: no real access control before Phase 8).
-- [ ] Artist entity.
-- [ ] Artist lifecycle state (`active`/`archived`, BR-014).
-- [ ] SQLAlchemy models (User, Workspace, WorkspaceMembership, Artist,
+- [x] Artist entity.
+- [x] Artist lifecycle state (`active`/`archived`, BR-014).
+- [x] SQLAlchemy models (User, Workspace, WorkspaceMembership, Artist,
   and a minimal ArtistIdentityProfile — an empty draft record created
   with the artist per REQ-003/AC-002; no section schema or editor, which
   remain Phase 6) with audit timestamps and version tokens; first real
   Alembic migration; the empty-baseline migration test now proves a
   non-trivial schema.
-- [ ] Idempotent seed command (`make seed`): `local-owner` user, owner
+- [x] Idempotent seed command (`make seed`): `local-owner` user, owner
   membership, single workspace (golden path Step 1 semantics — a second
   run returns the existing workspace).
-- [ ] Entity factories, database reset tooling (`make db-reset`), and the
+- [x] Entity factories, database reset tooling (`make db-reset`), and the
   CYR3NT seed fixture wired to the real schema (Test Data Strategy;
   fixture content and conventions arrive from Phase 2).
 - Acceptance: creating an artist creates its empty AIP draft record in
@@ -2778,3 +2778,32 @@ this phase must not begin.
 - Decisions: None new.
 - Risks: None new; the AC-002 silent-skip risk is retired.
 - Next recommended step: Product Owner go for Increment 5.1.
+
+### 2026-07-20 (Increment 5.1: domain schema, seed, and test data)
+
+- Phase: 5
+- Increment: 5.1 — COMPLETE
+- Status: COMPLETE
+- Work completed: SQLAlchemy models (User, Workspace,
+  WorkspaceMembership, Artist, minimal ArtistIdentityProfile) with
+  UUIDv7 identifiers, audit timestamps, and version tokens; migration
+  7c41f0a2d9b3 with FKs, the membership uniqueness constraint, and the
+  case-insensitive per-workspace artist-name unique index; idempotent
+  `make seed` (local-owner, single workspace, owner membership — second
+  run reports exists for all three); `make db-reset`; entity factories
+  with CYR3NT defaults; ArtistRepository.create persists the artist and
+  its empty AIP draft in one transaction (AC-002 clause).
+- Tests run: make check green — root 22, apps/api 27 (5 new
+  domain-schema tests on a scratch database: same-transaction AIP draft
+  with rollback assertion, case-insensitive uniqueness, workspace_id
+  required, version-token default, seed idempotency on an isolated
+  database); live `make migrate` applied 7c41f0a2d9b3; `make seed` run
+  twice against the dev stack (created then exists). One test-design
+  defect caught during implementation: the seed test initially asserted
+  whole-database counts in the module-shared scratch database
+  (order-dependent); fixed with a private per-test database per the
+  tests-own-their-data convention.
+- Decisions: None new (D5-1 candidate rules implemented at the schema
+  level; API-level enforcement lands in 5.2).
+- Risks: None new.
+- Next recommended step: Increment 5.2 — workspace and artist API.
