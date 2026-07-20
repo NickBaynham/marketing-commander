@@ -63,3 +63,35 @@ requirements-to-test map:
 
 CI runs the same suite on every change, so documentation drift fails the
 build exactly like a code defect.
+
+## Backend Layering (Phase 4, Increment 4.3)
+
+The API follows one import direction, enforced by
+`apps/api/tests/test_layering.py` (violations fail the build):
+
+```text
+transport (app/main, app/health, app/api)
+  -> domain (app/domain)
+persistence (app/repositories) is called by domain at runtime but
+  imported by neither domain nor the reverse direction
+shared infrastructure (app/config, app/db, app/correlation, app/errors)
+  is importable by any layer
+```
+
+Rules:
+
+- Route handlers contain wiring only — no business logic in routes
+  (CLAUDE.md quality principle). Handlers translate service results to
+  HTTP; policy lives in domain services.
+- Domain services receive repositories and probes through the
+  constructor (transport wires them via FastAPI dependencies). The
+  domain layer imports neither transport nor persistence modules, which
+  keeps services unit-testable with fakes.
+- Repositories receive their `AsyncSession` (or connection) through the
+  constructor and contain persistence access only — no domain policy.
+- One session per request via the `get_session` dependency
+  (`app/db.py`).
+- The reference slice is the readiness probe: `app/health.py`
+  (transport) -> `app/domain/system.py` (service) ->
+  `app/repositories/system.py` (probes). Phase 5 domain code follows
+  this shape.

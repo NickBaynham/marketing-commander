@@ -5,8 +5,8 @@
   Test Commander exit review with zero product findings (clean-room
   bootstrap, five healthy services, hot reload, negative and recovery
   cases, CI compose smoke all verified). Next: Phase 4.
-- Current phase: Phase 4 — Backend Application Foundation (IN PROGRESS —
-  Increment 4.1: API application foundation)
+- Current phase: Phase 4 — Backend Application Foundation (IN REVIEW —
+  Increments 4.1–4.3 complete; awaiting Test Commander Phase 4 review)
 - Last updated: 2026-07-19
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -213,7 +213,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
 | 2 | Repository and Development Foundation | COMPLETE |
 | 3 | Docker Runtime Foundation | COMPLETE |
-| 4 | Backend Application Foundation | IN PROGRESS |
+| 4 | Backend Application Foundation | IN REVIEW |
 | 5 | Workspace and Artist Domain | NOT STARTED |
 | 6 | Artist Identity Profile | NOT STARTED |
 | 7 | Artifact and Versioning System | NOT STARTED |
@@ -806,8 +806,8 @@ Recorded now:
 
 ## Phase 4 — Backend Application Foundation
 
-- Status: IN PROGRESS (increment plan drafted 2026-07-19; Increment 4.1
-  in progress)
+- Status: IN REVIEW — Increments 4.1–4.3 COMPLETE with acceptance
+  criteria verified; awaiting Test Commander Phase 4 review
 - Objective: A tested FastAPI foundation with migrations, configuration,
   logging, and explicit domain-service boundaries.
 - Dependencies: Phase 3.
@@ -878,18 +878,28 @@ Recorded now:
   by the migration test locally (scratch database) and by `make migrate`
   stamping the dev database; CI verification with this commit.
 
-#### Increment 4.3 — Domain-service boundaries and repository abstractions
+#### Increment 4.3 — Domain-service boundaries and repository abstractions — COMPLETE
 
-- [ ] Package boundaries: routes (transport) → services (domain) →
-  repositories (persistence); no business logic in route handlers
-  (CLAUDE.md quality principle), enforced by convention documentation
-  and review.
-- [ ] Repository abstraction and session provider used by one concrete,
-  non-speculative example wired end to end (the readiness/system probe),
-  ready for Phase 5's workspace and artist domain.
-- [ ] Conventions documented in `docs/development/conventions.md`.
-- Acceptance: the layering is real (imports flow one direction) and the
-  example slice has unit and API tests.
+- [x] Package boundaries: transport (`app/main`, `app/health`,
+  `app/api`) → domain (`app/domain`) with persistence
+  (`app/repositories`) injected by transport wiring; no business logic
+  in route handlers. Enforced by an AST-based import-direction test
+  (`tests/test_layering.py`) that fails the build on violations — the
+  domain imports neither transport nor persistence.
+- [x] Repository abstraction and session provider in one concrete,
+  non-speculative slice: `app/health.py` (wiring only) →
+  `app/domain/system.py` (SystemService: probe timeout policy, status
+  interpretation) → `app/repositories/system.py` (SystemRepository over
+  the request session; RedisProber). Constructor injection throughout;
+  no speculative base classes (a shared base appears when Phase 5
+  duplication justifies it, per DRY-when-needed).
+- [x] Conventions documented in `docs/development/conventions.md`
+  (Backend Layering section: rules, reference slice, enforcement).
+- Acceptance verified: layering test green (imports flow one
+  direction); the slice has 7 service unit tests (fakes, no I/O:
+  ok/failure/detail/timeout/concurrency), dependency-override API
+  tests, and the live integration test; apps/api suite 22 passed;
+  container rebuilt Healthy with /readyz 200 through the layered path.
 
 ### Decisions (Phase 4)
 
@@ -2561,3 +2571,34 @@ this phase must not begin.
 - Risks: Runner queue delays can defer failure discovery; the increment
   cadence (watch every push) already mitigates.
 - Next recommended step: Confirm green CI, then Increment 4.3.
+
+### 2026-07-20 (Increment 4.3 complete: layering; Phase 4 to IN REVIEW)
+
+- Phase: 4
+- Increment: 4.3 — Domain-service boundaries and repository abstractions
+- Status: COMPLETE (Phase 4 IN REVIEW)
+- Work completed: Readiness refactored into the reference three-layer
+  slice — transport wiring in app/health.py, SystemService domain
+  policy (3s probe timeout, status interpretation, concurrent probes)
+  in app/domain/system.py, persistence probes (SystemRepository on the
+  request session, RedisProber) in app/repositories/system.py.
+  Constructor injection throughout; FastAPI dependencies wire the
+  layers. AST-based layering test enforces one-direction imports (the
+  domain imports neither transport nor persistence). Conventions
+  documented (Backend Layering in conventions.md). Readyz API tests
+  switched from module monkeypatching to dependency overrides with a
+  stub service.
+- Tests run (all executed, all passing): apps/api pytest — 22 passed
+  (7 new SystemService unit tests incl. timeout and concurrency, 2
+  layering tests, dependency-override readyz tests, live integration
+  test); api container rebuilt Healthy; GET /readyz 200 through the
+  layered path; make check green end to end (root 22, api 22,
+  bootstrap check all ok). Hosted CI verification with this commit's
+  run.
+- Decisions: No new decisions; D4-1..D4-3 all closed earlier.
+- Risks: None new.
+- Next recommended step: Test Commander Phase 4 review (evidence: the
+  4.1-4.3 increment records and this log). With no open Major
+  findings, Phase 4 closes and Phase 5 (workspace and artist domain —
+  the first product vertical slice and the start of the golden-path
+  Playwright test) begins.

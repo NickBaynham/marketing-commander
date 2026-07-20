@@ -1,50 +1,33 @@
-"""Liveness and readiness endpoints (Phase 4 owns the full design).
+"""Liveness and readiness endpoints (transport layer).
 
 /healthz: process liveness only — no dependencies.
-/readyz: PostgreSQL and Redis connectivity with per-dependency detail;
-HTTP 503 with the standard error envelope when any dependency is down.
+/readyz: delegates to the SystemService (domain), which probes
+PostgreSQL and Redis (repositories). This route contains wiring only —
+no business logic in route handlers (CLAUDE.md quality principle).
 
-Traceability: REQ-048, AC-001.
+Traceability: REQ-048, AC-001; Phase 4 Increment 4.3.
 """
 
-import asyncio
+from typing import Annotated
 
-import redis.asyncio as aioredis
-from fastapi import APIRouter, HTTPException
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
-from app.db import get_engine
+from app.db import get_session
+from app.domain.system import SystemService
+from app.repositories.system import RedisProber, SystemRepository
 
 router = APIRouter()
 
-CHECK_TIMEOUT_SECONDS = 3
 
-
-async def check_postgres() -> str | None:
-    """Probe through the shared engine (the same path requests will use)."""
-    try:
-        async with asyncio.timeout(CHECK_TIMEOUT_SECONDS):
-            async with get_engine().connect() as conn:
-                await conn.execute(text("SELECT 1"))
-        return None
-    except (OSError, TimeoutError, SQLAlchemyError) as exc:
-        return str(exc) or exc.__class__.__name__
-
-
-async def check_redis() -> str | None:
-    settings = get_settings()
-    client = aioredis.from_url(
-        settings.redis_url, socket_timeout=CHECK_TIMEOUT_SECONDS
+def get_system_service(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> SystemService:
+    return SystemService(
+        database_probe=SystemRepository(session),
+        redis_probe=RedisProber(get_settings().redis_url),
     )
-    try:
-        await client.ping()
-        return None
-    except (OSError, aioredis.RedisError) as exc:
-        return str(exc) or exc.__class__.__name__
-    finally:
-        await client.aclose()
 
 
 @router.get("/healthz")
@@ -53,23 +36,22 @@ def healthz() -> dict[str, str]:
 
 
 @router.get("/readyz")
-async def readyz() -> dict:
-    postgres_error, redis_error = await asyncio.gather(
-        check_postgres(), check_redis()
-    )
-    dependencies = {
-        "postgres": "ok" if postgres_error is None else postgres_error,
-        "redis": "ok" if redis_error is None else redis_error,
-    }
-    if postgres_error or redis_error:
+async def readyz(
+    service: Annotated[SystemService, Depends(get_system_service)],
+) -> dict:
+    statuses = await service.readiness()
+    if not all(status.ok for status in statuses):
         raise HTTPException(
             status_code=503,
             detail={
                 "message": "one or more dependencies are not ready",
                 "details": [
-                    {"dependency": name, "status": status}
-                    for name, status in dependencies.items()
+                    {"dependency": status.name, "status": status.detail}
+                    for status in statuses
                 ],
             },
         )
-    return {"status": "ready", "dependencies": dependencies}
+    return {
+        "status": "ready",
+        "dependencies": {status.name: status.detail for status in statuses},
+    }

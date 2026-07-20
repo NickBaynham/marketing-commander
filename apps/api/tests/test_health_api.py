@@ -1,14 +1,23 @@
 """Health, readiness, correlation, and versioning API tests.
 
-Readiness dependency probes are overridden here so unit runs need no
-live services; the end-to-end path is exercised by bootstrap-check and
-the integration test against the compose stack.
+Readiness uses a stub SystemService via FastAPI dependency override, so
+unit runs need no live services; the end-to-end path is exercised by
+bootstrap-check and the integration test against the compose stack.
 
-Traceability: REQ-048, AC-001, REQ-040; Phase 4 Increment 4.1.
+Traceability: REQ-048, AC-001, REQ-040; Phase 4 Increments 4.1, 4.3.
 """
 
-from app import health
 from app.correlation import CORRELATION_HEADER
+from app.domain.system import DependencyStatus
+from app.health import get_system_service
+
+
+class StubSystemService:
+    def __init__(self, statuses: list[DependencyStatus]):
+        self._statuses = statuses
+
+    async def readiness(self) -> list[DependencyStatus]:
+        return self._statuses
 
 
 def test_healthz_liveness(client):
@@ -33,12 +42,13 @@ def test_correlation_id_propagated(client):
     assert response.headers[CORRELATION_HEADER] == "test-id-123"
 
 
-def test_readyz_ready_when_dependencies_ok(client, monkeypatch):
-    async def ok() -> None:
-        return None
-
-    monkeypatch.setattr(health, "check_postgres", ok)
-    monkeypatch.setattr(health, "check_redis", ok)
+def test_readyz_ready_when_dependencies_ok(client):
+    client.app.dependency_overrides[get_system_service] = lambda: StubSystemService(
+        [
+            DependencyStatus("postgres", True, "ok"),
+            DependencyStatus("redis", True, "ok"),
+        ]
+    )
     response = client.get("/readyz")
     assert response.status_code == 200
     body = response.json()
@@ -46,15 +56,13 @@ def test_readyz_ready_when_dependencies_ok(client, monkeypatch):
     assert body["dependencies"] == {"postgres": "ok", "redis": "ok"}
 
 
-def test_readyz_503_names_failing_dependency(client, monkeypatch):
-    async def ok() -> None:
-        return None
-
-    async def down() -> str:
-        return "connection refused"
-
-    monkeypatch.setattr(health, "check_postgres", ok)
-    monkeypatch.setattr(health, "check_redis", down)
+def test_readyz_503_names_failing_dependency(client):
+    client.app.dependency_overrides[get_system_service] = lambda: StubSystemService(
+        [
+            DependencyStatus("postgres", True, "ok"),
+            DependencyStatus("redis", False, "connection refused"),
+        ]
+    )
     response = client.get("/readyz")
     assert response.status_code == 503
     error = response.json()["error"]
