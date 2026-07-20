@@ -29,6 +29,7 @@ PROHIBITED_PATTERNS = [
     "*/.venv/*",
     "*/dist/*",
     "*/.next/*",
+    "*.tsbuildinfo",
 ]
 PROHIBITED_ALLOWED = {".env.example"}
 
