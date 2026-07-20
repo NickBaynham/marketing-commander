@@ -80,6 +80,12 @@ Each failure class the bootstrap can hit, per the AC-001 failure branch.
   with `docker compose logs <service>`. A port conflict appears here as a
   bind error; change the conflicting `*_PORT` value in `.env` or stop the
   process occupying the port.
+- Running a second stack of this repository side by side: override all
+  four port variables in that stack's `.env` — `WEB_PORT`, `API_PORT`,
+  `POSTGRES_PORT`, and `REDIS_PORT`. Leaving any one on its default
+  (Redis is the easy one to forget) makes the two stacks contend for the
+  port, and a stopped container from one stack can silently lose its
+  rebind to the other (TC Phase 3 review note).
 - Step "api endpoint" or "web endpoint" fails while service health
   passes: the port publish is blocked or overridden. Confirm the
   `API_PORT`/`WEB_PORT` values in `.env` match what you are probing and
