@@ -9,10 +9,15 @@ Traceability: REQ-003, REQ-004; AC-002; BR-001.
 
 import uuid
 
+from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.exceptions import DuplicateArtistName
 from app.models import Artist, ArtistIdentityProfile
+
+UNIQUE_NAME_INDEX = "uq_artist_workspace_name_ci"
 
 
 class ArtistRepository:
@@ -30,12 +35,39 @@ class ArtistRepository:
             workspace_id=workspace_id, name=name, genre=genre, summary=summary
         )
         self._session.add(artist)
-        await self._session.flush()
+        try:
+            await self._session.flush()
+        except IntegrityError as exc:
+            if UNIQUE_NAME_INDEX in str(exc.orig):
+                raise DuplicateArtistName(name) from exc
+            raise
         self._session.add(
             ArtistIdentityProfile(artist_id=artist.id, workspace_id=workspace_id)
         )
         await self._session.flush()
         return artist
+
+    async def save(self, artist: Artist) -> Artist:
+        try:
+            await self._session.flush()
+        except IntegrityError as exc:
+            if UNIQUE_NAME_INDEX in str(exc.orig):
+                raise DuplicateArtistName(artist.name) from exc
+            raise
+        return artist
+
+    async def delete(self, artist: Artist) -> dict[str, str]:
+        """Remove the artist aggregate; the AIP draft cascades. Returns
+        what was removed so the response can name the loss (BR-015)."""
+        removed = {"artist": artist.name, "aip_draft": "empty draft"}
+        await self._session.execute(
+            sa_delete(ArtistIdentityProfile).where(
+                ArtistIdentityProfile.artist_id == artist.id
+            )
+        )
+        await self._session.delete(artist)
+        await self._session.flush()
+        return removed
 
     async def get(self, artist_id: uuid.UUID) -> Artist | None:
         return await self._session.get(Artist, artist_id)

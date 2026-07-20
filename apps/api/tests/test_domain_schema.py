@@ -21,6 +21,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import get_settings
+from app.exceptions import DuplicateArtistName
 from app.models import Artist, ArtistIdentityProfile, User, Workspace
 from app.repositories.artists import ArtistRepository
 from app.seed import seed
@@ -97,7 +98,7 @@ def test_artist_name_unique_per_workspace_case_insensitive(scratch_dsn):
         user = await factories.create_user(session, user_id=f"u-{uuid.uuid4().hex[:6]}")
         workspace = await factories.create_workspace(session, created_by=user.id)
         await factories.create_artist(session, workspace.id, name="CYR3NT")
-        with pytest.raises(IntegrityError):
+        with pytest.raises(DuplicateArtistName):
             await factories.create_artist(session, workspace.id, name="cyr3nt")
         await session.rollback()
 

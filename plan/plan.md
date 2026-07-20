@@ -7,7 +7,7 @@
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
 - Current phase: Phase 5 — Workspace and Artist Domain (IN PROGRESS —
-  Increment 5.1 complete; 5.2 workspace and artist API next)
+  Increments 5.1-5.2 complete; 5.3 web application shell next)
 - Last updated: 2026-07-20
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -949,8 +949,8 @@ Tested backend foundation
 
 ## Phase 5 — Workspace and Artist Domain
 
-- Status: IN PROGRESS — Product Owner go received 2026-07-20; Increment
-  5.1 COMPLETE; 5.2 next
+- Status: IN PROGRESS — Product Owner go received 2026-07-20; Increments
+  5.1 and 5.2 COMPLETE; 5.3 web shell next
 - Objective: A user can create and view the CYR3NT artist inside a
   workspace.
 - Dependencies: Phase 4. Before implementation begins, the following
@@ -1014,20 +1014,20 @@ reference layering (transport → domain → repositories) from Phase 4.
   workspace); model invariants (name uniqueness per workspace,
   workspace_id required) covered by unit tests.
 
-#### Increment 5.2 — Workspace and artist API
+#### Increment 5.2 — Workspace and artist API — COMPLETE
 
-- [ ] Artist CRUD API: create, list, get, update (optimistic concurrency
+- [x] Artist CRUD API: create, list, get, update (optimistic concurrency
   version token, HTTP 409 on stale, BR-019), archive/restore (BR-014,
   REQ-005), delete (REQ-051, BR-015: response names what is removed).
-- [ ] Workspace endpoints (get/create with idempotent-create semantics,
+- [x] Workspace endpoints (get/create with idempotent-create semantics,
   REQ-001).
-- [ ] Validation and authorization rules: name 1–120 characters and
+- [x] Validation and authorization rules: name 1–120 characters and
   unique per workspace (422 per the AC-003 contract, D5-1); archived
   artists reject mutation; single-local-owner authorization with the
   Phase 8 limitation documented at the enforcement point.
-- [ ] Audit records for every state change (actor `local-owner`,
+- [x] Audit records for every state change (actor `local-owner`,
   BR-020, REQ-040).
-- [ ] API tests: CRUD, validation shapes, 409 stale update, archival
+- [x] API tests: CRUD, validation shapes, 409 stale update, archival
   blocking, deletion, audit presence; service unit tests with fakes.
 - Acceptance: all AC-002/AC-003 API clauses pass; layering test still
   green with the new domain/repository modules.
@@ -2807,3 +2807,38 @@ this phase must not begin.
   level; API-level enforcement lands in 5.2).
 - Risks: None new.
 - Next recommended step: Increment 5.2 — workspace and artist API.
+
+### 2026-07-20 (Increment 5.2: workspace and artist API)
+
+- Phase: 5
+- Increment: 5.2 — COMPLETE
+- Status: COMPLETE
+- Work completed: Workspace endpoints (idempotent create returning the
+  existing workspace, REQ-001) and the artist API (create with trimmed
+  D5-1 validation and the same-transaction AIP draft; list; get; update
+  under optimistic concurrency with 409 on stale tokens; archive and
+  restore per BR-014; deletion requiring explicit confirmation and
+  naming the loss per BR-015/REQ-051). ArtistService owns the policy
+  with injected repositories per the layering convention (AST test still
+  green); shared domain-outcome exceptions keep the one-direction import
+  rule; audit_records migration 9d2e8b1c4f70 and AuditRepository write
+  an audit row with actor local-owner for every state change (BR-020).
+  The single-actor dependency documents the Phase 8 limitation at the
+  enforcement point.
+- Tests run: make check green — root 22, apps/api 29 (new API suite:
+  workspace idempotency; full artist lifecycle covering AC-003 422
+  field+rule shapes for duplicates and invalid input, 409 stale and
+  archived paths, confirmed deletion, and audit-trail assertions with
+  the seeded actor). Live smoke against the rebuilt container: seeded
+  workspace returned with created=false, artist created and
+  confirm-deleted with the loss named. Two implementation defects found
+  and fixed by the tests before commit: pooled asyncpg connections bound
+  to a dead event loop under TestClient (fixed with NullPool in the test
+  harness) and the 5.1 uniqueness test updated to the repository's new
+  DuplicateArtistName contract.
+- Decisions: D5-1 recorded as implemented (trimmed 1-120,
+  case-insensitive uniqueness enforced at schema and surfaced as 422
+  unique_per_workspace).
+- Risks: None new.
+- Next recommended step: Increment 5.3 — web application shell and
+  screens.

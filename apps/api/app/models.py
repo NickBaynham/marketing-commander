@@ -118,6 +118,25 @@ class Artist(TimestampMixin, Base):
     )
 
 
+class AuditRecord(Base):
+    """Append-only audit trail: every state change names its actor
+    (BR-020, REQ-040)."""
+
+    __tablename__ = "audit_records"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid7
+    )
+    actor_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    action: Mapped[str] = mapped_column(String(64), nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    entity_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    correlation_id: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
 class ArtistIdentityProfile(TimestampMixin, Base):
     """Minimal empty AIP draft, created with its artist (REQ-003, AC-002).
 
