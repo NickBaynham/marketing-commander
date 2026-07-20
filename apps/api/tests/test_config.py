@@ -34,3 +34,4 @@ def test_postgres_dsn_assembly(monkeypatch):
         postgres_password="p",
     )
     assert settings.postgres_dsn == "postgresql://u:p@h:1/d"
+    assert settings.postgres_async_dsn == "postgresql+asyncpg://u:p@h:1/d"

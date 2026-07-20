@@ -1,7 +1,7 @@
 [project]
 name = "marketing-commander-api"
 version = "0.1.0"
-description = "Marketing Commander API (Phase 3 stub: /healthz only)"
+description = "Marketing Commander API (FastAPI backend)"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "fastapi>=0.115",
@@ -9,6 +9,8 @@ dependencies = [
     "pydantic-settings>=2.6",
     "asyncpg>=0.30",
     "redis>=5",
+    "sqlalchemy[asyncio]>=2.0",
+    "alembic>=1.13",
 ]
 
 [dependency-groups]

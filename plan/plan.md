@@ -853,15 +853,30 @@ Recorded now:
   live (503 naming redis during an outage, 200 on recovery); every
   response carries a correlation ID; CI verification with this commit.
 
-#### Increment 4.2 — Database foundation (Alembic and sessions)
+#### Increment 4.2 — Database foundation (Alembic and sessions) — COMPLETE
 
-- [ ] SQLAlchemy 2.x and session handling per decision D4-1.
-- [ ] Alembic wired with a baseline migration; `make migrate` target.
-- [ ] Migration test: empty database to current schema cleanly (Phase 4
-  acceptance criterion), running in CI against the compose PostgreSQL.
-- [ ] `/readyz` switches to the shared session/engine machinery.
-- Acceptance: `alembic upgrade head` from empty database verified in CI
-  and locally; downgrade of the baseline verified.
+- [x] SQLAlchemy 2.x and session handling per D4-1 (decided — see
+  Decisions): async engine on asyncpg (SQLAlchemy 2.0.51), cached
+  engine/sessionmaker, `get_session` FastAPI dependency, `Base`
+  declarative root for Phase 5+ models.
+- [x] Alembic 1.18.5 wired with the async template; `sqlalchemy.url`
+  comes from application settings (overridable by the invoker); empty
+  baseline revision `4e21b456f9ec`; `make migrate` target added.
+- [x] Migration test: creates a scratch database, `alembic upgrade
+  head` from empty, asserts the head revision is stamped, downgrades to
+  base, asserts empty, drops the scratch database; skips visibly when
+  PostgreSQL is unreachable; runs in CI against the compose PostgreSQL.
+- [x] `/readyz` probes through the shared engine (`SELECT 1` on a
+  pooled connection) instead of raw asyncpg.
+- [x] Settings now load the repository `.env` on the host (found by
+  upward search; absent in containers where compose env is the only
+  source; real env vars take precedence) — alembic, tests, and compose
+  resolve identical addresses. A fixed-depth path lookup broke inside
+  the container and was caught by the container healthcheck at rebuild;
+  replaced with the upward search.
+- Acceptance verified: upgrade-from-empty and baseline downgrade proven
+  by the migration test locally (scratch database) and by `make migrate`
+  stamping the dev database; CI verification with this commit.
 
 #### Increment 4.3 — Domain-service boundaries and repository abstractions
 
@@ -2489,3 +2504,33 @@ this phase must not begin.
 - Risks: None new.
 - Next recommended step: Increment 4.2 — database foundation (SQLAlchemy
   per D4-1, Alembic baseline, migration test, make migrate).
+
+### 2026-07-19 (Increment 4.2 complete: database foundation)
+
+- Phase: 4
+- Increment: 4.2 — Database foundation (Alembic and sessions)
+- Status: COMPLETE
+- Work completed: SQLAlchemy 2.0.51 async engine on asyncpg (D4-1
+  decided), cached engine/sessionmaker with a get_session dependency,
+  declarative Base for Phase 5 models; Alembic 1.18.5 (async template)
+  reading its URL from application settings with an empty baseline
+  revision 4e21b456f9ec; make migrate target (D4-3 confirmed: explicit,
+  not auto-run); /readyz now probes through the shared engine; Settings
+  load the repository .env on the host via upward search (env vars take
+  precedence; containers unaffected).
+- Tests run (all executed, all passing): apps/api pytest — 13 passed
+  including the new migration test (scratch database created, upgrade
+  head stamped 4e21b456f9ec, downgrade base emptied alembic_version,
+  scratch dropped); make migrate against the dev database (stamped
+  4e21b456f9ec, verified by psql); api container rebuilt Healthy and
+  GET /readyz 200 via the engine path; make check green end to end.
+  Two defects caught during the increment: (1) host tools missed .env
+  port overrides — fixed by Settings env_file loading; (2) the first
+  env-file lookup used a fixed parent depth that raised IndexError in
+  the container — caught by the container healthcheck, fixed with an
+  upward search.
+- Decisions: D4-1 decided (SQLAlchemy async + asyncpg); D4-3 confirmed
+  (explicit make migrate; no auto-run on container start).
+- Risks: None new.
+- Next recommended step: Increment 4.3 — domain-service boundaries and
+  repository abstractions.

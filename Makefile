@@ -12,6 +12,7 @@ help:
 	@echo "  make test             Run the test suite (documentation and repo validation)"
 	@echo "  make check            Full local quality gate (what CI runs)"
 	@echo "  make bootstrap-check  Verify the local environment bootstrap"
+	@echo "  make migrate          Apply database migrations (alembic upgrade head)"
 	@echo "  make build            Build service containers"
 	@echo "  make run              Start the local stack (docker compose up --build)"
 	@echo "  make clean            Remove caches and build output"
@@ -37,6 +38,9 @@ check: lint test bootstrap-check
 
 bootstrap-check:
 	pdm run python scripts/bootstrap_check.py
+
+migrate:
+	cd apps/api && pdm run alembic upgrade head
 
 build:
 	docker compose build

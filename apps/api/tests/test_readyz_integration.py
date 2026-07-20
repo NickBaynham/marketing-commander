@@ -7,22 +7,9 @@ the stack up, where this asserts the real dependency path.
 Traceability: REQ-048, AC-001; Phase 4 Increment 4.1.
 """
 
-import socket
-
 import pytest
 
-from app.config import get_settings
-
-
-def compose_stack_reachable() -> bool:
-    settings = get_settings()
-    try:
-        with socket.create_connection(
-            (settings.postgres_host, settings.postgres_port), timeout=2
-        ):
-            return True
-    except OSError:
-        return False
+from tests.conftest import compose_stack_reachable
 
 
 @pytest.mark.skipif(

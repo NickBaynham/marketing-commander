@@ -9,11 +9,13 @@ Traceability: REQ-048, AC-001.
 
 import asyncio
 
-import asyncpg
 import redis.asyncio as aioredis
 from fastapi import APIRouter, HTTPException
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.config import get_settings
+from app.db import get_engine
 
 router = APIRouter()
 
@@ -21,17 +23,13 @@ CHECK_TIMEOUT_SECONDS = 3
 
 
 async def check_postgres() -> str | None:
-    settings = get_settings()
+    """Probe through the shared engine (the same path requests will use)."""
     try:
-        conn = await asyncpg.connect(
-            settings.postgres_dsn, timeout=CHECK_TIMEOUT_SECONDS
-        )
-        try:
-            await conn.fetchval("SELECT 1")
-        finally:
-            await conn.close()
+        async with asyncio.timeout(CHECK_TIMEOUT_SECONDS):
+            async with get_engine().connect() as conn:
+                await conn.execute(text("SELECT 1"))
         return None
-    except (OSError, asyncio.TimeoutError, asyncpg.PostgresError) as exc:
+    except (OSError, TimeoutError, SQLAlchemyError) as exc:
         return str(exc) or exc.__class__.__name__
 
 
