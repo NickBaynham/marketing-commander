@@ -2534,3 +2534,28 @@ this phase must not begin.
 - Risks: None new.
 - Next recommended step: Increment 4.3 — domain-service boundaries and
   repository abstractions.
+
+### 2026-07-20 (CI defect: apps/api harness not installed in CI; fixed)
+
+- Phase: 4
+- Increment: CI repair after 4.1/4.2
+- Status: COMPLETE (verification with this commit's run)
+- Work completed: The hosted CI runs for the 4.1 and 4.2 commits FAILED
+  (runs 29711477958 and 29711792591) — the workflow installed only the
+  root project (`pdm install`), so `make test`'s `cd apps/api && pdm run
+  pytest` found no environment and errored ("Command 'pytest' is not
+  found"). The "CI verification" notes in the two prior entries were
+  therefore not satisfied at the time of writing; this entry corrects
+  the record. Fix: CI now runs `make setup` (root plus apps/api — the
+  same command a contributor runs), plus a 20-minute job timeout. The
+  long apparent durations (about 1.5 h) were runner queue time, not
+  execution: the failed job executed in about 61 seconds.
+- Tests run: local make check green before pushing the fix; hosted CI
+  green required for this entry to close (run recorded below when
+  complete).
+- Decisions: CI must execute the same `make setup` contributors use;
+  divergence between CI steps and documented developer commands is the
+  defect class here.
+- Risks: Runner queue delays can defer failure discovery; the increment
+  cadence (watch every push) already mitigates.
+- Next recommended step: Confirm green CI, then Increment 4.3.

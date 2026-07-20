@@ -8,13 +8,14 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pdm-project/setup-pdm@v4
         with:
           python-version: "3.14"
-      - name: Install dependencies
-        run: pdm install
+      - name: Install dependencies (same as local "make setup")
+        run: make setup
       - name: Prepare environment file
         run: cp .env.example .env
       - name: Start infrastructure services (waits for healthy)
