@@ -1,11 +1,43 @@
-// Marketing Commander web stub (plan/plan.md Phase 3, Increment 3.4).
-// Static status line only; product screens (SCR-01..SCR-25) arrive per
-// phase from Phase 5 onward. Traceability: REQ-048, AC-001.
-export default function Home() {
-  return (
-    <main>
-      <h1>Marketing Commander</h1>
-      <p>Web stub is running (Phase 3, Increment 3.4).</p>
-    </main>
-  );
+// SCR-01 — seeded-owner entry (Phase 5, Increment 5.3).
+// Routes to workspace setup on first run, otherwise to the artists
+// list. Traceability: US-001; SCR-01; DEC-03.
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { api, ApiError } from "../lib/api";
+
+export default function Entry() {
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .getWorkspace()
+      .then(() => !cancelled && router.replace("/artists"))
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        if (err instanceof ApiError && err.status === 404) {
+          router.replace("/setup");
+        } else {
+          setError(err instanceof Error ? err.message : "API unreachable");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  if (error) {
+    return (
+      <div className="error-banner" role="alert">
+        <p>The API is unreachable: {error}</p>
+        <p>
+          Start the stack with <code>make run</code> and reload this page.
+        </p>
+      </div>
+    );
+  }
+  return <p aria-live="polite">Signing in as the local owner…</p>;
 }

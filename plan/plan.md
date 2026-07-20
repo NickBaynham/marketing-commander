@@ -7,7 +7,7 @@
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
 - Current phase: Phase 5 — Workspace and Artist Domain (IN PROGRESS —
-  Increments 5.1-5.2 complete; 5.3 web application shell next)
+  Increments 5.1-5.3 complete; 5.4 Playwright framework next)
 - Last updated: 2026-07-20
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -950,7 +950,7 @@ Tested backend foundation
 ## Phase 5 — Workspace and Artist Domain
 
 - Status: IN PROGRESS — Product Owner go received 2026-07-20; Increments
-  5.1 and 5.2 COMPLETE; 5.3 web shell next
+  5.1-5.3 COMPLETE; 5.4 Playwright framework next
 - Objective: A user can create and view the CYR3NT artist inside a
   workspace.
 - Dependencies: Phase 4. Before implementation begins, the following
@@ -1032,18 +1032,18 @@ reference layering (transport → domain → repositories) from Phase 4.
 - Acceptance: all AC-002/AC-003 API clauses pass; layering test still
   green with the new domain/repository modules.
 
-#### Increment 5.3 — Web application shell and screens
+#### Increment 5.3 — Web application shell and screens — COMPLETE
 
-- [ ] Application shell: navigation, API client (D5-2), error and
+- [x] Application shell: navigation, API client (D5-2), error and
   loading conventions from the UX specification's Common Screen
   Behavior.
-- [ ] SCR-01 seeded-owner entry and SCR-02 workspace setup (idempotent;
+- [x] SCR-01 seeded-owner entry and SCR-02 workspace setup (idempotent;
   golden path Steps 0–1).
-- [ ] SCR-04 artists list, SCR-05 create artist (validation display per
+- [x] SCR-04 artists list, SCR-05 create artist (validation display per
   AC-003: adjacent messages, preserved input, focus management,
   assistive-technology exposure), SCR-06 artist overview (archive/
   restore/delete actions with BR-015 confirmation naming what is lost).
-- [ ] Accessibility baseline on these screens: labeled fields, keyboard
+- [x] Accessibility baseline on these screens: labeled fields, keyboard
   operability, visible focus (DEC-09; verified in 5.4 with axe).
 - Acceptance: create-and-view flow works end to end against the live
   API; UI states (loading, empty, error, validation) match the UX
@@ -2842,3 +2842,35 @@ this phase must not begin.
 - Risks: None new.
 - Next recommended step: Increment 5.3 — web application shell and
   screens.
+
+### 2026-07-20 (Increment 5.3: web application shell and screens)
+
+- Phase: 5
+- Increment: 5.3 — COMPLETE
+- Status: COMPLETE
+- Work completed: Application shell (navigation, global styles with a
+  visible-focus accessibility baseline), typed API client reading the
+  error envelope (D5-2), and screens SCR-01 (seeded-owner entry routing
+  to setup or artists), SCR-02 (idempotent workspace setup), SCR-04
+  (artists list with loading, empty, and error states), SCR-05 (create
+  artist with the AC-003 validation display: adjacent field messages,
+  preserved input, focus to first invalid field, aria-invalid and
+  role=alert exposure), SCR-06 (overview with archive/restore carrying
+  the version token, and deletion behind an explicit confirmation
+  naming what is lost). One integration defect found by driving the UI
+  in a real browser before commit: direct browser fetch (D5-2) was
+  blocked cross-origin because the API had no CORS policy; fixed with
+  a configurable exact-origin CORS middleware (WEB_ORIGIN in compose)
+  exposing x-correlation-id, verified by header inspection and by
+  re-driving the flow.
+- Tests run: tsc --noEmit clean; make check green; all four routes
+  serve 200 from the rebuilt container; browser-driven verification of
+  the full create-and-view flow (entry -> artists empty state -> create
+  CYR3NT -> overview with genre, state, and actions) — the first
+  golden-path segment demonstrably works end to end against the live
+  API. Playwright automation of these flows lands in 5.4.
+- Decisions: D5-2 recorded as implemented (direct browser fetch via a
+  typed client plus exact-origin CORS on the API).
+- Risks: None new.
+- Next recommended step: Increment 5.4 — Playwright framework and the
+  golden-path first segment.

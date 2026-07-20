@@ -44,6 +44,19 @@ class Settings(BaseSettings):
 
     redis_url: str = "redis://localhost:6379/0"
 
+    # D5-2: the browser fetches the API cross-origin from the web app's
+    # published port; CORS allows exactly that origin (and its 127.0.0.1
+    # form), nothing wider.
+    web_origin: str = "http://localhost:3000"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        origins = [self.web_origin]
+        alternate = self.web_origin.replace("localhost", "127.0.0.1")
+        if alternate != self.web_origin:
+            origins.append(alternate)
+        return origins
+
     @property
     def postgres_dsn(self) -> str:
         return (

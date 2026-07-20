@@ -1,0 +1,88 @@
+/* Minimal application styles (Phase 5, Increment 5.3). Accessibility
+   baseline: visible focus, readable defaults (DEC-09). No component
+   framework per D5-4. */
+
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  line-height: 1.5;
+}
+
+a { color: inherit; }
+
+:focus-visible {
+  outline: 3px solid #4c9ffe;
+  outline-offset: 2px;
+}
+
+header.app-nav {
+  display: flex;
+  gap: 1.5rem;
+  align-items: baseline;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+}
+
+header.app-nav .brand { font-weight: 700; }
+
+main.app-main {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.field { margin-bottom: 1rem; }
+.field label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+.field input,
+.field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  font: inherit;
+}
+
+.field-error {
+  color: #b91c1c;
+  margin-top: 0.25rem;
+}
+
+.error-banner {
+  border: 1px solid #b91c1c;
+  color: #b91c1c;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state { padding: 2rem 0; }
+
+.artist-list { list-style: none; padding: 0; }
+.artist-list li {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.state-badge {
+  font-size: 0.85em;
+  border: 1px solid currentColor;
+  border-radius: 0.25rem;
+  padding: 0 0.4rem;
+  margin-left: 0.5rem;
+}
+
+.actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+
+.danger-zone {
+  margin-top: 2rem;
+  border: 1px solid #b91c1c;
+  padding: 1rem;
+}
+
+button {
+  font: inherit;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
