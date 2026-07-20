@@ -212,7 +212,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 1 | Product Boundary and MVP Definition | COMPLETE (2026-07-18) |
 | 2 | Repository and Development Foundation | COMPLETE |
 | 3 | Docker Runtime Foundation | COMPLETE |
-| 4 | Backend Application Foundation | NOT STARTED |
+| 4 | Backend Application Foundation | IN PROGRESS |
 | 5 | Workspace and Artist Domain | NOT STARTED |
 | 6 | Artist Identity Profile | NOT STARTED |
 | 7 | Artifact and Versioning System | NOT STARTED |
@@ -805,24 +805,79 @@ Recorded now:
 
 ## Phase 4 — Backend Application Foundation
 
-- Status: NOT STARTED
+- Status: IN PROGRESS (increment plan drafted 2026-07-19; Increment 4.1
+  in progress)
 - Objective: A tested FastAPI foundation with migrations, configuration,
   logging, and explicit domain-service boundaries.
 - Dependencies: Phase 3.
+- Traceability: REQ-040 (audit/correlation conventions established here),
+  REQ-043 (latency conventions the harness will measure against), and the
+  AC-003 validation-error contract (422 naming field and rule) that
+  Phase 5+ endpoints inherit. Phase 4 builds no product endpoint; domain
+  behavior remains Phase 5+ (phase-leakage stop condition).
 
-### Tasks
+### Increment Plan (drafted 2026-07-19)
 
-- [ ] FastAPI project structure.
-- [ ] Configuration management.
-- [ ] Database session handling.
-- [ ] Alembic migrations.
-- [ ] API versioning.
-- [ ] Error-response conventions.
-- [ ] Logging and correlation IDs.
-- [ ] Health and readiness endpoints.
-- [ ] Domain-service boundaries.
-- [ ] Repository abstractions.
-- [ ] Initial API test harness.
+#### Increment 4.1 — API application foundation (IN PROGRESS)
+
+- [ ] FastAPI project structure: application factory, configuration
+  module, versioned router mount (`/api/v1`), middleware, error handlers,
+  tests package.
+- [ ] Configuration management: pydantic-settings reading environment
+  variables (`MC_ENV`, `POSTGRES_*`, `REDIS_URL`); no secrets in code.
+- [ ] API versioning: `/api/v1` mount with a minimal versioned ping
+  endpoint proving the prefix and envelope conventions.
+- [ ] Error-response conventions: one error envelope (code, message,
+  correlation ID, details); HTTP 422 validation errors name the field and
+  violated rule per the AC-003 contract; HTTP 409 convention reserved for
+  optimistic concurrency (BR-019).
+- [ ] Logging and correlation IDs: JSON log lines; middleware accepts or
+  generates `X-Correlation-ID`, returns it on every response, includes it
+  in logs and error envelopes.
+- [ ] Health and readiness endpoints: `/healthz` (process liveness) and
+  `/readyz` (PostgreSQL and Redis connectivity with per-dependency
+  detail, HTTP 503 when not ready) — the full design Phase 3 deferred
+  here.
+- [ ] Initial API test harness: pytest in `apps/api` (unit tests for
+  config and error conventions; API tests for health, readiness,
+  correlation, versioned ping) wired into `make test` and therefore CI.
+- Acceptance: harness green locally and in CI; `/readyz` flips with
+  dependency availability; every response carries a correlation ID.
+
+#### Increment 4.2 — Database foundation (Alembic and sessions)
+
+- [ ] SQLAlchemy 2.x and session handling per decision D4-1.
+- [ ] Alembic wired with a baseline migration; `make migrate` target.
+- [ ] Migration test: empty database to current schema cleanly (Phase 4
+  acceptance criterion), running in CI against the compose PostgreSQL.
+- [ ] `/readyz` switches to the shared session/engine machinery.
+- Acceptance: `alembic upgrade head` from empty database verified in CI
+  and locally; downgrade of the baseline verified.
+
+#### Increment 4.3 — Domain-service boundaries and repository abstractions
+
+- [ ] Package boundaries: routes (transport) → services (domain) →
+  repositories (persistence); no business logic in route handlers
+  (CLAUDE.md quality principle), enforced by convention documentation
+  and review.
+- [ ] Repository abstraction and session provider used by one concrete,
+  non-speculative example wired end to end (the readiness/system probe),
+  ready for Phase 5's workspace and artist domain.
+- [ ] Conventions documented in `docs/development/conventions.md`.
+- Acceptance: the layering is real (imports flow one direction) and the
+  example slice has unit and API tests.
+
+### Decisions (Phase 4)
+
+- D4-1 — ORM/driver model: decided at 4.2 implementation; candidate is
+  SQLAlchemy 2.x async with asyncpg (latest-APIs directive), falling back
+  to sync psycopg only on concrete evidence of friction.
+- D4-2 — Log format and correlation header: decided at 4.1
+  implementation; candidate is stdlib logging with a JSON formatter and
+  `X-Correlation-ID`.
+- D4-3 — Migration execution model: explicit (`make migrate`, CI step),
+  not auto-run on container start, so failures are visible and retryable
+  (quality principle); revisit when Phase 5 adds real schema.
 
 ### Deliverable
 
