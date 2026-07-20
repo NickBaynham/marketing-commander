@@ -18,6 +18,7 @@ help:
 
 setup:
 	pdm install
+	cd apps/api && pdm install -G:all
 
 lint:
 	pdm run ruff check scripts tests apps services
@@ -29,6 +30,7 @@ format:
 
 test:
 	pdm run pytest
+	cd apps/api && pdm run pytest
 
 check: lint test bootstrap-check
 	@echo "All checks passed."

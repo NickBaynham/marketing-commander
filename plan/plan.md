@@ -5,7 +5,8 @@
   Test Commander exit review with zero product findings (clean-room
   bootstrap, five healthy services, hot reload, negative and recovery
   cases, CI compose smoke all verified). Next: Phase 4.
-- Current phase: Phase 4 — Backend Application Foundation (NOT STARTED)
+- Current phase: Phase 4 — Backend Application Foundation (IN PROGRESS —
+  Increment 4.1: API application foundation)
 - Last updated: 2026-07-19
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -818,31 +819,39 @@ Recorded now:
 
 ### Increment Plan (drafted 2026-07-19)
 
-#### Increment 4.1 — API application foundation (IN PROGRESS)
+#### Increment 4.1 — API application foundation — COMPLETE
 
-- [ ] FastAPI project structure: application factory, configuration
-  module, versioned router mount (`/api/v1`), middleware, error handlers,
-  tests package.
-- [ ] Configuration management: pydantic-settings reading environment
-  variables (`MC_ENV`, `POSTGRES_*`, `REDIS_URL`); no secrets in code.
-- [ ] API versioning: `/api/v1` mount with a minimal versioned ping
-  endpoint proving the prefix and envelope conventions.
-- [ ] Error-response conventions: one error envelope (code, message,
-  correlation ID, details); HTTP 422 validation errors name the field and
-  violated rule per the AC-003 contract; HTTP 409 convention reserved for
-  optimistic concurrency (BR-019).
-- [ ] Logging and correlation IDs: JSON log lines; middleware accepts or
-  generates `X-Correlation-ID`, returns it on every response, includes it
-  in logs and error envelopes.
-- [ ] Health and readiness endpoints: `/healthz` (process liveness) and
-  `/readyz` (PostgreSQL and Redis connectivity with per-dependency
-  detail, HTTP 503 when not ready) — the full design Phase 3 deferred
-  here.
-- [ ] Initial API test harness: pytest in `apps/api` (unit tests for
-  config and error conventions; API tests for health, readiness,
-  correlation, versioned ping) wired into `make test` and therefore CI.
-- Acceptance: harness green locally and in CI; `/readyz` flips with
-  dependency availability; every response carries a correlation ID.
+- [x] FastAPI project structure: application factory (`create_app`),
+  config, correlation, errors, health modules, `app/api/v1` router
+  package, `tests/` harness.
+- [x] Configuration management: pydantic-settings reading environment
+  variables (`MC_ENV`, `POSTGRES_*`, `REDIS_URL`); no secrets in code;
+  compose provides in-network values to the api service.
+- [x] API versioning: `/api/v1` mount with `GET /api/v1/ping` proving
+  the prefix (product resources arrive Phase 5+ per the endpoint
+  inventory).
+- [x] Error-response conventions: one envelope (code, message,
+  correlation_id, details); 422 details name field and rule per the
+  AC-003 contract; handlers registered against the Starlette
+  HTTPException base class so routing 404/405 use the envelope too (a
+  defect the harness caught: fastapi-subclass-only registration missed
+  router 404s).
+- [x] Logging and correlation IDs (D4-2 decided): stdlib logging with a
+  JSON formatter; middleware accepts or generates `X-Correlation-ID`,
+  returns it on every response, binds it into log lines and error
+  envelopes via a ContextVar.
+- [x] Health and readiness endpoints: `/healthz` liveness; `/readyz`
+  probes PostgreSQL (asyncpg `SELECT 1`) and Redis (async ping)
+  concurrently with 3s timeouts, HTTP 503 naming each dependency's
+  status when not ready.
+- [x] Initial API test harness: 12 tests in `apps/api/tests` (config
+  units, error-convention tests incl. 422 field/rule shape, health/
+  correlation/versioning API tests, live readiness integration test that
+  skips with a visible reason when services are down); `make setup` and
+  `make test` now include `apps/api`, so the harness runs in CI.
+- Acceptance verified: harness green locally; `/readyz` flip verified
+  live (503 naming redis during an outage, 200 on recovery); every
+  response carries a correlation ID; CI verification with this commit.
 
 #### Increment 4.2 — Database foundation (Alembic and sessions)
 
@@ -2448,3 +2457,35 @@ this phase must not begin.
   override all four ports including REDIS_PORT; the port-override
   verification stack had left Redis on the default port.
 - Next recommended step: Begin Phase 4 (Backend Application Foundation).
+
+### 2026-07-19 (Increment 4.1 complete: API application foundation)
+
+- Phase: 4
+- Increment: 4.1 — API application foundation
+- Status: COMPLETE
+- Work completed: FastAPI application foundation in apps/api —
+  application factory; pydantic-settings configuration; correlation-ID
+  middleware with JSON logging (D4-2 decided: stdlib + JSON formatter,
+  X-Correlation-ID); single error envelope with AC-003-shaped 422
+  details; /healthz and /readyz (concurrent asyncpg and Redis probes,
+  per-dependency 503 detail); /api/v1 mount with ping; 12-test harness
+  wired into make setup/test and therefore CI; compose api service now
+  receives in-network POSTGRES_*/REDIS_URL. Dependencies added:
+  pydantic-settings, asyncpg, redis; dev: pytest, httpx.
+- Tests run (all executed, all passing): apps/api pdm run pytest — 12
+  passed (including the live readiness integration test against the
+  compose stack); container rebuild and live verification —
+  GET /readyz 200 with postgres/redis ok, GET /api/v1/ping 200, 404
+  envelope with matching X-Correlation-ID header and body; negative
+  path — docker compose stop redis -> /readyz 503 with details naming
+  postgres ok and redis unreachable, recovery to 200 after restart;
+  make check green end to end (root suite 22 passed, api suite 12
+  passed, bootstrap check all ok on the overridden ports). One defect
+  caught by the harness during development: error handlers registered
+  on fastapi.HTTPException missed Starlette routing 404s; fixed by
+  registering on the Starlette base class (regression test in place).
+- Decisions: D4-2 decided (recorded in the increment). D4-1 and D4-3
+  remain for 4.2.
+- Risks: None new.
+- Next recommended step: Increment 4.2 — database foundation (SQLAlchemy
+  per D4-1, Alembic baseline, migration test, make migrate).

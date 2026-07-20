@@ -37,6 +37,13 @@ services:
     build: apps/api
     environment:
       MC_ENV: ${MC_ENV:-local}
+      # In-network addresses; the .env values are the host's view.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-marketing_commander}
+      POSTGRES_USER: ${POSTGRES_USER:-mc_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      REDIS_URL: redis://redis:6379/0
     ports:
       - "127.0.0.1:${API_PORT:-8000}:8000"
     volumes:
