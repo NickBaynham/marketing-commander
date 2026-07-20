@@ -2551,8 +2551,10 @@ this phase must not begin.
   long apparent durations (about 1.5 h) were runner queue time, not
   execution: the failed job executed in about 61 seconds.
 - Tests run: local make check green before pushing the fix; hosted CI
-  green required for this entry to close (run recorded below when
-  complete).
+  verified green — run 29714453563 (1m44s), log confirms the apps/api
+  suite executed in CI (13 passed, including the migration test against
+  the compose PostgreSQL) before bootstrap check and the full gate.
+  With this run, the 4.1 and 4.2 CI verifications are genuinely met.
 - Decisions: CI must execute the same `make setup` contributors use;
   divergence between CI steps and documented developer commands is the
   defect class here.
