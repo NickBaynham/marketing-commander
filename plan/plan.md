@@ -960,18 +960,26 @@ Tested backend foundation
   (Test Data Strategy), and optimistic concurrency.
 
 - Traceability: REQ-001 (workspace), REQ-002 (seeded owner), REQ-003
-  (artist creation), REQ-004 (list/overview), REQ-005 (archival),
-  REQ-051 (deletion, Must — needed before Phase 9 live calls), REQ-040
-  (audit records), REQ-041/REQ-042 activate for the first product UI;
-  AC-002, AC-003, AC-025, AC-024 (first golden-path segment); US-001,
-  US-002, US-003; screens SCR-01, SCR-02, SCR-04, SCR-05, SCR-06.
+  (artist creation, including the empty AIP draft), REQ-004
+  (list/overview), REQ-005 (archival), REQ-051 (deletion, Must — needed
+  before Phase 9 live calls), REQ-007 (the validation contract applied to
+  the first product endpoints), REQ-040 (audit records), REQ-041/REQ-042
+  activate for the first product UI, REQ-050 (golden-path coverage starts
+  with the 5.4 segment); AC-002, AC-003, AC-025, AC-024 (first
+  golden-path segment); US-001, US-002, US-003; screens SCR-01, SCR-02,
+  SCR-04, SCR-05, SCR-06. REQ-051's SCR-25 (Settings → data management)
+  surface arrives with the settings screen in a later phase; the SCR-06
+  deletion path satisfies Phase 5 (TC plan validation, 2026-07-20).
 - Pre-implementation decision status: temporary local identity → DEC-03
   and ADR-002 (approved); explicit save and optimistic concurrency →
   ADR-003 and BR-019 (approved); accessibility baseline and browser
   matrix → DEC-09 (approved); test factories → Test Data Strategy
   (approved, implemented here). Residual concrete decisions are D5-1..
   D5-4 below, settled at increment implementation and recorded.
-- Phase-leakage stop condition: no AIP editor (Phase 6), no artifact
+- Phase-leakage stop condition: no AIP editor or section schema
+  (Phase 6) — the empty AIP record itself IS created with the artist in
+  this phase per REQ-003/AC-002 (TC plan validation, 2026-07-20), no
+  artifact
   versioning (Phase 7), no authentication (Phase 8), no dashboard
   beyond a minimal navigation shell (Phase 13).
 
@@ -988,17 +996,21 @@ reference layering (transport → domain → repositories) from Phase 4.
   limitation: no real access control before Phase 8).
 - [ ] Artist entity.
 - [ ] Artist lifecycle state (`active`/`archived`, BR-014).
-- [ ] SQLAlchemy models (User, Workspace, WorkspaceMembership, Artist)
-  with audit timestamps and version tokens; first real Alembic
-  migration; the empty-baseline migration test now proves a non-trivial
-  schema.
+- [ ] SQLAlchemy models (User, Workspace, WorkspaceMembership, Artist,
+  and a minimal ArtistIdentityProfile — an empty draft record created
+  with the artist per REQ-003/AC-002; no section schema or editor, which
+  remain Phase 6) with audit timestamps and version tokens; first real
+  Alembic migration; the empty-baseline migration test now proves a
+  non-trivial schema.
 - [ ] Idempotent seed command (`make seed`): `local-owner` user, owner
   membership, single workspace (golden path Step 1 semantics — a second
   run returns the existing workspace).
 - [ ] Entity factories, database reset tooling (`make db-reset`), and the
   CYR3NT seed fixture wired to the real schema (Test Data Strategy;
   fixture content and conventions arrive from Phase 2).
-- Acceptance: migration up/down clean; seed idempotent (run twice, one
+- Acceptance: creating an artist creates its empty AIP draft record in
+  the same transaction (AC-002 clause, unit-tested); migration up/down
+  clean; seed idempotent (run twice, one
   workspace); model invariants (name uniqueness per workspace,
   workspace_id required) covered by unit tests.
 
@@ -2746,3 +2758,23 @@ this phase must not begin.
   by DEC-03).
 - Next recommended step: Begin Increment 5.1 (domain schema, seed, and
   test data).
+
+### 2026-07-20 (TC Phase 5 plan validation repairs applied)
+
+- Phase: 5 (planning)
+- Increment: Plan validation repairs
+- Status: COMPLETE
+- Work completed: Applied the three Test Commander plan-validation
+  findings on Product Owner instruction: (1) Increment 5.1 now includes a
+  minimal ArtistIdentityProfile model — the empty draft record REQ-003
+  and AC-002 require at artist creation — with a same-transaction
+  acceptance clause; the phase-leakage fence distinguishes the AIP record
+  (created here) from the AIP editor and section schema (Phase 6).
+  (2) The traceability block records that REQ-051's SCR-25 settings
+  surface arrives with the settings screen in a later phase; SCR-06
+  satisfies Phase 5. (3) REQ-007 and REQ-050 added to the traceability
+  block, closing the citation gaps.
+- Tests run: make check green after the edits.
+- Decisions: None new.
+- Risks: None new; the AC-002 silent-skip risk is retired.
+- Next recommended step: Product Owner go for Increment 5.1.
