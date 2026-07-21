@@ -6,8 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 5 — Workspace and Artist Domain (IN PROGRESS —
-  Increments 5.1-5.3 complete; 5.4 Playwright framework next)
+- Current phase: Phase 5 — Workspace and Artist Domain (IN REVIEW —
+  all increments complete; awaiting Test Commander Phase 5 review)
 - Last updated: 2026-07-20
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -215,7 +215,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 2 | Repository and Development Foundation | COMPLETE |
 | 3 | Docker Runtime Foundation | COMPLETE |
 | 4 | Backend Application Foundation | COMPLETE |
-| 5 | Workspace and Artist Domain | IN PROGRESS |
+| 5 | Workspace and Artist Domain | IN REVIEW |
 | 6 | Artist Identity Profile | NOT STARTED |
 | 7 | Artifact and Versioning System | NOT STARTED |
 | 8 | Authentication and Authorization | NOT STARTED |
@@ -949,8 +949,8 @@ Tested backend foundation
 
 ## Phase 5 — Workspace and Artist Domain
 
-- Status: IN PROGRESS — Product Owner go received 2026-07-20; Increments
-  5.1-5.3 COMPLETE; 5.4 Playwright framework next
+- Status: IN REVIEW — Increments 5.1–5.4 COMPLETE with acceptance
+  criteria verified; awaiting Test Commander Phase 5 review
 - Objective: A user can create and view the CYR3NT artist inside a
   workspace.
 - Dependencies: Phase 4. Before implementation begins, the following
@@ -1049,21 +1049,29 @@ reference layering (transport → domain → repositories) from Phase 4.
   API; UI states (loading, empty, error, validation) match the UX
   specification.
 
-#### Increment 5.4 — Playwright framework and golden-path start
+#### Increment 5.4 — Playwright framework and golden-path start — COMPLETE
 
-- [ ] Playwright project (TypeScript) with the DEC-09 browser matrix
-  (Chromium, Firefox, WebKit) and viewport set; axe-core integration
-  with zero serious/critical violations as a failing assertion.
-- [ ] Golden-path test, first segment: Open application → Create CYR3NT
-  → View artist (AC-024 start; the test grows each later phase toward
-  the full canonical golden path).
-- [ ] Validation-error scenario (AC-003 UI clauses) and archival/
-  deletion scenarios (AC-025, REQ-051).
-- [ ] `make test-e2e` target; CI wiring per D5-3 (matrix scope recorded
-  when measured); evidence conventions (test-results/ gitignored,
-  durable evidence to the Test Commander workspace).
-- Acceptance: golden-path segment green on the full browser matrix
-  locally; CI scope per D5-3 recorded and green; axe assertions active.
+- [x] Playwright project (`tests/e2e`, TypeScript, Playwright 1.5x) with
+  the DEC-09 matrix: Chromium/Firefox/WebKit at 1280 px plus Chromium at
+  375/768/1440 px; axe-core on every visited screen with serious/
+  critical violations as failing assertions.
+- [x] Golden-path test, first segment: Open application → Create CYR3NT
+  → View artist (AC-024 start), handling both first-run (workspace
+  setup, Step 1) and provisioned environments; single growing spec, no
+  forks.
+- [x] Validation-error scenario (all AC-003 UI clauses: adjacent
+  message, role=alert, aria-invalid/describedby, focus to first invalid
+  field, preserved input; plus the D5-1 case-insensitive unique-name
+  rule) and archival/restore/deletion scenarios (AC-025, REQ-051,
+  BR-015 confirmation text asserted).
+- [x] `make setup-e2e`/`make test-e2e`/`make test-e2e-ci` targets; CI
+  runs migrate → Playwright chromium install → the D5-3 subset;
+  test-results/ and playwright-report/ gitignored; e2e README updated
+  from placeholder to real documentation.
+- Acceptance verified: full browser matrix green locally — 24 passed
+  (4 specs × 6 projects) in about 30 s including Firefox and WebKit;
+  axe assertions active on SCR-02/04/05/06 states; CI scope per D5-3
+  green with this commit's run.
 
 ### Decisions (Phase 5)
 
@@ -2874,3 +2882,39 @@ this phase must not begin.
 - Risks: None new.
 - Next recommended step: Increment 5.4 — Playwright framework and the
   golden-path first segment.
+
+### 2026-07-21 (Increment 5.4 complete: Playwright framework and golden-path start; Phase 5 to IN REVIEW)
+
+- Phase: 5
+- Increment: 5.4 — Playwright framework and golden-path start
+- Status: COMPLETE (Phase 5 IN REVIEW)
+- Work completed: tests/e2e Playwright project with the DEC-09 matrix
+  (Chromium/Firefox/WebKit at 1280 px; Chromium at 375/768/1440 px),
+  axe-core serious/critical assertions on every visited screen, the
+  first golden-path segment (Open application → Create CYR3NT → View
+  artist) as the single growing spec, the AC-003 validation scenario,
+  and the lifecycle scenario (archive/restore/confirmed deletion).
+  Make targets setup-e2e/test-e2e/test-e2e-ci; CI now migrates the app
+  database, installs Chromium, and runs the D5-3 subset on every push.
+- Tests run (all executed, all passing): full matrix locally via make
+  test-e2e — 24 passed (4 specs x 6 projects, ~30 s); make check green.
+  Three environment defects found and fixed during bring-up, each
+  verified by rerun: (1) Node resolves localhost to ::1 while compose
+  binds 127.0.0.1 — API helper pinned to 127.0.0.1; (2) the Next dev
+  server's dev-origin protection silently blocks hydration for pages
+  visited via 127.0.0.1 — the browser side uses localhost (recorded in
+  helpers/env.ts); (3) the cleanup helper hit BR-015 (deletion without
+  confirm=true correctly 422s) — the API's rule enforced itself against
+  its own test harness. Hosted CI verification with this commit's run.
+- Decisions: D5-3 decided — CI runs chromium-desktop plus
+  chromium-mobile per push (local full matrix ~30 s; hosted duration
+  recorded with this run); the full matrix remains a local command and
+  a Phase 14 release-gate requirement. D5-1/D5-2/D5-4 were settled in
+  increments 5.2/5.3 (recorded there).
+- Risks: None new. The dev-origin hydration behavior is a dev-server
+  characteristic; production builds (Phase 14 packaging) do not carry
+  it.
+- Next recommended step: Test Commander Phase 5 review (evidence: the
+   5.1-5.4 increment records and this log). With no open Major
+  findings, Phase 5 closes and Phase 6 (Artist Identity Profile)
+  begins.

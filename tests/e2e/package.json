@@ -1,0 +1,11 @@
+{
+  "name": "marketing-commander-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
+    "@playwright/test": "^1.50.0",
+    "@types/node": "^24",
+    "typescript": "^5"
+  }
+}

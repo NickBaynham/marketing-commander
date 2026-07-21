@@ -22,6 +22,12 @@ jobs:
         run: docker compose up -d --wait
       - name: Check (same gate as local "make check")
         run: make check
+      - name: Apply database migrations
+        run: make migrate
+      - name: Install Playwright (Chromium)
+        run: cd tests/e2e && npm ci && npx playwright install --with-deps chromium
+      - name: End-to-end tests (D5-3 CI scope, chromium desktop and mobile)
+        run: make test-e2e-ci
       - name: Service logs on failure
         if: failure()
         run: docker compose ps -a && docker compose logs --tail 50

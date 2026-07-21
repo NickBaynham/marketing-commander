@@ -1,7 +1,7 @@
 # Marketing Commander developer commands.
 # Requires: pdm (Python package manager), Docker (from Phase 3).
 
-.PHONY: help setup lint format test check bootstrap-check build run clean migrate seed db-reset
+.PHONY: help setup setup-e2e lint format test test-e2e test-e2e-ci check bootstrap-check build run clean migrate seed db-reset
 
 help:
 	@echo "Marketing Commander"
@@ -13,6 +13,8 @@ help:
 	@echo "  make check            Full local quality gate (what CI runs)"
 	@echo "  make bootstrap-check  Verify the local environment bootstrap"
 	@echo "  make migrate          Apply database migrations (alembic upgrade head)"
+	@echo "  make setup-e2e        Install Playwright dependencies and browsers"
+	@echo "  make test-e2e         Run the e2e suite (full browser matrix; stack must be up)"
 	@echo "  make build            Build service containers"
 	@echo "  make run              Start the local stack (docker compose up --build)"
 	@echo "  make clean            Remove caches and build output"
@@ -51,6 +53,15 @@ run:
 clean:
 	rm -rf .pytest_cache .ruff_cache
 	find . -type d -name __pycache__ -not -path './.git/*' -exec rm -rf {} +
+
+setup-e2e:
+	cd tests/e2e && npm install && npx playwright install
+
+test-e2e:
+	cd tests/e2e && npx playwright test
+
+test-e2e-ci:
+	cd tests/e2e && npx playwright test --project=chromium-desktop --project=chromium-mobile
 
 seed:
 	cd apps/api && pdm run python -m app.seed
