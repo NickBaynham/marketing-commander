@@ -6,9 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 5 — Workspace and Artist Domain (IN REVIEW —
-  all increments complete; awaiting Test Commander Phase 5 review)
-- Last updated: 2026-07-20
+- Current phase: Phase 6 — Artist Identity Profile (NOT STARTED)
+- Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
 
@@ -215,7 +214,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 2 | Repository and Development Foundation | COMPLETE |
 | 3 | Docker Runtime Foundation | COMPLETE |
 | 4 | Backend Application Foundation | COMPLETE |
-| 5 | Workspace and Artist Domain | IN REVIEW |
+| 5 | Workspace and Artist Domain | COMPLETE |
 | 6 | Artist Identity Profile | NOT STARTED |
 | 7 | Artifact and Versioning System | NOT STARTED |
 | 8 | Authentication and Authorization | NOT STARTED |
@@ -949,8 +948,12 @@ Tested backend foundation
 
 ## Phase 5 — Workspace and Artist Domain
 
-- Status: IN REVIEW — Increments 5.1–5.4 COMPLETE with acceptance
-  criteria verified; awaiting Test Commander Phase 5 review
+- Status: COMPLETE — Increments 5.1–5.4 closed; the Test Commander
+  Phase 5 exit review (independent adversarial reviewers on 5.1–5.3,
+  first-hand E2E-matrix and clean verification on 5.4) surfaced 10 Major
+  and 2 Minor findings, all fixed in ce22921 and re-verified green;
+  closed 2026-07-21 (full report in the Test Commander workspace,
+  documents/phase5-review-2026-07-21.md)
 - Objective: A user can create and view the CYR3NT artist inside a
   workspace.
 - Dependencies: Phase 4. Before implementation begins, the following
@@ -2919,3 +2922,42 @@ this phase must not begin.
    5.1-5.4 increment records and this log). With no open Major
   findings, Phase 5 closes and Phase 6 (Artist Identity Profile)
   begins.
+
+### 2026-07-21 (Test Commander Phase 5 exit review — 12 findings fixed; phase closed)
+
+- Phase: 5
+- Increment: Test Commander exit review
+- Status: COMPLETE
+- Work completed: Because the test lead implemented Increments 5.1–5.3,
+  the exit review used two independent adversarial reviewer agents for
+  that code, plus first-hand verification of the dev-side 5.4 (full
+  browser matrix run: 24 passed across 6 projects). The reviewers
+  surfaced 10 Major and 2 Minor findings — headline items: the
+  optimistic-concurrency check was check-then-write and could silently
+  lose updates under concurrent writers; the workspace singleton was
+  racy with no database guarantee; deletion's bare confirm=true did not
+  prove foreknowledge of the loss; the AC-003 validation display only
+  covered the name field; a detail-screen fetch race could aim
+  archive/restore at the wrong artist; 409s had no recovery path; audit
+  records lacked correlation IDs; workspace creation was unaudited. All
+  twelve were accepted and fixed in ce22921: mapper version counter
+  with version-conditioned UPDATEs (StaleVersion on lost races, proven
+  by a two-session race test), database-level workspace singleton index
+  with savepoint recovery, confirm_name deletion semantics, generalized
+  per-field validation display with DOM-order focus, cancellation
+  guards keyed to the route id, 409 reload-and-notify, correlation IDs
+  threaded through audit records and error displays, workspace-creation
+  audit records, structural constraint-name detection, and a shared
+  identity-constants module.
+- Tests run: make migrate (workspace-singleton migration); tsc clean;
+  make check green (root 22, apps/api 32 — including the new
+  concurrent-writer race, database-singleton, and workspace-audit
+  tests); full E2E matrix 24 passed post-fix; hosted CI green for
+  ce22921 (run 29843366234, 2m18s) including migrations and the D5-3
+  chromium E2E subset.
+- Decisions: None new.
+- Risks: None new. The lost-update and duplicate-workspace risks are
+  retired at the database level.
+- Next recommended step: Begin Phase 6 (Artist Identity Profile) with
+  an increment plan draft; the golden-path test grows through AIP
+  editing in Phase 6 per the growth plan.
