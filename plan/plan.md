@@ -2907,9 +2907,10 @@ this phase must not begin.
   confirm=true correctly 422s) — the API's rule enforced itself against
   its own test harness. Hosted CI verification with this commit's run.
 - Decisions: D5-3 decided — CI runs chromium-desktop plus
-  chromium-mobile per push (local full matrix ~30 s; hosted duration
-  recorded with this run); the full matrix remains a local command and
-  a Phase 14 release-gate requirement. D5-1/D5-2/D5-4 were settled in
+  chromium-mobile per push; measured on the hosted runner: e2e step
+  16.6 s (8 passed), whole pipeline 2m15s (run 29842228169). The full
+  matrix remains a local command and a Phase 14 release-gate
+  requirement. D5-1/D5-2/D5-4 were settled in
   increments 5.2/5.3 (recorded there).
 - Risks: None new. The dev-origin hydration behavior is a dev-server
   characteristic; production builds (Phase 14 packaging) do not carry
