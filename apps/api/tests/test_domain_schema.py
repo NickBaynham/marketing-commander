@@ -128,6 +128,66 @@ def test_artist_version_token_defaults_to_one(scratch_dsn):
     run_db(scratch_dsn, check)
 
 
+def test_workspace_singleton_enforced_by_database(isolated_dsn):
+    """DEC-01/REQ-001: the unique index over a constant expression makes a
+    second workspace row impossible regardless of application races."""
+
+    async def check(session: AsyncSession) -> None:
+        user = await factories.create_user(session, user_id=f"u-{uuid.uuid4().hex[:6]}")
+        await factories.create_workspace(session, created_by=user.id)
+        await session.commit()
+        session.add(Workspace(name="Second Workspace", created_by=user.id))
+        with pytest.raises(IntegrityError):
+            await session.flush()
+        await session.rollback()
+
+    run_db(isolated_dsn, check)
+
+
+def test_concurrent_update_raises_stale_version(isolated_dsn):
+    """BR-019 under real concurrency: the versioned UPDATE conditions on
+    the loaded version, so a second writer holding a stale row loses."""
+
+    async def check(_session: AsyncSession) -> None:
+        from sqlalchemy.pool import NullPool
+
+        from app.exceptions import StaleVersion
+        from app.repositories.artists import ArtistRepository
+
+        engine_a = create_async_engine(isolated_dsn, poolclass=NullPool)
+        engine_b = create_async_engine(isolated_dsn, poolclass=NullPool)
+        try:
+            maker_a = async_sessionmaker(engine_a, expire_on_commit=False)
+            maker_b = async_sessionmaker(engine_b, expire_on_commit=False)
+            async with maker_a() as setup:
+                user = await factories.create_user(
+                    setup, user_id=f"u-{uuid.uuid4().hex[:6]}"
+                )
+                workspace = await factories.create_workspace(
+                    setup, created_by=user.id
+                )
+                artist = await factories.create_artist(
+                    setup, workspace.id, name="Raced"
+                )
+                await setup.commit()
+                artist_id = artist.id
+            async with maker_a() as sa, maker_b() as sb:
+                loaded_a = await sa.get(Artist, artist_id)
+                loaded_b = await sb.get(Artist, artist_id)
+                loaded_a.summary = "writer A"
+                await ArtistRepository(sa).save(loaded_a)
+                await sa.commit()
+                loaded_b.summary = "writer B"
+                with pytest.raises(StaleVersion):
+                    await ArtistRepository(sb).save(loaded_b)
+                await sb.rollback()
+        finally:
+            await engine_a.dispose()
+            await engine_b.dispose()
+
+    run_db(isolated_dsn, check)
+
+
 def test_seed_is_idempotent(isolated_dsn):
     async def check(session: AsyncSession) -> None:
         first = await seed(session)

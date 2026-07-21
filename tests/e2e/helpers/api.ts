@@ -25,9 +25,9 @@ export async function deleteTestArtists(api: APIRequestContext): Promise<void> {
   const artists: { id: string; name: string }[] = await response.json();
   for (const artist of artists) {
     if (artist.name === "CYR3NT" || artist.name.startsWith("E2E ")) {
-      // BR-015: deletion requires explicit confirmation.
+      // BR-015: the confirmation names the artist being destroyed.
       const deleted = await api.delete(
-        `/api/v1/artists/${artist.id}?confirm=true`,
+        `/api/v1/artists/${artist.id}?confirm_name=${encodeURIComponent(artist.name)}`,
       );
       expect(deleted.ok()).toBeTruthy();
     }

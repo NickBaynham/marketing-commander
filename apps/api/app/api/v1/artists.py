@@ -165,10 +165,12 @@ async def delete_artist(
     artist_id: uuid.UUID,
     service: Service,
     session: Session,
-    confirm: bool = False,
+    confirm_name: str | None = None,
 ) -> DeletionOut:
+    """BR-015: confirm_name must match the artist's name exactly, proving
+    the caller knows what is being destroyed."""
     try:
-        removed = await service.delete(artist_id, confirmed=confirm)
+        removed = await service.delete(artist_id, confirm_name=confirm_name)
         await session.commit()
     except Exception as exc:  # noqa: BLE001
         await session.rollback()

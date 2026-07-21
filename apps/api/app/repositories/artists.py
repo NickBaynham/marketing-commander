@@ -13,11 +13,21 @@ from sqlalchemy import delete as sa_delete
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.exc import StaleDataError
 
-from app.exceptions import DuplicateArtistName
+from app.exceptions import DuplicateArtistName, StaleVersion
 from app.models import Artist, ArtistIdentityProfile
 
 UNIQUE_NAME_INDEX = "uq_artist_workspace_name_ci"
+
+
+def _is_duplicate_name(exc: IntegrityError) -> bool:
+    # asyncpg exposes the violated constraint structurally; fall back to
+    # the message only if the attribute is absent.
+    constraint = getattr(exc.orig, "constraint_name", None)
+    if constraint is not None:
+        return constraint == UNIQUE_NAME_INDEX
+    return UNIQUE_NAME_INDEX in str(exc.orig)
 
 
 class ArtistRepository:
@@ -38,7 +48,7 @@ class ArtistRepository:
         try:
             await self._session.flush()
         except IntegrityError as exc:
-            if UNIQUE_NAME_INDEX in str(exc.orig):
+            if _is_duplicate_name(exc):
                 raise DuplicateArtistName(name) from exc
             raise
         self._session.add(
@@ -51,9 +61,15 @@ class ArtistRepository:
         try:
             await self._session.flush()
         except IntegrityError as exc:
-            if UNIQUE_NAME_INDEX in str(exc.orig):
+            if _is_duplicate_name(exc):
                 raise DuplicateArtistName(artist.name) from exc
             raise
+        except StaleDataError as exc:
+            # The versioned UPDATE matched no row: a concurrent writer got
+            # there first (BR-019 — no silent overwrite).
+            raise StaleVersion(
+                "a concurrent update changed this artist; reload and retry"
+            ) from exc
         return artist
 
     async def delete(self, artist: Artist) -> dict[str, str]:

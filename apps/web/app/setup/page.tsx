@@ -5,7 +5,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError } from "../../lib/api";
+import { api, formatError } from "../../lib/api";
 
 export default function WorkspaceSetup() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function WorkspaceSetup() {
       await api.createWorkspace(name);
       router.replace("/artists");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "workspace setup failed");
+      setError(formatError(err, "workspace setup failed"));
       setBusy(false);
     }
   }

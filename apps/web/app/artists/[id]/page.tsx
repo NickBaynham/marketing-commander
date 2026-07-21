@@ -1,13 +1,16 @@
-// SCR-06 — artist overview (Phase 5, Increment 5.3).
-// Archive/restore (BR-014, AC-025) and deletion with an explicit
-// confirmation naming what is lost (BR-015, REQ-051). Actions carry the
-// current version token (BR-019).
-// Traceability: REQ-004, REQ-005, REQ-051; AC-025; US-003; SCR-06.
+// SCR-06 — artist overview (Phase 5, Increment 5.3; hardened
+// post-review). Fetches are cancellation-guarded and keyed to the route
+// id so a stale response can never aim an action at the wrong artist;
+// 409 conflicts reload the current version and say so (Common Screen
+// Behavior); deletion passes the artist's name as the BR-015
+// confirmation proving foreknowledge of the loss.
+// Traceability: REQ-004, REQ-005, REQ-051; AC-008 behavior, AC-025;
+// US-003; SCR-06.
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, Artist } from "../../../lib/api";
+import { api, ApiError, Artist, formatError } from "../../../lib/api";
 
 export default function ArtistOverview({
   params,
@@ -18,38 +21,69 @@ export default function ArtistOverview({
   const router = useRouter();
   const [artist, setArtist] = useState<Artist | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
+    let cancelled = false;
     api
       .getArtist(id)
-      .then(setArtist)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : "failed to load artist"),
+      .then((loaded) => !cancelled && setArtist(loaded))
+      .catch(
+        (err: unknown) =>
+          !cancelled && setError(formatError(err, "failed to load artist")),
       );
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
-  async function act(fn: () => Promise<Artist>) {
+  useEffect(() => {
+    setArtist(null);
+    setError(null);
+    setNotice(null);
+    return refetch();
+  }, [refetch]);
+
+  async function act(fn: (current: Artist) => Promise<Artist>) {
+    if (artist === null) return;
     setBusy(true);
     setError(null);
+    setNotice(null);
     try {
-      setArtist(await fn());
+      setArtist(await fn(artist));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "action failed");
+      if (err instanceof ApiError && err.status === 409) {
+        // A newer version exists: reload it and tell the user (Common
+        // Screen Behavior 409 contract) instead of looping on a stale
+        // token.
+        try {
+          setArtist(await api.getArtist(id));
+          setNotice(
+            "This artist changed since you loaded it. The latest version " +
+              "has been reloaded — please retry the action.",
+          );
+        } catch (reloadErr) {
+          setError(formatError(reloadErr, "failed to reload artist"));
+        }
+      } else {
+        setError(formatError(err, "action failed"));
+      }
     } finally {
       setBusy(false);
     }
   }
 
   async function onDelete() {
+    if (artist === null) return;
     setBusy(true);
     setError(null);
     try {
-      await api.deleteArtist(id);
+      await api.deleteArtist(id, artist.name);
       router.push("/artists");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "deletion failed");
+      setError(formatError(err, "deletion failed"));
       setBusy(false);
     }
   }
@@ -73,6 +107,11 @@ export default function ArtistOverview({
           <span className="state-badge">archived</span>
         )}
       </h1>
+      {notice && (
+        <div className="error-banner" role="status">
+          {notice}
+        </div>
+      )}
       {error && (
         <div className="error-banner" role="alert">
           {error}
@@ -94,7 +133,7 @@ export default function ArtistOverview({
           <button
             disabled={busy}
             onClick={() =>
-              act(() => api.archiveArtist(artist.id, artist.version_token))
+              act((current) => api.archiveArtist(id, current.version_token))
             }
           >
             Archive artist
@@ -103,7 +142,7 @@ export default function ArtistOverview({
           <button
             disabled={busy}
             onClick={() =>
-              act(() => api.restoreArtist(artist.id, artist.version_token))
+              act((current) => api.restoreArtist(id, current.version_token))
             }
           >
             Restore artist

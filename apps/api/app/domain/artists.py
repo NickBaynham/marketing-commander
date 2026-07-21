@@ -15,6 +15,7 @@ AC-025; BR-014, BR-015, BR-019, BR-020; D5-1.
 
 import uuid
 
+from app.correlation import get_correlation_id
 from app.exceptions import (
     ArtistArchived,
     NotFound,
@@ -49,6 +50,7 @@ class ArtistService:
             action=action,
             entity_type="artist",
             entity_id=str(entity_id),
+            correlation_id=get_correlation_id(),
         )
 
     async def create(
@@ -105,7 +107,9 @@ class ArtistService:
             artist.genre = genre
         if summary is not None:
             artist.summary = summary
-        artist.version_token += 1
+        # version_token increments via the mapper's version counter on
+        # flush (models.Artist.__mapper_args__), which also conditions the
+        # UPDATE on the loaded version — the real BR-019 guarantee.
         await self._artists.save(artist)
         await self._audited("artist.updated", artist.id)
         return artist
@@ -116,7 +120,6 @@ class ArtistService:
             return artist
         self._check_version(artist, expected_version)
         artist.state = "archived"
-        artist.version_token += 1
         await self._artists.save(artist)
         await self._audited("artist.archived", artist.id)
         return artist
@@ -127,20 +130,22 @@ class ArtistService:
             return artist
         self._check_version(artist, expected_version)
         artist.state = "active"
-        artist.version_token += 1
         await self._artists.save(artist)
         await self._audited("artist.restored", artist.id)
         return artist
 
-    async def delete(self, artist_id: uuid.UUID, confirmed: bool) -> dict:
-        if not confirmed:
-            raise ValidationFailed(
-                "confirm",
-                "required",
-                "deletion requires explicit confirmation naming what is "
-                "lost: the artist and its AIP draft (BR-015)",
-            )
+    async def delete(self, artist_id: uuid.UUID, confirm_name: str | None) -> dict:
+        """BR-015/REQ-051: the confirmation must prove foreknowledge of the
+        loss — the caller names the artist being destroyed."""
         artist = await self.get(artist_id)
+        if confirm_name is None or confirm_name.strip() != artist.name:
+            raise ValidationFailed(
+                "confirm_name",
+                "must_match_artist_name",
+                f'deletion permanently removes the artist "{artist.name}" '
+                "and its identity profile draft; confirm by supplying "
+                "confirm_name matching the artist name exactly (BR-015)",
+            )
         artist_id_value = artist.id
         removed = await self._artists.delete(artist)
         await self._audited("artist.deleted", artist_id_value)

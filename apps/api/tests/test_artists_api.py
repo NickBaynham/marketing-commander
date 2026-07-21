@@ -123,32 +123,41 @@ def test_artist_lifecycle_via_api(api):
     )
     assert restored.status_code == 200 and restored.json()["state"] == "active"
 
-    # BR-015 / REQ-051: deletion requires confirmation and names the loss.
+    # BR-015 / REQ-051: confirmation must prove foreknowledge by naming
+    # the artist being destroyed.
     unconfirmed = client.delete(f"/api/v1/artists/{artist_id}")
     assert unconfirmed.status_code == 422
-    assert unconfirmed.json()["error"]["details"][0]["field"] == "confirm"
-    deleted = client.delete(f"/api/v1/artists/{artist_id}?confirm=true")
+    detail = unconfirmed.json()["error"]["details"][0]
+    assert detail["field"] == "confirm_name"
+    assert "CYR3NT" in detail["message"]  # the loss is named to the caller
+    wrong_name = client.delete(
+        f"/api/v1/artists/{artist_id}?confirm_name=NotTheArtist"
+    )
+    assert wrong_name.status_code == 422
+    deleted = client.delete(f"/api/v1/artists/{artist_id}?confirm_name=CYR3NT")
     assert deleted.status_code == 200
     assert deleted.json()["removed"]["artist"] == "CYR3NT"
     assert client.get(f"/api/v1/artists/{artist_id}").status_code == 404
 
     # BR-020 / REQ-040: every state change wrote an audit record with the
     # seeded actor.
-    async def audit_actions() -> list[tuple[str, str]]:
+    async def audit_rows() -> list[tuple[str, str, str | None]]:
         engine = create_async_engine(dsn)
         try:
             async with async_sessionmaker(engine)() as session:
                 result = await session.execute(
-                    select(AuditRecord.action, AuditRecord.actor_id).where(
-                        AuditRecord.entity_id == artist_id
-                    )
+                    select(
+                        AuditRecord.action,
+                        AuditRecord.actor_id,
+                        AuditRecord.correlation_id,
+                    ).where(AuditRecord.entity_id == artist_id)
                 )
                 return list(result.all())
         finally:
             await engine.dispose()
 
-    records = asyncio.run(audit_actions())
-    actions = {action for action, _ in records}
+    records = asyncio.run(audit_rows())
+    actions = {action for action, _, _ in records}
     assert {
         "artist.created",
         "artist.updated",
@@ -156,4 +165,22 @@ def test_artist_lifecycle_via_api(api):
         "artist.restored",
         "artist.deleted",
     } <= actions
-    assert all(actor == "local-owner" for _, actor in records)
+    assert all(actor == "local-owner" for _, actor, _ in records)
+    # REQ-040: correlation ID is part of every audit record.
+    assert all(correlation for _, _, correlation in records)
+
+
+def test_workspace_creation_is_audited(api):
+    client, dsn = api
+
+    async def workspace_audit() -> set[str]:
+        engine = create_async_engine(dsn)
+        try:
+            async with async_sessionmaker(engine)() as session:
+                result = await session.execute(select(AuditRecord.action))
+                return {row[0] for row in result.all()}
+        finally:
+            await engine.dispose()
+
+    actions = asyncio.run(workspace_audit())
+    assert {"workspace.created", "membership.created"} <= actions

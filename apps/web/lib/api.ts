@@ -53,12 +53,37 @@ export class ApiError extends Error {
   }
 }
 
+// Human-actionable error text with the correlation ID for support
+// (Common Screen Behavior).
+export function formatError(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) {
+    return err.correlationId
+      ? `${err.message} (support reference: ${err.correlationId})`
+      : err.message;
+  }
+  return err instanceof Error ? err.message : fallback;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...init,
   });
-  const body = response.status === 204 ? null : await response.json();
+  let body: unknown = null;
+  if (response.status !== 204) {
+    try {
+      body = await response.json();
+    } catch {
+      // Non-JSON body (e.g. a bare 500): normalize instead of leaking a
+      // parser error to the user.
+      body = {
+        error: {
+          code: "unexpected_response",
+          message: `the server returned an unexpected response (HTTP ${response.status})`,
+        },
+      };
+    }
+  }
   if (!response.ok) {
     throw new ApiError(response.status, body);
   }
@@ -93,9 +118,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ expected_version: expectedVersion }),
     }),
-  deleteArtist: (id: string) =>
+  deleteArtist: (id: string, confirmName: string) =>
     request<{ removed: Record<string, string> }>(
-      `/api/v1/artists/${id}?confirm=true`,
+      `/api/v1/artists/${id}?confirm_name=${encodeURIComponent(confirmName)}`,
       { method: "DELETE" },
     ),
 };

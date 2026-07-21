@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, formatError } from "../lib/api";
 
 export default function Entry() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function Entry() {
         if (err instanceof ApiError && err.status === 404) {
           router.replace("/setup");
         } else {
-          setError(err instanceof Error ? err.message : "API unreachable");
+          setError(formatError(err, "API unreachable"));
         }
       });
     return () => {

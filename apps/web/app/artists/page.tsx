@@ -5,19 +5,24 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { api, Artist } from "../../lib/api";
+import { api, Artist, formatError } from "../../lib/api";
 
 export default function ArtistsList() {
   const [artists, setArtists] = useState<Artist[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     api
       .listArtists()
-      .then(setArtists)
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : "failed to load artists"),
+      .then((loaded) => !cancelled && setArtists(loaded))
+      .catch(
+        (err: unknown) =>
+          !cancelled && setError(formatError(err, "failed to load artists")),
       );
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (error) {

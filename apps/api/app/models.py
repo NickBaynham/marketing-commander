@@ -117,6 +117,12 @@ class Artist(TimestampMixin, Base):
         nullable=False, server_default=text("1")
     )
 
+    # BR-019 for real concurrency: SQLAlchemy conditions every UPDATE and
+    # DELETE on the loaded version (WHERE id = ... AND version_token = ...)
+    # and raises StaleDataError on a lost race — check-then-write alone
+    # cannot prevent silent overwrites under READ COMMITTED.
+    __mapper_args__ = {"version_id_col": version_token}
+
 
 class AuditRecord(Base):
     """Append-only audit trail: every state change names its actor

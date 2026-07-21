@@ -14,10 +14,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_sessionmaker
+from app.identity import (
+    IDENTITY_SOURCE,
+    LOCAL_OWNER_DISPLAY_NAME,
+    LOCAL_OWNER_ID,
+)
 from app.models import User, Workspace, WorkspaceMembership
 
-LOCAL_OWNER_ID = "local-owner"
-LOCAL_OWNER_DISPLAY_NAME = "Nick"
 DEFAULT_WORKSPACE_NAME = "CYR3NT Workspace"
 
 
@@ -30,7 +33,7 @@ async def seed(session: AsyncSession) -> dict[str, str]:
         user = User(
             id=LOCAL_OWNER_ID,
             display_name=LOCAL_OWNER_DISPLAY_NAME,
-            identity_source="local_seed",
+            identity_source=IDENTITY_SOURCE,
         )
         session.add(user)
         await session.flush()
