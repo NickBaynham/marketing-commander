@@ -9,8 +9,10 @@
 "use client";
 
 import { use, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api, ApiError, Artist, formatError } from "../../../lib/api";
+import { AipDraft, api, ApiError, Artist, formatError } from "../../../lib/api";
+import { percent } from "../../../lib/aip";
 
 export default function ArtistOverview({
   params,
@@ -24,6 +26,18 @@ export default function ArtistOverview({
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [aip, setAip] = useState<AipDraft | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .getAipDraft(id)
+      .then((draft) => !cancelled && setAip(draft))
+      .catch(() => undefined); // overview still renders without the AIP summary
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
   const refetch = useCallback(() => {
     let cancelled = false;
@@ -127,6 +141,23 @@ export default function ArtistOverview({
         <dt>Version</dt>
         <dd>{artist.version_token}</dd>
       </dl>
+
+      <section className="aip-summary" aria-label="Artist Identity Profile">
+        <h2>Artist Identity Profile</h2>
+        {aip ? (
+          <p>
+            {percent(aip.display_percentage)} complete ·{" "}
+            {aip.approval_eligible
+              ? "ready for approval"
+              : `${aip.incomplete_required_sections.length} required section(s) remaining`}{" "}
+            · <Link href={`/artists/${id}/aip`}>Open editor</Link>
+          </p>
+        ) : (
+          <p>
+            <Link href={`/artists/${id}/aip`}>Open editor</Link>
+          </p>
+        )}
+      </section>
 
       <div className="actions">
         {artist.state === "active" ? (

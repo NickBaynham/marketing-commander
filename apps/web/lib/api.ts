@@ -34,6 +34,24 @@ export interface FieldDetail {
   message: string;
 }
 
+export interface AipSection {
+  content: string;
+  status: "empty" | "draft" | "ready_for_review";
+  confidence: "low" | "medium" | "high" | null;
+  sources: string[];
+  unknown: boolean;
+}
+
+export interface AipDraft {
+  artist_id: string;
+  version_token: number;
+  sections: Record<string, AipSection>;
+  completeness: number;
+  display_percentage: number;
+  approval_eligible: boolean;
+  incomplete_required_sections: string[];
+}
+
 export class ApiError extends Error {
   status: number;
   code: string;
@@ -123,4 +141,16 @@ export const api = {
       `/api/v1/artists/${id}?confirm_name=${encodeURIComponent(confirmName)}`,
       { method: "DELETE" },
     ),
+  getAipDraft: (id: string) => request<AipDraft>(`/api/v1/artists/${id}/aip`),
+  saveAipDraft: (
+    id: string,
+    expectedVersion: number,
+    sections: Record<string, AipSection>,
+  ) =>
+    request<AipDraft>(`/api/v1/artists/${id}/aip`, {
+      method: "PUT",
+      body: JSON.stringify({ expected_version: expectedVersion, sections }),
+    }),
+  getAipPreview: (id: string) =>
+    request<{ markdown: string }>(`/api/v1/artists/${id}/aip/preview`),
 };

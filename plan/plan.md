@@ -1205,19 +1205,31 @@ A user can create and view CYR3NT
   per-section and total size 422s, preview contract, adversarial
   inertness, audit-with-correlation, true concurrent race, 404).
 
-#### Increment 6.3 — AIP editor, completeness view, preview UI
+#### Increment 6.3 — AIP editor, completeness view, preview UI — COMPLETE
 
-- [ ] SCR-07 structured editor: per-section editing, status control,
-  confidence and source metadata, explicit save carrying the version
-  token, all-field AC-003 display.
-- [ ] 409 conflict UI: reload and compare options (D6-3), no silent
-  overwrite (AC-008).
-- [ ] SCR-08 completeness and validation view: per-section state,
-  display percentage, binary eligibility, blocking sections with jump
-  links.
-- [ ] SCR-09 Markdown preview screen.
-- [ ] SCR-06 artist overview surfaces AIP completeness and links to the
-  editor.
+- [x] SCR-07 structured editor: per-section content, status, confidence,
+  sources, and `unknown` (optional sections) controls; explicit save
+  carrying the version token; all-field AC-003 display (adjacent
+  messages, aria-invalid/aria-describedby, focus to first invalid
+  section).
+- [x] 409 conflict UI (D6-3): on a stale save the editor fetches the
+  newer server draft and renders a compare panel — per-section local
+  vs latest — with "discard mine and load latest" and "re-apply mine
+  over the latest version"; no silent overwrite (AC-008).
+- [x] SCR-08 completeness panel: display percentage and required-section
+  percentage, binary eligibility badge, and the blocking required
+  sections as in-page jump links.
+- [x] SCR-09 Markdown preview screen (renders the server's
+  front-matter Markdown verbatim).
+- [x] SCR-06 artist overview surfaces AIP completeness ("75% complete ·
+  ready for approval · Open editor") and links to the editor.
+- Verified first-hand against the live stack (browser): editor renders
+  all 12 sections; a saved draft recomputes to 100% required / eligible
+  and clears the blocking list; preview renders front matter and
+  headings; overview shows the AIP summary. Web app typechecks
+  (`tsc --noEmit` clean). Formal Playwright coverage of the save and
+  conflict flows is Increment 6.4 (golden-path growth + conflict
+  scenario), matching the 5.3-builds / 5.4-verifies split.
 
 #### Increment 6.4 — E2E and golden-path growth
 
@@ -1238,9 +1250,12 @@ A user can create and view CYR3NT
 - D6-2 — Uniform section model: every section carries content, status,
   confidence, sources; optional sections add the explicit `unknown`
   flag. Settled at 6.1 implementation.
-- D6-3 — Conflict compare scope: settled at 6.3; candidate is reload
-  plus a per-section text comparison of local edits against the newer
-  server version (no merge tooling in the MVP).
+- D6-3 — Conflict compare scope: DECIDED 2026-07-22. On a 409 the
+  editor loads the newer server draft and shows a per-section text
+  comparison (local vs latest); the reviewer either discards local
+  edits and loads latest, or re-applies local edits over the latest
+  version (last-writer-wins after seeing the diff — never a silent
+  overwrite, AC-008). No automatic merge tooling in the MVP.
 - D6-4 — Section weights: equal weights (1.0) per section initially,
   held in one configuration constant validated by tests; recalibration
   is a recorded change.
@@ -3104,3 +3119,34 @@ this phase must not begin.
   blocking (CI has passed with this config).
 - Next recommended step: Increment 6.3 — AIP editor, completeness view,
   and preview UI (SCR-07/08/09).
+
+### 2026-07-22 (Increment 6.3 complete: AIP editor, completeness, preview UI)
+
+- Phase: 6
+- Increment: 6.3 — AIP editor, completeness view, preview UI
+- Status: COMPLETE
+- Work completed: lib/api.ts AIP types and methods (getAipDraft,
+  saveAipDraft, getAipPreview); lib/aip.ts DEC-02 section vocabulary
+  for the UI; SCR-07 editor (app/artists/[id]/aip/page.tsx) with the
+  SCR-08 completeness panel and the D6-3 conflict/compare flow; SCR-09
+  preview (app/artists/[id]/aip/preview/page.tsx); SCR-06 overview
+  augmented with the AIP summary and editor link; globals.css additions.
+- Tests run / verification (first-hand): web app tsc --noEmit clean;
+  live browser walkthrough against the running stack — editor renders
+  all 12 sections with metadata controls; an API-saved valid draft is
+  read back as 100% required / 75% overall / Eligible with the blocking
+  list cleared; SCR-09 preview renders YAML front matter and one heading
+  per section; SCR-06 shows "75% complete · ready for approval · Open
+  editor". make check green (root 22, api 85, five services healthy).
+  The Save-button write path issues the same PUT the 6.2 API tests
+  prove (200 / 409-stale); formal Playwright automation of save and the
+  conflict panel is Increment 6.4.
+- Decisions: D6-3 decided and recorded (per-section compare; discard or
+  re-apply; no merge tooling).
+- Risks: lib/aip.ts duplicates the DEC-02 section list on the frontend;
+  drift is guarded by the 6.4 golden-path E2E driving real sections
+  through it. Recorded for a possible future "expose section catalog
+  from the API" simplification.
+- Next recommended step: Increment 6.4 — E2E and golden-path growth
+  (Complete required AIP → Save draft → Validate completeness), the
+  conflict scenario, preview scenario, and axe on SCR-07/08/09.
