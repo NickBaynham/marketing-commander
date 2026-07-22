@@ -204,3 +204,45 @@ def incomplete_required_sections(sections: AipSections) -> list[str]:
         for name in REQUIRED_SECTIONS
         if not section_complete(sections.section(name))
     ]
+
+
+def _yaml_scalar(value: str) -> str:
+    """Double-quote and escape a YAML scalar so untrusted section-derived
+    values (the artist name) cannot break out of the front matter."""
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    escaped = escaped.replace("\n", " ").replace("\r", " ")
+    return f'"{escaped}"'
+
+
+def render_markdown(artist_name: str, sections: AipSections) -> str:
+    """Render the draft as Markdown with YAML front matter (AC-005).
+
+    One `##` heading per DEC-02 section in canonical order; no required
+    section is omitted. Front-matter scalars are escaped; section bodies
+    are the artist's own text, rendered verbatim under their heading (a
+    draft preview, not sanitized HTML — the body is never executed).
+    """
+    eligible = approval_eligible(sections)
+    percent = round(completeness(sections) * 100)
+    lines = [
+        "---",
+        f"title: {_yaml_scalar(f'Artist Identity Profile — {artist_name}')}",
+        f"artist: {_yaml_scalar(artist_name)}",
+        f"completeness_percent: {percent}",
+        f"approval_eligible: {str(eligible).lower()}",
+        "kind: aip-draft-preview",
+        "---",
+        "",
+    ]
+    for name in ALL_SECTIONS:
+        section = sections.section(name)
+        lines.append(f"## {SECTION_TITLES[name]}")
+        lines.append("")
+        if name in OPTIONAL_SECTIONS and section.unknown:
+            lines.append("_Marked unknown._")
+        elif section.content.strip():
+            lines.append(section.content.strip())
+        else:
+            lines.append("_Not yet provided._")
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"

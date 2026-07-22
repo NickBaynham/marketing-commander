@@ -11,6 +11,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.domain.aip import AipSections
+
 
 class WorkspaceCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
@@ -57,3 +59,29 @@ class ArtistOut(BaseModel):
 
 class DeletionOut(BaseModel):
     removed: dict[str, str]
+
+
+class AipDraftSave(BaseModel):
+    """Explicit save (SCR-07). Per-section content caps (DEC-09) are
+    enforced by AipSections at this boundary → 422 in the AC-003 shape;
+    total-size and version conflicts are handled by the domain service."""
+
+    expected_version: int
+    sections: AipSections
+
+
+class AipDraftView(BaseModel):
+    """Draft state for SCR-07/SCR-08: sections plus derived completeness,
+    eligibility, and the exact blocking list."""
+
+    artist_id: uuid.UUID
+    version_token: int
+    sections: AipSections
+    completeness: float
+    display_percentage: float
+    approval_eligible: bool
+    incomplete_required_sections: list[str]
+
+
+class AipPreviewOut(BaseModel):
+    markdown: str

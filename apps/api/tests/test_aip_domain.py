@@ -19,6 +19,7 @@ from app.domain.aip import (
     OPTIONAL_SECTIONS,
     REQUIRED_SECTIONS,
     SECTION_MAX_CHARS,
+    SECTION_TITLES,
     SECTION_WEIGHTS,
     AipSections,
     Confidence,
@@ -29,6 +30,7 @@ from app.domain.aip import (
     display_percentage,
     incomplete_required_sections,
     is_placeholder,
+    render_markdown,
     section_complete,
     size_violations,
 )
@@ -238,3 +240,51 @@ def test_section_size_violation_shape():
     violations = size_violations(sections)
     assert violations[0]["field"] == "sections.core_identity.content"
     assert violations[0]["rule"] == "max_length"
+
+
+# Markdown preview rendering (AC-005)
+
+
+def test_render_has_one_heading_per_section_in_order():
+    markdown = render_markdown("CYR3NT", load("aip_complete_valid"))
+    headings = [
+        line[3:] for line in markdown.splitlines() if line.startswith("## ")
+    ]
+    assert headings == [SECTION_TITLES[name] for name in ALL_SECTIONS]
+    assert len(headings) == 12  # no required section omitted
+
+
+def test_render_front_matter_reports_eligibility_and_completeness():
+    markdown = render_markdown("CYR3NT", load("aip_minimal_valid"))
+    assert markdown.startswith("---\n")
+    assert 'artist: "CYR3NT"' in markdown
+    assert "approval_eligible: true" in markdown
+    assert "completeness_percent: 100" in markdown
+
+
+def test_render_incomplete_shows_partial_completeness():
+    markdown = render_markdown("CYR3NT", load("aip_incomplete"))
+    assert "approval_eligible: false" in markdown
+    assert "completeness_percent: 67" in markdown  # round(6/9 * 100)
+
+
+def test_render_escapes_front_matter_scalar():
+    # An artist name with quotes must not break out of the YAML scalar.
+    markdown = render_markdown('CY"R3NT', AipSections())
+    assert 'artist: "CY\\"R3NT"' in markdown
+
+
+def test_render_marks_empty_and_unknown_sections():
+    markdown = render_markdown("CYR3NT", load("aip_complete_valid"))
+    assert "_Marked unknown._" in markdown  # unknowns_and_assumptions
+    empty = render_markdown("CYR3NT", AipSections())
+    assert "_Not yet provided._" in empty
+
+
+def test_render_adversarial_content_stays_in_body_not_front_matter():
+    markdown = render_markdown("CYR3NT", load("aip_adversarial"))
+    # The front matter is the first block only; injection-shaped section
+    # text appears after it, under a heading, as inert body text.
+    front_matter = markdown.split("---\n")[1]
+    assert "<script>" not in front_matter
+    assert "Ignore all previous instructions" in markdown  # preserved as data

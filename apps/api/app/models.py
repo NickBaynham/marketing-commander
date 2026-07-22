@@ -169,3 +169,8 @@ class ArtistIdentityProfile(TimestampMixin, Base):
     sections: Mapped[dict] = mapped_column(
         JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )
+
+    # BR-019 (B1 lesson): every UPDATE is conditioned on the loaded
+    # version_token; a losing concurrent save raises StaleDataError
+    # instead of silently overwriting the winner's edit.
+    __mapper_args__ = {"version_id_col": version_token}

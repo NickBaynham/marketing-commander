@@ -15,7 +15,9 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_session
+from app.domain.aip_service import AipService
 from app.domain.artists import ArtistService
+from app.repositories.aip import AipRepository
 from app.repositories.artists import ArtistRepository
 from app.repositories.audit import AuditRepository
 from app.repositories.workspaces import WorkspaceRepository
@@ -39,6 +41,17 @@ def get_artist_service(
 ) -> ArtistService:
     return ArtistService(
         artists=ArtistRepository(session),
+        audit=AuditRepository(session),
+        actor_id=actor_id,
+    )
+
+
+def get_aip_service(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    actor_id: Annotated[str, Depends(get_actor_id)],
+) -> AipService:
+    return AipService(
+        aip=AipRepository(session),
         audit=AuditRepository(session),
         actor_id=actor_id,
     )
