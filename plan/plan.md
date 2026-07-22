@@ -1130,8 +1130,8 @@ A user can create and view CYR3NT
 
 ## Phase 6 — Artist Identity Profile
 
-- Status: IN PROGRESS (increment plan drafted 2026-07-21; Increment 6.1
-  in progress)
+- Status: IN PROGRESS (Increment 6.1 COMPLETE and CI-verified 2026-07-21;
+  next: Increment 6.2 — AIP API)
 - Objective: CYR3NT can complete a structured AIP draft with measurable
   completeness and approval eligibility.
 - Dependencies: Phase 5. Concurrency Strategy (explicit save, optimistic
