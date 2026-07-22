@@ -1130,8 +1130,8 @@ A user can create and view CYR3NT
 
 ## Phase 6 — Artist Identity Profile
 
-- Status: IN PROGRESS (Increment 6.1 COMPLETE and CI-verified 2026-07-21;
-  next: Increment 6.2 — AIP API)
+- Status: IN REVIEW (Increments 6.1–6.4 COMPLETE; 6.3 frontend review
+  findings fixed 2026-07-22; awaiting Test Commander Phase 6 exit review)
 - Objective: CYR3NT can complete a structured AIP draft with measurable
   completeness and approval eligibility.
 - Dependencies: Phase 5. Concurrency Strategy (explicit save, optimistic
@@ -1233,13 +1233,14 @@ A user can create and view CYR3NT
 
 #### Increment 6.4 — E2E and golden-path growth
 
-- [ ] Golden-path spec grows: Complete required AIP → Save draft →
-  Validate completeness (single spec, no forks).
-- [ ] Conflict scenario: two contexts, stale save surfaces the conflict
+- [x] Golden-path spec grows: Complete required AIP → Save draft →
+  Validate completeness → Preview (single spec, no forks).
+- [x] Conflict scenario: two contexts, stale save surfaces the conflict
   UI (AC-008).
-- [ ] Preview scenario (AC-005 UI clauses) and adversarial-text entry
+- [x] Preview scenario (AC-005 UI clauses) and adversarial-text entry
   through the editor.
-- [ ] Axe assertions on SCR-07/08/09; full matrix locally, D5-3 subset
+- [x] Axe assertions on SCR-07/08/09; full matrix locally (36/36 across
+  Chromium desktop/mobile/tablet/wide, Firefox, WebKit), D5-3 subset
   in CI.
 
 ### Decisions (Phase 6)
@@ -3150,3 +3151,34 @@ this phase must not begin.
 - Next recommended step: Increment 6.4 — E2E and golden-path growth
   (Complete required AIP → Save draft → Validate completeness), the
   conflict scenario, preview scenario, and axe on SCR-07/08/09.
+
+### 2026-07-22 (Increment 6.4 — E2E and golden-path growth)
+
+- Phase: 6
+- Increment: 6.4 — E2E and golden-path growth
+- Status: COMPLETE (implemented by the test lead on Product Owner
+  instruction)
+- Work completed: Extended the single golden-path Playwright spec through
+  the Phase 6 segment (Complete required AIP → Save draft → Validate
+  completeness → Preview AIP Markdown) with no forks; added a shared
+  helper (helpers/aip.ts) that drives sections to DEC-02 completeness
+  (content, ready_for_review status, confidence, sources). Added
+  aip-conflict.spec.ts (two clients: browser holds v1 while the API
+  context saves first; the browser's stale save surfaces the D6-3
+  conflict view; the server edit is proven un-overwritten; discard-and-
+  load-latest adopts it — AC-008). Added aip-adversarial.spec.ts (a
+  script tag and injection line entered through the editor never execute
+  and survive only as inert preview text — AC-022 at the UI). Axe
+  assertions cover SCR-07/08/09.
+- Tests run: full local matrix green — 36/36 across chromium
+  desktop/mobile/tablet/wide, firefox, and webkit (1.0m); e2e tsc clean;
+  existing artist-lifecycle and validation specs unaffected. Verified
+  against the live compose stack.
+- Decisions: none new (D5-3 CI subset already decided; full matrix run
+  locally per that decision).
+- Risks: none new. Note for the exit review — the golden-path assertion
+  initially used display_percentage=100%, which is wrong (optional
+  sections untouched → 75%); corrected to assert required-section
+  eligibility per DEC-02 before the suite was run.
+- Next recommended step: Test Commander Phase 6 exit review (independent
+  reviewers for 6.4, which the test lead authored), then close Phase 6.
