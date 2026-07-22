@@ -9,7 +9,14 @@
 
 import { use, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { AipDraft, AipSection, api, ApiError, FieldDetail } from "../../../../lib/api";
+import {
+  AipDraft,
+  AipSection,
+  api,
+  ApiError,
+  FieldDetail,
+  formatError,
+} from "../../../../lib/api";
 import {
   ALL_SECTIONS,
   OPTIONAL_SET,
@@ -38,15 +45,24 @@ export default function AipEditor({
   const firstInvalid = useRef<string | null>(null);
 
   useEffect(() => {
+    // Cancellation guard: the App Router reuses this instance across
+    // [id] changes, so a stale in-flight response must never overwrite a
+    // newer artist's draft — otherwise a later save aims the wrong
+    // artist's content and version at this route's id.
+    let cancelled = false;
     api
       .getAipDraft(id)
       .then((d) => {
+        if (cancelled) return;
         setDraft(d);
         setSections(structuredClone(d.sections));
       })
-      .catch((err: unknown) =>
-        setError(err instanceof Error ? err.message : "failed to load draft"),
-      );
+      .catch((err: unknown) => {
+        if (!cancelled) setError(formatError(err, "failed to load draft"));
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   function update(name: string, patch: Partial<AipSection>) {
@@ -56,8 +72,11 @@ export default function AipEditor({
     );
   }
 
-  const sectionError = (name: string) =>
-    fieldErrors.find((d) => d.field.includes(`sections.${name}`));
+  // Match a specific sub-field (content/sources/status/confidence) so each
+  // control shows and announces its own error, per AC-003 — not a single
+  // section-level message misattributed to the content textarea.
+  const fieldError = (name: string, sub: string) =>
+    fieldErrors.find((d) => d.field.includes(`sections.${name}.${sub}`));
   const totalError = fieldErrors.find(
     (d) => d.field === "sections" || d.field.endsWith(".sections"),
   );
@@ -82,21 +101,28 @@ export default function AipEditor({
       if (err instanceof ApiError && err.status === 422) {
         setFieldErrors(err.details);
         const first = err.details.find((d) => d.field.includes("sections."));
-        firstInvalid.current = first
-          ? first.field.split("sections.")[1]?.split(".")[0] ?? null
-          : null;
-        if (firstInvalid.current) {
-          document
-            .getElementById(`section-${firstInvalid.current}`)
-            ?.querySelector("textarea")
-            ?.focus();
+        const parts = first
+          ? first.field.split("sections.")[1]?.split(".")
+          : undefined;
+        const sec = parts?.[0] ?? null;
+        const sub = parts?.[1] ?? "content";
+        firstInvalid.current = sec;
+        if (sec) {
+          // Focus the exact erroring control (content/sources/...), not
+          // always the textarea; fall back to the section's textarea.
+          const target =
+            document.getElementById(`${sec}-${sub}`) ??
+            document
+              .getElementById(`section-${sec}`)
+              ?.querySelector("textarea");
+          (target as HTMLElement | null)?.focus();
         }
       } else if (err instanceof ApiError && err.status === 409) {
         // D6-3: surface the newer server version for comparison.
         const latest = await api.getAipDraft(id);
         setConflict(latest);
       } else {
-        setError(err instanceof Error ? err.message : "save failed");
+        setError(formatError(err, "save failed"));
       }
     } finally {
       setBusy(false);
@@ -162,10 +188,16 @@ export default function AipEditor({
       >
         {ALL_SECTIONS.map((name) => {
           const section = sections[name];
-          const err = sectionError(name);
+          const contentErr = fieldError(name, "content");
+          const sourcesErr = fieldError(name, "sources");
           const optional = OPTIONAL_SET.has(name);
           return (
-            <fieldset key={name} id={`section-${name}`} className="aip-section">
+            <fieldset
+              key={name}
+              id={`section-${name}`}
+              className="aip-section"
+              tabIndex={-1}
+            >
               <legend>
                 {SECTION_TITLES[name]}
                 {optional ? " (optional)" : ""}
@@ -177,13 +209,17 @@ export default function AipEditor({
                   rows={3}
                   maxLength={20000}
                   value={section.content}
-                  aria-invalid={Boolean(err)}
-                  aria-describedby={err ? `${name}-error` : undefined}
+                  aria-invalid={Boolean(contentErr)}
+                  aria-describedby={contentErr ? `${name}-content-error` : undefined}
                   onChange={(e) => update(name, { content: e.target.value })}
                 />
-                {err && (
-                  <p id={`${name}-error`} className="field-error" role="alert">
-                    {err.message}
+                {contentErr && (
+                  <p
+                    id={`${name}-content-error`}
+                    className="field-error"
+                    role="alert"
+                  >
+                    {contentErr.message}
                   </p>
                 )}
               </div>
@@ -227,7 +263,12 @@ export default function AipEditor({
                 <label className="sources-field">
                   Sources (comma-separated)
                   <input
+                    id={`${name}-sources`}
                     value={section.sources.join(", ")}
+                    aria-invalid={Boolean(sourcesErr)}
+                    aria-describedby={
+                      sourcesErr ? `${name}-sources-error` : undefined
+                    }
                     onChange={(e) =>
                       update(name, {
                         sources: e.target.value
@@ -237,6 +278,15 @@ export default function AipEditor({
                       })
                     }
                   />
+                  {sourcesErr && (
+                    <p
+                      id={`${name}-sources-error`}
+                      className="field-error"
+                      role="alert"
+                    >
+                      {sourcesErr.message}
+                    </p>
+                  )}
                 </label>
                 {optional && (
                   <label className="unknown-field">

@@ -19,10 +19,18 @@ export default function AipPreview({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     api
       .getAipPreview(id)
-      .then((r) => setMarkdown(r.markdown))
-      .catch((err: unknown) => setError(formatError(err, "preview failed")));
+      .then((r) => {
+        if (!cancelled) setMarkdown(r.markdown);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(formatError(err, "preview failed"));
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   return (
