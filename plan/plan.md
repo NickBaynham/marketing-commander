@@ -1130,36 +1130,110 @@ A user can create and view CYR3NT
 
 ## Phase 6 — Artist Identity Profile
 
-- Status: NOT STARTED
+- Status: IN PROGRESS (increment plan drafted 2026-07-21; Increment 6.1
+  in progress)
 - Objective: CYR3NT can complete a structured AIP draft with measurable
   completeness and approval eligibility.
 - Dependencies: Phase 5. Concurrency Strategy (explicit save, optimistic
   concurrency) applies to the editor.
+- Traceability: REQ-006..REQ-012, REQ-017, REQ-045; AC-003, AC-004,
+  AC-005, AC-008, AC-024 (segment growth); US-004, US-005, US-006;
+  SCR-07, SCR-08, SCR-09; DEC-02, DEC-09; BR-002, BR-003, BR-019.
+- Phase 5 review lessons applied here: conditioned UPDATEs for
+  optimistic concurrency (B1), structural not substring error
+  detection (B6), correlation IDs in audit writes (B4), AC-003 display
+  for every field (F1).
+- Phase-leakage stop condition: no approval or immutable versions
+  (Phase 7), no AI generation (Phase 9); the preview renders the draft,
+  it does not create an artifact version.
 
-### Tasks
+### Increment Plan (drafted 2026-07-21)
 
-- [ ] Typed AIP schema.
-- [ ] Required and optional sections per Decision 2.
-- [ ] Per-section status.
-- [ ] Confidence and source metadata.
-- [ ] Weighted completeness calculation per Decision 2.
-- [ ] Approval eligibility calculation (binary: 100% of required sections
-  complete).
-- [ ] Required-section weights.
-- [ ] Placeholder detection (placeholder text does not count as complete).
-- [ ] Draft persistence.
-- [ ] Structured editor.
-- [ ] Explicit save with optimistic concurrency (version token; stale update
-  receives HTTP 409; UI offers reload or compare; no autosave in the first
-  implementation).
-- [ ] Conflict handling between concurrent editors or tabs.
-- [ ] AIP size limits (section length and total size per Decision 9 payload
-  constraints).
-- [ ] Adversarial text fixture (Test Data Strategy).
-- [ ] Validation feedback (same criteria as Phase 5).
-- [ ] AIP preview.
-- [ ] AIP API and UI tests.
-- [ ] Extend the golden-path Playwright test through AIP draft creation.
+#### Increment 6.1 — AIP domain: typed schema and completeness engine — COMPLETE
+
+- [x] Typed AIP schema (`app/domain/aip.py`, pure domain): twelve DEC-02
+  sections (nine required, three optional), uniform section model with
+  content, status (empty | draft | ready_for_review), confidence,
+  bounded source metadata, and the explicit `unknown` flag (D6-2;
+  eligibility ignores `unknown` on required sections).
+- [x] Section weights (equal 1.0, one constant, D6-4), the DEC-02
+  weighted completeness formula, binary approval eligibility, display
+  percentage including optional sections (explicit `unknown` counts as
+  resolved for display only), and the blocking-sections list SCR-08
+  will render.
+- [x] Placeholder detection: whitespace/short content (minimum 40
+  characters) and template phrases (TODO/TBD/TBA/FIXME/placeholder/
+  lorem ipsum/XXX), word-bounded and case-insensitive.
+- [x] Size limits per DEC-09 (20,000/section, 200,000 total) surfaced
+  as AC-003-shaped violation details (REQ-045).
+- [x] Migration `989ef563481c`: JSONB `sections` document on the draft
+  row (D6-1). Hand-repaired after autogenerate tried to drop the
+  expression-based indexes it cannot see in the models — including the
+  B2 workspace-singleton unique index; the applied migration adds the
+  column only, and the singleton index was verified present afterward
+  in pg_indexes.
+- [x] AIP fixtures: minimal valid, complete valid, incomplete, and
+  adversarial as JSON files; oversized as a factory (keeps a 20k+
+  character blob out of the repository — recorded interpretation of the
+  Test Data Strategy item).
+- [x] 30 unit tests: schema shape and caps, every placeholder class,
+  each incomplete-section leg, formula values on fixtures (0, 6/9, 8/9,
+  1.0), binary eligibility, optional/unknown semantics, display
+  percentage, size-violation shapes, weights configuration.
+
+#### Increment 6.2 — AIP API: draft persistence, conflicts, preview
+
+- [ ] GET draft (sections, statuses, completeness, eligibility, version
+  token); PUT explicit save with expected version → 409 on stale
+  (conditioned UPDATE, not check-then-write), 422 in the AC-003 shape
+  for schema and size violations.
+- [ ] Audit records with correlation IDs on every save.
+- [ ] Markdown preview endpoint: YAML front matter, one heading per
+  section, stable ordering, escaping; AC-005 assertions from a stable
+  fixture (semantic assertions on headings and order).
+- [ ] API tests: persistence and resume, two-session 409 race,
+  validation shapes, size limits, preview contract, adversarial
+  fixture.
+
+#### Increment 6.3 — AIP editor, completeness view, preview UI
+
+- [ ] SCR-07 structured editor: per-section editing, status control,
+  confidence and source metadata, explicit save carrying the version
+  token, all-field AC-003 display.
+- [ ] 409 conflict UI: reload and compare options (D6-3), no silent
+  overwrite (AC-008).
+- [ ] SCR-08 completeness and validation view: per-section state,
+  display percentage, binary eligibility, blocking sections with jump
+  links.
+- [ ] SCR-09 Markdown preview screen.
+- [ ] SCR-06 artist overview surfaces AIP completeness and links to the
+  editor.
+
+#### Increment 6.4 — E2E and golden-path growth
+
+- [ ] Golden-path spec grows: Complete required AIP → Save draft →
+  Validate completeness (single spec, no forks).
+- [ ] Conflict scenario: two contexts, stale save surfaces the conflict
+  UI (AC-008).
+- [ ] Preview scenario (AC-005 UI clauses) and adversarial-text entry
+  through the editor.
+- [ ] Axe assertions on SCR-07/08/09; full matrix locally, D5-3 subset
+  in CI.
+
+### Decisions (Phase 6)
+
+- D6-1 — AIP storage shape: one JSONB `sections` document on the draft
+  row, validated by the typed schema at the boundary; per-section rows
+  deferred until a concrete query need exists.
+- D6-2 — Uniform section model: every section carries content, status,
+  confidence, sources; optional sections add the explicit `unknown`
+  flag. Settled at 6.1 implementation.
+- D6-3 — Conflict compare scope: settled at 6.3; candidate is reload
+  plus a per-section text comparison of local edits against the newer
+  server version (no merge tooling in the MVP).
+- D6-4 — Section weights: equal weights (1.0) per section initially,
+  held in one configuration constant validated by tests; recalibration
+  is a recorded change.
 
 ### Required Initial AIP Sections
 
@@ -2961,3 +3035,30 @@ this phase must not begin.
 - Next recommended step: Begin Phase 6 (Artist Identity Profile) with
   an increment plan draft; the golden-path test grows through AIP
   editing in Phase 6 per the growth plan.
+
+### 2026-07-21 (Increment 6.1 complete: AIP domain schema and completeness engine)
+
+- Phase: 6
+- Increment: 6.1 — AIP domain: typed schema and completeness engine
+- Status: COMPLETE
+- Work completed: app/domain/aip.py pure domain module — twelve-section
+  typed schema (D6-2), equal section weights (D6-4), DEC-02 weighted
+  completeness with binary eligibility and display percentage,
+  placeholder detection, DEC-09 size limits as AC-003-shaped details,
+  blocking-sections list; JSONB sections column via migration
+  989ef563481c (D6-1); AIP fixtures (minimal/complete/incomplete/
+  adversarial files, oversized factory).
+- Tests run (all executed, all passing): apps/api pytest — 62 passed
+  (30 new AIP domain tests); make check green end to end. Migration
+  applied to the dev database; autogenerate's spurious drops of
+  expression-based indexes (including the B2 workspace-singleton
+  guarantee) were removed by hand and the index verified present in
+  pg_indexes after upgrade — recorded as a standing caution for every
+  future autogenerated migration.
+- Decisions: D6-1, D6-2, D6-4 settled and recorded in the increment;
+  D6-3 (conflict compare scope) remains for 6.3.
+- Risks: Alembic autogenerate cannot see expression-based indexes and
+  will propose dropping them; mitigation recorded (hand-review every
+  autogenerated migration against pg_indexes).
+- Next recommended step: Increment 6.2 — AIP API (draft persistence,
+  conflicts, preview).

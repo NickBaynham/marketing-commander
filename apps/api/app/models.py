@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, func, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -144,10 +144,12 @@ class AuditRecord(Base):
 
 
 class ArtistIdentityProfile(TimestampMixin, Base):
-    """Minimal empty AIP draft, created with its artist (REQ-003, AC-002).
+    """AIP draft, created empty with its artist (REQ-003, AC-002).
 
-    One per artist. Section content, statuses, and completeness arrive in
-    Phase 6; this record's existence is what Phase 5 promises.
+    One per artist. `sections` holds the twelve-section JSONB document
+    (DEC-02, D6-1) validated by the typed schema in app/domain/aip.py;
+    completeness and eligibility are always derived, never stored
+    (BR-002).
     """
 
     __tablename__ = "artist_identity_profiles"
@@ -163,4 +165,7 @@ class ArtistIdentityProfile(TimestampMixin, Base):
     )
     version_token: Mapped[int] = mapped_column(
         nullable=False, server_default=text("1")
+    )
+    sections: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, server_default=text("'{}'::jsonb")
     )

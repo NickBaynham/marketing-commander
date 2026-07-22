@@ -1,0 +1,108 @@
+{
+  "core_identity": {
+    "content": "CYR3NT is a melodic techno project built on tension between machine precision and human longing.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "musical_identity": {
+    "content": "Driving 122-126 BPM melodic techno: analog bass, wide pads, restrained percussion, one memorable motif per track.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "differentiation_hypothesis": {
+    "content": "Where peers chase festival maximalism, CYR3NT commits to narrative restraint: every release tells one story arc.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "artist_personality": {
+    "content": "Reserved, precise, quietly intense; lets the work speak and answers questions with specifics, never hype.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "brand_voice": {
+    "content": "Short declarative sentences. Technical honesty. No exclamation marks, no slang, no manufactured urgency.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "audience_hypothesis": {
+    "content": "Listeners 22-38 who favor Afterlife and Anjunadeep catalogs, discover via curated playlists and live sets.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "visual_direction": {
+    "content": "Monochrome with a single cyan accent; architectural photography; motion kept slow and deliberate.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "narrative_themes": {
+    "content": "Signal versus noise; building alone at night; the moment a pattern finally resolves into meaning.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "do_and_avoid": {
+    "content": "Do: process detail, gear honesty, finished work. Avoid: giveaways, engagement bait, genre-bashing, politics.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "origin_and_motivation": {
+    "content": "Started as late-night studio therapy after years of session engineering for other artists' visions.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "influence_map": {
+    "content": "Tale Of Us and Stephan Bodzin for arrangement; Jon Hopkins for texture; Detroit lineage for restraint.",
+    "status": "ready_for_review",
+    "confidence": "medium",
+    "sources": [
+      "artist interview 2026-07"
+    ],
+    "unknown": false
+  },
+  "unknowns_and_assumptions": {
+    "content": "",
+    "status": "empty",
+    "confidence": null,
+    "sources": [],
+    "unknown": true
+  }
+}
