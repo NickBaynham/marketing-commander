@@ -6,7 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 7 — Artifact and Versioning System (NOT STARTED); Phases 1-6 COMPLETE
+- Current phase: Phase 7 — Artifact and Versioning System (NOT STARTED —
+  increment plan drafted 2026-07-22); Phases 1-6 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -1325,30 +1326,122 @@ CYR3NT can complete a structured AIP draft
 
 ## Phase 7 — Artifact and Versioning System
 
-- Status: NOT STARTED
+- Status: NOT STARTED (increment plan drafted 2026-07-22; implementation
+  starts on Product Owner go)
 - Objective: CYR3NT AIP version 1.0 can be approved as an immutable version
   and exported.
 - Dependencies: Phase 6.
+- Traceability: REQ-010 (approval eligibility gate), REQ-013 (immutable
+  version on approval), REQ-014 (two-layer immutability), REQ-015
+  (superseding), REQ-016 (approval records); AC-005 (preview), AC-006
+  (approval + ineligible block), AC-007 (immutability, superseding,
+  approved-edit); US-007, US-017; SCR-09, SCR-10, SCR-24; BR-004, BR-005,
+  BR-006, BR-020; ADR-005; API-12, API-13, API-14.
+- Reuse (no rebuild): the DEC-02 completeness/eligibility engine
+  (`app/domain/aip.py`) is the approval gate; the 6.2 Markdown renderer
+  (`render_markdown`) renders the immutable version snapshot for
+  preview/export.
+- Phase-leakage stop condition: no authorization roles (Phase 8 — approval
+  uses the seeded local owner per DEC-03), no campaign or brief (Phase 11),
+  no CSV/JSON export (Phase 12 — Phase 7 export is the AIP version Markdown
+  only). Bulk approval (DEC-08) is Phase 12; Phase 7 approval is
+  single-artifact.
 
-### Tasks
+### Increment Plan (drafted 2026-07-22)
 
-- [ ] Artifact entity.
-- [ ] Artifact-version entity.
-- [ ] Immutable approved versions.
-- [ ] Approval requires eligible completeness state (Decision 2).
-- [ ] Stable local approver identity on every approval record (Decision 3;
-  actor ID never null).
-- [ ] Persistence-level immutability (see acceptance criteria).
-- [ ] Markdown rendering.
-- [ ] YAML front matter.
-- [ ] Version comparison.
-- [ ] Approval workflow.
-- [ ] Superseding rules (new version row; approved rows never mutated).
-- [ ] Approval audit record.
-- [ ] Export behavior.
-- [ ] Audit metadata.
-- [ ] Tests for version and approval rules.
-- [ ] Extend the golden-path Playwright test through AIP approval.
+Each increment follows the Test Commander review loop and extends the
+reference layering (transport → domain → repositories).
+
+#### Increment 7.1 — Version domain and immutable persistence (backend)
+
+- [ ] `ArtistIdentityProfileVersion` model: aip_id, workspace_id,
+  version_number (int), full sections snapshot (JSONB), created_from
+  draft version token, created_by actor, created_at. Insert-only — no
+  version_token, no updatable columns (D7-2).
+- [ ] `Approval` model: version reference, non-null actor_id (DEC-03,
+  BR-020), created_at, context (`individual` in MVP; bulk batch column
+  present but unused until Phase 12), optional review note.
+- [ ] Migration adding both tables plus a `BEFORE UPDATE OR DELETE`
+  trigger on the versions table that raises — persistence-level
+  immutability enforced against the application role (REQ-014, ADR-005,
+  D7-3).
+- [ ] Domain: integer version numbering; active-authority derivation
+  (highest approved version number is active; older ones are derived
+  `superseded`, never row-mutated — D7-2); snapshot integrity.
+- [ ] Unit tests: numbering, snapshot fidelity, active-authority
+  derivation, and the immutability trigger (an UPDATE and a DELETE via
+  the app-role session both raise).
+
+#### Increment 7.2 — Approval API, versions, and export
+
+- [ ] `POST /artists/{id}/aip/approve` (API-12): gate on DEC-02
+  eligibility (reuse the engine) — ineligible → blocked naming the
+  incomplete sections (AC-006); stale draft token → 409; on success
+  snapshot the draft into version 1.0 (then 2.0…), write the Approval
+  with the seeded actor, audit with correlation.
+- [ ] `GET /artists/{id}/aip/versions` (API-13) and
+  `GET /aip-versions/{id}` (API-14): list with derived active/superseded
+  status and approver metadata; read one immutable version.
+- [ ] `GET /aip-versions/{id}/export`: the immutable snapshot rendered as
+  Markdown with YAML front matter (reuse `render_markdown`); Markdown
+  only (D7-6). No update or delete route exists on versions.
+- [ ] API tests: approve creates version + approval; ineligible blocked
+  with the list; superseding inserts 2.0 and leaves 1.0 byte-identical;
+  immutability proven at the API layer (no mutating route) and the DB
+  layer (app-role UPDATE/DELETE raises, REQ-014); approval record fields
+  (exact version id, non-null actor, timestamp); export contract.
+
+#### Increment 7.3 — Approval and version-history UI
+
+- [ ] SCR-10 AIP review and approval: profile in review layout, the
+  exact draft version being approved, eligibility state; Approve enabled
+  only when eligible, ineligible state lists blocking sections with jump
+  links (AC-006).
+- [ ] SCR-24 artifact/version history: version list with derived
+  active/superseded state, approver and timestamp, read-only version
+  view, and a two-version comparison (client-side from list + read, D7-5).
+- [ ] SCR-06/editor surface the current approved version and the
+  Approve entry point when eligible; approved-AIP edit opens a new draft
+  (never mutates the approved version, AC-007).
+
+#### Increment 7.4 — E2E and golden-path growth
+
+- [ ] Golden-path spec grows: … Preview AIP Markdown → Approve AIP
+  version 1.0 (single spec, no forks).
+- [ ] Ineligible-approval-blocked scenario (AC-006); superseding
+  scenario (edit approved AIP → new draft → approve 2.0, 1.0 unchanged,
+  AC-007); immutability visible in version history.
+- [ ] Axe assertions on SCR-10 and SCR-24; full matrix locally, D5-3
+  subset in CI.
+
+### Decisions (Phase 7)
+
+- D7-1 — Concrete before generic: build the concrete
+  `artist_identity_profile_versions` table now (matching the API
+  contract's `AIPVersion` shape and the ArtifactVersion lifecycle);
+  extract a shared Artifact/ArtifactVersion abstraction when Phase 11
+  introduces the second versioned artifact (the campaign brief). Avoids
+  speculative infrastructure (CLAUDE.md) while keeping the shape
+  compatible.
+- D7-2 — Insert-only versions, derived authority: approved version rows
+  are never updated. Active authority is the highest approved
+  version_number; `superseded` is a derived status, not a stored
+  mutation — so REQ-015's "the prior record is unchanged" holds
+  literally and immutability has no update path to guard.
+- D7-3 — Two-layer immutability (REQ-014, ADR-005): the domain/
+  repository layer exposes no update path, and a `BEFORE UPDATE OR
+  DELETE` trigger on the versions table raises for the application role.
+  Both layers are tested; the trigger is chosen over role-grant
+  revocation because it is enforceable and directly testable in the
+  single-role local setup.
+- D7-4 — Version numbering stored as an integer; displayed as `v{n}.0`
+  (the golden path's "1.0"). Minor versions are not used in the MVP.
+- D7-5 — Version comparison is client-side from the list and read-one
+  endpoints; no dedicated compare endpoint unless a concrete need
+  appears.
+- D7-6 (settle at 7.2) — Phase 7 export surface: a single endpoint
+  returning the immutable version rendered as Markdown + YAML front
+  matter. CSV/JSON and campaign-level export remain Phase 12.
 
 ### Deliverable
 
@@ -3219,3 +3312,28 @@ this phase must not begin.
 - Next recommended step: Phase 7 — Artifact and Versioning System.
   Approve CYR3NT AIP v1.0 as an immutable version; the eligible draft from
   Phase 6 is its input.
+
+### 2026-07-22 (Phase 7 increment plan drafted)
+
+- Phase: 7 (planning only)
+- Increment: Increment plan draft (7.1–7.4)
+- Status: NOT STARTED (implementation on Product Owner go)
+- Work completed: Drafted the Phase 7 increment plan: 7.1 version domain
+  and immutable persistence (ArtistIdentityProfileVersion + Approval
+  tables, insert-only rows, DB immutability trigger); 7.2 approval API
+  (eligibility-gated approve, versions list/read, Markdown export); 7.3
+  approval and version-history UI (SCR-10, SCR-24); 7.4 E2E golden-path
+  growth through Approve version 1.0 plus superseding and immutability
+  scenarios. Recorded traceability (REQ-010, REQ-013..016, AC-005/006/
+  007, US-007/017, SCR-09/10/24, BR-004..006/020, ADR-005, API-12..14),
+  the reuse of the DEC-02 engine (approval gate) and the 6.2 renderer
+  (version export), the phase-leakage stop condition, and decisions
+  D7-1..D7-6.
+- Tests run: `make check` — green (documentation suite validates the
+  plan edits; root 22, api 85, bootstrap check).
+- Decisions: D7-1..D7-5 settled in the draft; D7-6 (export surface)
+  settles at 7.2.
+- Risks: immutability-by-convention (mitigated by the D7-3 two-layer
+  enforcement, tested at DB and domain layers).
+- Next recommended step: Begin Increment 7.1 (version domain and
+  immutable persistence).
