@@ -79,8 +79,12 @@ test("golden path: create CYR3NT, complete AIP draft, preview", async ({
   await page.getByRole("button", { name: "Save draft" }).click();
   await expect(page.getByText("Draft saved.")).toBeVisible();
   await expect(page.getByText("Eligible", { exact: true })).toBeVisible();
+  // The editor's own completeness panel drops its incomplete-sections
+  // list once every required section is complete — this text is rendered
+  // on THIS route (unlike the overview's "remaining" copy) so its
+  // absence genuinely proves the recalculation, not a wrong-page no-op.
   await expect(
-    page.getByText(/required section\(s\) remaining/),
+    page.getByText("Complete these required sections to become eligible:"),
   ).toHaveCount(0);
 
   // Preview AIP Markdown (SCR-09, AC-005): one heading per section, in
