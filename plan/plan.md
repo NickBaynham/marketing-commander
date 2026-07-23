@@ -7,7 +7,7 @@
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
 - Current phase: Phase 8 — Authentication and Authorization (NOT STARTED —
-  increment plan drafted 2026-07-23; D8-1 auth approach awaits PO sign-off);
+  increment plan drafted 2026-07-23; D8-1 auth approach APPROVED 2026-07-23);
   Phases 1-7 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
@@ -1522,8 +1522,8 @@ CYR3NT AIP version 1.0 can be approved and exported
 
 ## Phase 8 — Authentication and Authorization
 
-- Status: NOT STARTED (increment plan drafted 2026-07-23; implementation
-  gated on Product Owner confirmation of D8-1, the auth approach)
+- Status: NOT STARTED (increment plan drafted 2026-07-23; D8-1 auth
+  approach APPROVED 2026-07-23 — ready to begin Increment 8.1)
 - Objective: Controlled access to artist and approval workflows.
 - Dependencies: Phase 5 (workspace model); informs approval flows from
   Phase 7 onward.
@@ -1606,18 +1606,19 @@ layering (transport → domain → repositories).
 
 ### Decisions (Phase 8)
 
-- D8-1 (PENDING — Product Owner confirmation before 8.2) — Authentication
-  approach. Recommended: minimal local username/password authentication
+- D8-1 (APPROVED 2026-07-23 by Nick Baynham, Product Owner) —
+  Authentication approach: minimal local username/password authentication
   for the seeded owner, proportionate to the DEC-10 local single-workspace
-  release. The full five-role model is defined and enforced, but only the
-  owner is provisioned in the MVP. External IdP / OAuth / SSO and
-  self-service registration are deferred to Phase 20. Rationale: honors
-  "avoid speculative infrastructure" and "prefer a working vertical
-  slice"; a public-SaaS identity stack would over-build a local MVP.
-  Alternatives: (a) full OAuth/OIDC provider now — rejected as
-  Phase-20 scope; (b) keep the seeded owner with no real auth — rejected
-  because Phase 8's acceptance criteria require real access control and
-  the linking migration.
+  release. The full five-role model is defined and enforced (matching the
+  technical-design endpoint Permission column), but only the owner is
+  provisioned in the MVP. External IdP / OAuth / SSO and self-service
+  registration are deferred to Phase 20. Rationale: honors "avoid
+  speculative infrastructure" and "prefer a working vertical slice"; a
+  public-SaaS identity stack would over-build a local MVP. Alternatives:
+  (a) full OAuth/OIDC provider now — rejected as Phase-20 scope; (b) keep
+  the seeded owner with no real auth — rejected because Phase 8's
+  acceptance criteria require real access control and the linking
+  migration. ADR-007 records this in 8.1.
 - D8-2 (settle at 8.2) — Session mechanism. Candidate: opaque
   server-side session token in an HttpOnly, SameSite=Lax, Secure-in-prod
   cookie, stored in Redis (already provisioned), with idle + absolute
@@ -3622,3 +3623,23 @@ this phase must not begin.
 - Next recommended step: Product Owner confirms D8-1 (or selects an
   alternative), then begin Increment 8.1 (docs-first: requirements,
   role-action matrix, ADR-007).
+
+### 2026-07-23 (D8-1 authentication approach approved)
+
+- Phase: 8 (planning)
+- Increment: D8-1 decision
+- Status: COMPLETE
+- Work completed: Product Owner (Nick Baynham) approved D8-1 — minimal
+  local username/password authentication for the seeded owner, with the
+  full five-role model enforced (per the technical-design endpoint
+  Permission column) but only the owner provisioned; external IdP/OAuth/
+  SSO, registration, and email flows deferred to Phase 20. Recorded via
+  the Test Commander readiness review; ADR-007 records it in 8.1. The
+  remaining decisions D8-2..D8-6 settle at their increments as drafted.
+- Tests run: none (plan edit).
+- Decisions: D8-1 APPROVED.
+- Risks: none new.
+- Next recommended step: Increment 8.1 — docs-first (author REQ-052..056,
+  the role-action matrix, and ADR-007). Test Commander note: the new
+  US-019+/AC-026+ must be numbered contiguously (the traceability suite
+  enforces contiguous IDs and full matrix coverage in the same change).
