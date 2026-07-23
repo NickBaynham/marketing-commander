@@ -174,3 +174,65 @@ class ArtistIdentityProfile(TimestampMixin, Base):
     # version_token; a losing concurrent save raises StaleDataError
     # instead of silently overwriting the winner's edit.
     __mapper_args__ = {"version_id_col": version_token}
+
+
+class ArtistIdentityProfileVersion(Base):
+    """Immutable approved AIP snapshot (Phase 7, REQ-013).
+
+    Insert-only: no updatable columns, no version token. A BEFORE UPDATE
+    trigger blocks mutation for the application role (REQ-014, ADR-005,
+    D7-3). Active authority is derived — the highest version_number is
+    active, older ones are superseded — never a stored mutation (D7-2).
+    """
+
+    __tablename__ = "artist_identity_profile_versions"
+    __table_args__ = (
+        UniqueConstraint(
+            "aip_id", "version_number", name="uq_aip_version_number"
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid7
+    )
+    aip_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("artist_identity_profiles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    workspace_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("workspaces.id"), nullable=False
+    )
+    version_number: Mapped[int] = mapped_column(nullable=False)
+    sections: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    # The draft version_token this snapshot was taken from (provenance).
+    created_from_token: Mapped[int] = mapped_column(nullable=False)
+    created_by: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class Approval(Base):
+    """Immutable record of an actor accepting one exact version
+    (REQ-016, BR-020). Insert-only; a BEFORE UPDATE trigger blocks
+    mutation. `context`/`batch_id` carry the individual-vs-bulk shape;
+    bulk is unused until Phase 12 (DEC-08)."""
+
+    __tablename__ = "approvals"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid7
+    )
+    version_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("artist_identity_profile_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    actor_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+    context: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'individual'")
+    )
+    batch_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    note: Mapped[str | None] = mapped_column(String(2000))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )

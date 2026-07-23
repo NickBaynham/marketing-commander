@@ -1326,8 +1326,7 @@ CYR3NT can complete a structured AIP draft
 
 ## Phase 7 — Artifact and Versioning System
 
-- Status: NOT STARTED (increment plan drafted 2026-07-22; implementation
-  starts on Product Owner go)
+- Status: IN PROGRESS (Increment 7.1 COMPLETE; next: 7.2 approval API)
 - Objective: CYR3NT AIP version 1.0 can be approved as an immutable version
   and exported.
 - Dependencies: Phase 6.
@@ -1352,25 +1351,29 @@ CYR3NT can complete a structured AIP draft
 Each increment follows the Test Commander review loop and extends the
 reference layering (transport → domain → repositories).
 
-#### Increment 7.1 — Version domain and immutable persistence (backend)
+#### Increment 7.1 — Version domain and immutable persistence — COMPLETE
 
-- [ ] `ArtistIdentityProfileVersion` model: aip_id, workspace_id,
-  version_number (int), full sections snapshot (JSONB), created_from
-  draft version token, created_by actor, created_at. Insert-only — no
-  version_token, no updatable columns (D7-2).
-- [ ] `Approval` model: version reference, non-null actor_id (DEC-03,
-  BR-020), created_at, context (`individual` in MVP; bulk batch column
-  present but unused until Phase 12), optional review note.
-- [ ] Migration adding both tables plus a `BEFORE UPDATE OR DELETE`
-  trigger on the versions table that raises — persistence-level
-  immutability enforced against the application role (REQ-014, ADR-005,
-  D7-3).
-- [ ] Domain: integer version numbering; active-authority derivation
-  (highest approved version number is active; older ones are derived
-  `superseded`, never row-mutated — D7-2); snapshot integrity.
-- [ ] Unit tests: numbering, snapshot fidelity, active-authority
-  derivation, and the immutability trigger (an UPDATE and a DELETE via
-  the app-role session both raise).
+- [x] `ArtistIdentityProfileVersion` model: aip_id, workspace_id,
+  version_number (int), sections snapshot (JSONB), created_from_token,
+  created_by, created_at. Insert-only — no version_token, no updatable
+  columns (D7-2).
+- [x] `Approval` model: version_id, non-null actor_id (DEC-03, BR-020),
+  created_at, context (`individual` default; `batch_id` present, unused
+  until Phase 12), optional note.
+- [x] Migration `3522ec8dfd5d`: both tables plus a `mc_reject_update()`
+  trigger function and `BEFORE UPDATE` triggers on both tables
+  (persistence-level immutability against the app role — REQ-014,
+  ADR-005, D7-3). Hand-repaired to drop autogenerate's spurious index
+  removals; singleton index verified present; downgrade/upgrade
+  round-trip clean.
+- [x] Domain (`app/domain/aip_versions.py`, pure): integer numbering,
+  `v{n}.0` labels, active-authority derivation (highest number active,
+  older derived `superseded` — D7-2). Repository
+  (`app/repositories/aip_versions.py`, insert-only, no update path).
+- [x] Tests (12): numbering and derivation units; immutability
+  integration proving app-role UPDATE of version and approval rows both
+  raise, aggregate-delete cascade still succeeds (D7-3 UPDATE-only),
+  and superseding leaves version 1 byte-identical.
 
 #### Increment 7.2 — Approval API, versions, and export
 
@@ -1429,11 +1432,17 @@ reference layering (transport → domain → repositories).
   mutation — so REQ-015's "the prior record is unchanged" holds
   literally and immutability has no update path to guard.
 - D7-3 — Two-layer immutability (REQ-014, ADR-005): the domain/
-  repository layer exposes no update path, and a `BEFORE UPDATE OR
-  DELETE` trigger on the versions table raises for the application role.
+  repository layer exposes no update path, and a `BEFORE UPDATE` trigger
+  on the versions and approvals tables raises for the application role.
   Both layers are tested; the trigger is chosen over role-grant
   revocation because it is enforceable and directly testable in the
-  single-role local setup.
+  single-role local setup. Refined at 7.1 implementation: the trigger
+  blocks UPDATE only, not DELETE. A blanket DELETE block would make
+  BR-015 artist-aggregate deletion impossible — deleting an artist
+  cascades to its AIP versions and approvals — a direct contradiction
+  with REQ-014, which concerns *mutating* an approved version (UPDATE).
+  Single-version deletion is prevented by the domain layer exposing no
+  delete path; the only DELETE is the sanctioned aggregate cascade.
 - D7-4 — Version numbering stored as an integer; displayed as `v{n}.0`
   (the golden path's "1.0"). Minor versions are not used in the MVP.
 - D7-5 — Version comparison is client-side from the list and read-one
@@ -3337,3 +3346,31 @@ this phase must not begin.
   enforcement, tested at DB and domain layers).
 - Next recommended step: Begin Increment 7.1 (version domain and
   immutable persistence).
+
+### 2026-07-23 (Increment 7.1 complete: version domain and immutable persistence)
+
+- Phase: 7
+- Increment: 7.1 — Version domain and immutable persistence
+- Status: COMPLETE
+- Work completed: ArtistIdentityProfileVersion and Approval models
+  (insert-only); migration 3522ec8dfd5d adding both tables and BEFORE
+  UPDATE immutability triggers via mc_reject_update(); pure domain
+  helpers (app/domain/aip_versions.py) for numbering and active-authority
+  derivation (D7-2); insert-only repository (app/repositories/
+  aip_versions.py). D7-3 refined during implementation and recorded: the
+  trigger blocks UPDATE only, not DELETE, so BR-015 artist-aggregate
+  deletion can cascade to versions/approvals — a blanket DELETE block
+  would contradict REQ-014-vs-BR-015; REQ-014 concerns mutation (UPDATE).
+- Tests run (all executed, all passing): apps/api pytest — 97 passed
+  (12 new: version-domain units + immutability integration). Migration
+  downgrade -1 then upgrade head clean. make check green end to end
+  (root 22, api 97, bootstrap check). One test defect found and fixed
+  during the run: the immutability helper created a workspace per artist,
+  violating the B2 singleton constraint on the shared scratch DB; fixed
+  to reuse the single workspace.
+- Decisions: D7-3 refined (UPDATE-only trigger; DELETE via aggregate
+  cascade), recorded in the Phase 7 Decisions list.
+- Risks: Alembic autogenerate again proposed dropping the expression
+  indexes; hand-repaired (standing caution already recorded at 6.1).
+- Next recommended step: Increment 7.2 — approval API, versions, and
+  export.
