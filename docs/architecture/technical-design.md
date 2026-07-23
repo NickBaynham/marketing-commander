@@ -118,7 +118,12 @@ No endpoint exists yet; this inventory is the design contract for Phases
 4–13. Request/response schemas reference [domain model](../product/domain-model.md)
 entities; `→ job` means the endpoint enqueues a background job and returns
 `202` with a job reference within 1 second (DEC-09). Permission column is
-the Phase 8 target role; pre-Phase-8 all resolve to the seeded owner.
+the Phase 8 target role — the least-privileged role permitted, with more
+privileged roles inheriting. From Phase 8 on,
+[knowledge/requirements/role-action-matrix.md](../../knowledge/requirements/role-action-matrix.md)
+is the authoritative source for role permissions; where this column and
+the matrix disagree, the matrix wins. Pre-Phase-8 all resolve to the
+seeded owner.
 
 | ID | Method | Path | Purpose | Request | Response | Permission | Idempotency | Validation | REQ |
 |----|--------|------|---------|---------|----------|------------|-------------|-----------|-----|
@@ -128,8 +133,8 @@ the Phase 8 target role; pre-Phase-8 all resolve to the seeded owner.
 | API-04 | GET | /api/v1/artists | List artists | filters | Artist[] | viewer | n/a | — | REQ-004 |
 | API-05 | GET | /api/v1/artists/{id} | Read artist | — | Artist | viewer | n/a | — | REQ-004 |
 | API-06 | PATCH | /api/v1/artists/{id} | Update artist | ArtistUpdate + version | Artist | editor | version token | BR-003 | REQ-004 |
-| API-07 | POST | /api/v1/artists/{id}/archive | Archive/restore | { archived } | Artist | admin | state-idempotent | BR-014 | REQ-005 |
-| API-08 | DELETE | /api/v1/artists/{id} | Delete aggregate | confirmation token | 204 | owner | n/a | BR-015 | REQ-051 |
+| API-07 | POST | /api/v1/artists/{id}/archive | Archive/restore | { archived } | Artist | editor | state-idempotent | BR-014 | REQ-005 |
+| API-08 | DELETE | /api/v1/artists/{id} | Delete aggregate | confirmation token | 204 | admin | n/a | BR-015 | REQ-051 |
 | API-09 | GET | /api/v1/artists/{id}/aip | Read AIP draft + completeness | — | AIPDraft | viewer | n/a | — | REQ-006 |
 | API-10 | PUT | /api/v1/artists/{id}/aip | Save AIP draft | AIPDraftUpdate + version | AIPDraft | editor | version token; 409 stale | DEC-02 schemas, size limits | REQ-006, REQ-017 |
 | API-11 | GET | /api/v1/artists/{id}/aip/preview | Markdown preview | — | { markdown } | viewer | n/a | — | REQ-012 |

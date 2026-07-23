@@ -199,3 +199,23 @@ def test_non_member_is_denied_403(as_role):
 def test_unauthenticated_is_401(api):
     api.cookies.clear()
     assert api.get(f"/api/v1/artists/{ARTIST_ID}").status_code == 401
+
+
+def test_non_member_cannot_read_workspace_via_post(as_role):
+    """A non-member is 403'd on GET /workspace; POST must not become a
+    back door that returns the existing singleton's data to them
+    (Phase 8.3 security review, Critical). Idempotent POST when a
+    workspace exists is a gated read, not an open creation path."""
+    client = as_role("outsider-user")
+    assert client.get("/api/v1/workspace").status_code == 403
+    response = client.post("/api/v1/workspace", json={"name": "x"})
+    assert response.status_code == 403, response.text
+
+
+def test_member_post_workspace_is_idempotent_read(as_role):
+    """A member POSTing when the workspace exists gets the existing one
+    (created=False), never a second workspace."""
+    client = as_role("viewer-user")
+    response = client.post("/api/v1/workspace", json={"name": "ignored"})
+    assert response.status_code == 200, response.text
+    assert response.json()["created"] is False
