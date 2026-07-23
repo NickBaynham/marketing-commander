@@ -199,3 +199,21 @@ acceptance criteria: [acceptance-criteria.md](acceptance-criteria.md).
   and given options so that no work is silently lost.
 - Main flow: stale save → 409 → reload or compare → resolve.
 - Related: REQ-017. AC: AC-008. Phase: 6.
+
+### US-019 — Sign in to the workspace
+
+- Story: As the owner, I want to sign in with a username and password so
+  that only I can reach my workspace and its approvals.
+- Main flow: SCR-01 sign-in → session issued → land on the artists list.
+- Alternate/failure flow: wrong credentials → error, no session; expired
+  session → redirected to sign-in.
+- Related: REQ-052, REQ-053, REQ-056. AC: AC-026, AC-027, AC-030.
+  Phase: 8.
+
+### US-020 — Controlled access by role
+
+- Story: As the owner, I want actions gated by role so that only permitted
+  members can approve, edit, or manage the workspace.
+- Main flow: authenticated request → membership and role resolved →
+  permitted action proceeds, forbidden action denied.
+- Related: REQ-054, REQ-055. AC: AC-028, AC-029. Phase: 8.

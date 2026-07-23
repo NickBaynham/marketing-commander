@@ -211,3 +211,41 @@ when the artist is archived, then new campaign creation and generation are
 blocked with the archived state stated as the reason, all approved versions
 and approval records remain retrievable and unchanged, and when the artist is
 restored, then the blocks are lifted with no data loss. (REQ-005; Phase 5)
+
+### AC-026 — Sign-in success and failure
+
+Given the seeded owner with a configured password, when they submit the
+correct username and password, then a session is issued and they reach the
+artists list; when they submit an incorrect password, then no session is
+issued, an error is shown that does not reveal which field was wrong, and
+access remains denied. (REQ-052; Phase 8)
+
+### AC-027 — Session lifecycle
+
+Given an authenticated session, when the user signs out or the session
+reaches its idle or absolute expiry, then the session is invalidated and a
+subsequent request to a protected route returns HTTP 401 and the UI
+redirects to sign-in; session cookies are HttpOnly and SameSite. (REQ-053;
+Phase 8)
+
+### AC-028 — Deny by default
+
+Given a protected route, when the caller has no valid session, then the
+response is HTTP 401; when the caller is authenticated but their role lacks
+the required permission, then the response is HTTP 403; in neither case is
+workspace data read or mutated. (REQ-054; Phase 8)
+
+### AC-029 — Role-action matrix enforcement
+
+Given the authoritative role-action matrix, when the allow/deny test suite
+runs, then every applicable cell has a test: each permitted (role, action)
+pair succeeds and each forbidden pair is denied with HTTP 403, and a request
+scoped to another workspace is denied. (REQ-054, REQ-055; Phase 8)
+
+### AC-030 — Account linking preserves history
+
+Given AIP version 1.0 approved by `local-owner` before authentication
+existed, when the authentication migration adds credentials and the owner
+signs in, then the approval and audit records are byte-identical to before —
+same actor id, timestamp, and version reference — and the signed-in owner
+resolves to the same `local-owner` domain id. (REQ-056, DEC-03; Phase 8)

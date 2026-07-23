@@ -486,3 +486,61 @@ No requirement is implemented yet; every entry is at lifecycle state DRAFT.
 - Source: Brief §6, DEC-10. Priority: Must. Verification: API, Unit.
 - Related: BR-015; US-003; AC-021; required by REQ-038. Phase: 5
   (implemented), hard deadline before Phase 9 live calls. Status: DRAFT.
+
+### REQ-052 — Local authentication
+
+- Statement: A user authenticates with a username and password before
+  accessing any workspace data; credentials are verified against a stored
+  password hash produced by a vetted memory-hard KDF; the MVP provisions
+  the single seeded owner (D8-1). External identity providers and
+  self-service registration are out of scope until Phase 20.
+- Rationale: Phase 8 objective; DEC-10 local controlled release; D8-1.
+- Source: Plan Phase 8, DEC-10. Priority: Must. Verification: API, Unit.
+- Related: BR-020; US-019; AC-026, AC-027. Phase: 8. Status: DRAFT.
+
+### REQ-053 — Session handling
+
+- Statement: A successful sign-in issues a session carried in an HttpOnly,
+  SameSite cookie (Secure in non-local environments); sessions have idle
+  and absolute expiry; sign-out invalidates the session; expired or absent
+  sessions on protected routes return HTTP 401. Session state is validated
+  server-side on every request (D8-2).
+- Rationale: DEC-09 ASVS V3 session management; D8-2.
+- Source: DEC-09. Priority: Must. Verification: API, Unit.
+- Related: US-019; AC-027, AC-028. Phase: 8. Status: DRAFT.
+
+### REQ-054 — Authorization enforcement
+
+- Statement: Every route resolves the caller's workspace membership and
+  role before domain work and enforces the endpoint's required permission;
+  access is denied by default — unauthenticated callers receive HTTP 401,
+  authenticated callers lacking the permission receive HTTP 403, and
+  cross-workspace access is denied (BR-001). Enforcement is driven by the
+  authoritative role-action matrix.
+- Rationale: Phase 8 objective; DEC-09 ASVS V4 access control; BR-001.
+- Source: Plan Phase 8, technical design Permission column. Priority: Must.
+  Verification: API, Integration.
+- Related: BR-001; US-020; AC-028, AC-029. Phase: 8. Status: DRAFT.
+
+### REQ-055 — Workspace membership and roles
+
+- Statement: A user is linked to a workspace through a membership carrying
+  exactly one role from owner, admin, editor, reviewer, viewer; the
+  role-action matrix defines each role's permitted actions; at least one
+  owner exists per workspace. The MVP provisions the seeded owner
+  membership; additional members are supported by the model but not
+  provisioned through the MVP UI (D8-6).
+- Rationale: Plan Phase 8 role model; DEC-01 workspace boundary.
+- Source: Plan Phase 8, domain model. Priority: Must. Verification: Unit,
+  API.
+- Related: BR-001, BR-020; US-020; AC-029. Phase: 8. Status: DRAFT.
+
+### REQ-056 — Seeded-owner account linking
+
+- Statement: Introducing authentication links the authenticated owner to
+  the existing `local-owner` domain user id; no historic approval or audit
+  record is created, altered, or deleted by the linking; the migration adds
+  credentials to the existing user in place (DEC-03, D8-5).
+- Rationale: DEC-03; ADR-002; approvals are immutable provenance (BR-020).
+- Source: DEC-03, ADR-002. Priority: Must. Verification: Integration, Unit.
+- Related: BR-020; DEC-03; US-019; AC-030. Phase: 8. Status: DRAFT.

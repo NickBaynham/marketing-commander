@@ -15,3 +15,4 @@ approval on 2026-07-18.
 | [ADR-004](adr-004-provider-neutral-llm-interface.md) | Provider-neutral LLM interface | Accepted | DEC-06 |
 | [ADR-005](adr-005-append-only-approved-versions.md) | Append-only approved artifact versions | Accepted | BR-005, BR-006 |
 | [ADR-006](adr-006-graph-database-deferred.md) | Graph database deferred | Accepted | Phase 18 gate |
+| [ADR-007](adr-007-local-password-authentication.md) | Local password authentication for the MVP | Accepted | D8-1 |

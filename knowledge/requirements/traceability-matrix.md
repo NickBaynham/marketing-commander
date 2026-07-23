@@ -70,6 +70,11 @@ implemented.
 | REQ-049 | BR-011 | US-015 | AC-012 | — | — | — | mock adapter | Inspection, Integration | 2–3 |
 | REQ-050 | BR-004–BR-013 | US-014 | AC-024 | (all golden-path entities) | golden-path APIs | golden-path screens | AGC-BRIEF, AGC-PLAN (TBD) | E2E | 5–14 |
 | REQ-051 | BR-015 | US-003 | AC-021 | Artist (aggregate), AgentRun data | API-08 | SCR-06, SCR-25 | — | API, Unit | 5 (required before Phase 9 live calls) |
+| REQ-052 | BR-020 | US-019 | AC-026, AC-027 | User (credentials) | API-auth (TBD) | SCR-01 | — | API, Unit | 8 |
+| REQ-053 | BR-020 | US-019 | AC-027, AC-028 | User, Session | API-auth (TBD) | SCR-01 | — | API, Unit | 8 |
+| REQ-054 | BR-001 | US-020 | AC-028, AC-029 | WorkspaceMembership | all protected endpoints | (all screens) | — | API, Integration | 8 |
+| REQ-055 | BR-001, BR-020 | US-020 | AC-029 | WorkspaceMembership | API-auth (TBD) | SCR-25 | — | Unit, API | 8 |
+| REQ-056 | BR-020 | US-019 | AC-030 | User, Approval, AuditRecord | migration | SCR-01 | — | Integration, Unit | 8 |
 
 Coverage notes:
 

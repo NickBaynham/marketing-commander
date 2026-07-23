@@ -6,8 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 8 — Authentication and Authorization (NOT STARTED —
-  increment plan drafted 2026-07-23; D8-1 auth approach APPROVED 2026-07-23);
+- Current phase: Phase 8 — Authentication and Authorization (IN PROGRESS —
+  Increment 8.1 COMPLETE 2026-07-23; D8-1 approved; next 8.2);
   Phases 1-7 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
@@ -219,7 +219,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 5 | Workspace and Artist Domain | COMPLETE |
 | 6 | Artist Identity Profile | COMPLETE |
 | 7 | Artifact and Versioning System | COMPLETE |
-| 8 | Authentication and Authorization | NOT STARTED |
+| 8 | Authentication and Authorization | IN PROGRESS |
 | 9 | AI Provider and Prompt Foundation | NOT STARTED |
 | 10 | Background Jobs and Progress Updates | NOT STARTED |
 | 11 | Campaign Domain and First Agent Workflow | NOT STARTED |
@@ -1522,8 +1522,8 @@ CYR3NT AIP version 1.0 can be approved and exported
 
 ## Phase 8 — Authentication and Authorization
 
-- Status: NOT STARTED (increment plan drafted 2026-07-23; D8-1 auth
-  approach APPROVED 2026-07-23 — ready to begin Increment 8.1)
+- Status: IN PROGRESS (Increment 8.1 COMPLETE 2026-07-23; D8-1 approved;
+  next: Increment 8.2 — authentication backend)
 - Objective: Controlled access to artist and approval workflows.
 - Dependencies: Phase 5 (workspace model); informs approval flows from
   Phase 7 onward.
@@ -1552,21 +1552,22 @@ CYR3NT AIP version 1.0 can be approved and exported
 Each increment follows the Test Commander review loop and the reference
 layering (transport → domain → repositories).
 
-#### Increment 8.1 — Requirements, role-action matrix, and ADR (docs-first)
+#### Increment 8.1 — Requirements, role-action matrix, and ADR (docs-first) — COMPLETE
 
-- [ ] Add REQ-052..REQ-056 to `requirements.md` (authentication;
+- [x] Added REQ-052..REQ-056 to `requirements.md` (authentication;
   session handling; authorization enforcement / deny-by-default;
   membership and the five roles; seeded-owner account linking per
-  DEC-03) with user stories and acceptance criteria; update the
-  traceability matrix in the same change.
-- [ ] Author the authoritative role-action matrix (owner, admin, editor,
-  reviewer, viewer × the actions in the task list) under
-  `knowledge/requirements/` — the source of the generated allow/deny
-  tests. Every endpoint-inventory Permission cell must map to a matrix
-  row.
-- [ ] ADR-007 recording the D8-1 auth approach (material architectural
-  decision).
-- [ ] Record decisions D8-1..D8-6. No application code.
+  DEC-03), US-019/US-020, AC-026..AC-030, and the traceability matrix
+  rows — all in this change.
+- [x] Authored the authoritative role-action matrix
+  (`knowledge/requirements/role-action-matrix.md`): five roles × the
+  Phase 8 action set plus the approval actions, deny-by-default notes,
+  and the create/approve role separation. Source of the AC-029 allow/
+  deny tests.
+- [x] ADR-007 records the D8-1 approach (Accepted on PO confirmation);
+  README updated.
+- [x] Decisions recorded: D8-1 CONFIRMED, D8-4 and D8-6 settled below;
+  D8-2/D8-3/D8-5 settle at 8.2. No application code.
 
 #### Increment 8.2 — Authentication backend (identity, credentials, sessions)
 
@@ -1628,16 +1629,17 @@ layering (transport → domain → repositories).
 - D8-3 (settle at 8.2) — Password hashing: a vetted memory-hard KDF
   (argon2id preferred, bcrypt acceptable) via a maintained library; work
   factor recorded and configurable.
-- D8-4 (settle at 8.1) — Role → action mapping: the exact matrix cells;
-  authored as the authoritative document in 8.1.
+- D8-4 (settled 8.1) — Role → action mapping: authored as
+  `knowledge/requirements/role-action-matrix.md` (owner/admin/editor/
+  reviewer/viewer × actions); the source for AC-029 allow/deny tests.
 - D8-5 (settle at 8.2) — Seeded-owner linking: the authenticated owner
   resolves to the existing `local-owner` domain user id; no approval or
   audit row is rewritten (DEC-03). A migration/seed change adds
   credentials to that user in place.
-- D8-6 (settle at 8.1) — Member provisioning scope: the membership model
-  and role enforcement are complete and tested; a member-management API
-  may be included, but member-management UI is deferred (single-owner
-  MVP). Recorded as a limitation.
+- D8-6 (settled 8.1) — Member provisioning scope: the membership model
+  and role enforcement are complete and tested; member-management UI is
+  deferred (single-owner MVP), recorded in the role-action matrix and
+  REQ-055 as a limitation.
 
 ### Deliverable
 
@@ -3643,3 +3645,26 @@ this phase must not begin.
   the role-action matrix, and ADR-007). Test Commander note: the new
   US-019+/AC-026+ must be numbered contiguously (the traceability suite
   enforces contiguous IDs and full matrix coverage in the same change).
+
+### 2026-07-23 (Increment 8.1: requirements, role-action matrix, ADR-007)
+
+- Phase: 8
+- Increment: 8.1 — Requirements, role-action matrix, and ADR (docs-first)
+- Status: COMPLETE
+- Work completed: Added REQ-052..056 (authentication, session,
+  authorization enforcement, membership/roles, seeded-owner linking),
+  US-019/020, AC-026..030, and the traceability matrix rows. Authored
+  knowledge/requirements/role-action-matrix.md (five roles × the Phase 8
+  action set plus approval actions; deny-by-default; create/approve role
+  separation) as the source for AC-029 allow/deny tests. Recorded ADR-007
+  (local password authentication, Accepted on PO approval of D8-1) and
+  indexed it. Settled D8-4 (role→action mapping) and D8-6 (member
+  provisioning scope). No application code.
+- Tests run: `make check` — lint, root and API unit suites, docs
+  validation (contiguous REQ/US/AC IDs, full matrix coverage, resolvable
+  links, no ambiguity language), and bootstrap check.
+- Decisions: D8-1 approved by the Product Owner; D8-4 and D8-6 settled;
+  D8-2/D8-3/D8-5 settle at 8.2.
+- Risks: none new.
+- Next recommended step: Increment 8.2 — authentication backend
+  (credentials, sessions, seeded-owner linking).
