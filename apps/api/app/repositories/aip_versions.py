@@ -13,7 +13,12 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Approval, ArtistIdentityProfileVersion
+from app.models import (
+    Approval,
+    Artist,
+    ArtistIdentityProfile,
+    ArtistIdentityProfileVersion,
+)
 
 
 class AipVersionRepository:
@@ -84,3 +89,16 @@ class AipVersionRepository:
             select(Approval).where(Approval.version_id == version_id)
         )
         return result.scalars().first()
+
+    async def artist_ref_for_aip(
+        self, aip_id: uuid.UUID
+    ) -> tuple[uuid.UUID, str] | None:
+        """(artist_id, artist_name) for a version's owning AIP, so a
+        version resolved by id alone can name its artist for export."""
+        result = await self._session.execute(
+            select(Artist.id, Artist.name)
+            .join(ArtistIdentityProfile, ArtistIdentityProfile.artist_id == Artist.id)
+            .where(ArtistIdentityProfile.id == aip_id)
+        )
+        row = result.first()
+        return (row[0], row[1]) if row else None

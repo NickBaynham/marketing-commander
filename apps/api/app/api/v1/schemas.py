@@ -61,6 +61,27 @@ class DeletionOut(BaseModel):
     removed: dict[str, str]
 
 
+class ApproveRequest(BaseModel):
+    expected_version: int
+    note: str | None = Field(default=None, max_length=2000)
+
+
+class AipVersionOut(BaseModel):
+    id: uuid.UUID
+    artist_id: uuid.UUID
+    version_number: int
+    version_label: str
+    status: str
+    created_at: datetime
+    created_by: str
+    approved_by: str | None
+    approved_at: datetime | None
+
+
+class AipVersionExportOut(BaseModel):
+    markdown: str
+
+
 class AipDraftSave(BaseModel):
     """Explicit save (SCR-07). Per-section content caps (DEC-09) are
     enforced by AipSections at this boundary → 422 in the AC-003 shape;

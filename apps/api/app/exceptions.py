@@ -39,3 +39,15 @@ class NotFound(DomainError):
     def __init__(self, entity: str) -> None:
         super().__init__(f"{entity} not found")
         self.entity = entity
+
+
+class ApprovalNotEligible(DomainError):
+    """Approval blocked because required sections are incomplete (AC-006,
+    BR-004). Carries the exact blocking section list for the response."""
+
+    def __init__(self, incomplete: list[str]) -> None:
+        super().__init__(
+            f"approval blocked: {len(incomplete)} required section(s) "
+            "are not complete"
+        )
+        self.incomplete = incomplete

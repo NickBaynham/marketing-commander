@@ -16,19 +16,47 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_aip_service
-from app.api.v1.schemas import AipDraftSave, AipDraftView, AipPreviewOut
+from app.api.v1.deps import get_aip_approval_service, get_aip_service
+from app.api.v1.schemas import (
+    AipDraftSave,
+    AipDraftView,
+    AipPreviewOut,
+    AipVersionOut,
+    ApproveRequest,
+)
 from app.db import get_session
+from app.domain.aip_approval import AipApprovalService, VersionView
 from app.domain.aip_service import AipDraftState, AipService
-from app.exceptions import NotFound, StaleVersion, ValidationFailed
+from app.exceptions import (
+    ApprovalNotEligible,
+    NotFound,
+    StaleVersion,
+    ValidationFailed,
+)
 
 router = APIRouter(prefix="/artists", tags=["aip"])
 
 Service = Annotated[AipService, Depends(get_aip_service)]
+Approvals = Annotated[AipApprovalService, Depends(get_aip_approval_service)]
 Session = Annotated[AsyncSession, Depends(get_session)]
 
 
 def _raise_mapped(exc: Exception) -> None:
+    if isinstance(exc, ApprovalNotEligible):
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": str(exc),
+                "details": [
+                    {
+                        "field": f"sections.{name}",
+                        "rule": "incomplete",
+                        "message": "required section is not complete",
+                    }
+                    for name in exc.incomplete
+                ],
+            },
+        ) from exc
     if isinstance(exc, ValidationFailed):
         raise HTTPException(
             status_code=422,
@@ -44,6 +72,20 @@ def _raise_mapped(exc: Exception) -> None:
     if isinstance(exc, NotFound):
         raise HTTPException(status_code=404, detail={"message": str(exc)}) from exc
     raise exc
+
+
+def _version_out(view: VersionView) -> AipVersionOut:
+    return AipVersionOut(
+        id=view.id,
+        artist_id=view.artist_id,
+        version_number=view.version_number,
+        version_label=view.version_label,
+        status=view.status,
+        created_at=view.created_at,
+        created_by=view.created_by,
+        approved_by=view.approved_by,
+        approved_at=view.approved_at,
+    )
 
 
 def _view(state: AipDraftState) -> AipDraftView:
@@ -93,3 +135,32 @@ async def preview_aip_draft(
     except Exception as exc:  # noqa: BLE001
         _raise_mapped(exc)
     return AipPreviewOut(markdown=markdown)
+
+
+@router.post("/{artist_id}/aip/approve", response_model=AipVersionOut, status_code=201)
+async def approve_aip(
+    artist_id: uuid.UUID,
+    body: ApproveRequest,
+    approvals: Approvals,
+    session: Session,
+) -> AipVersionOut:
+    try:
+        view = await approvals.approve(
+            artist_id, expected_version=body.expected_version, note=body.note
+        )
+        await session.commit()
+    except Exception as exc:  # noqa: BLE001
+        await session.rollback()
+        _raise_mapped(exc)
+    return _version_out(view)
+
+
+@router.get("/{artist_id}/aip/versions", response_model=list[AipVersionOut])
+async def list_aip_versions(
+    artist_id: uuid.UUID, approvals: Approvals
+) -> list[AipVersionOut]:
+    try:
+        views = await approvals.list_versions(artist_id)
+    except Exception as exc:  # noqa: BLE001
+        _raise_mapped(exc)
+    return [_version_out(v) for v in views]

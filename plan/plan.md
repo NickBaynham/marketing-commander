@@ -1375,24 +1375,27 @@ reference layering (transport → domain → repositories).
   raise, aggregate-delete cascade still succeeds (D7-3 UPDATE-only),
   and superseding leaves version 1 byte-identical.
 
-#### Increment 7.2 — Approval API, versions, and export
+#### Increment 7.2 — Approval API, versions, and export — COMPLETE
 
-- [ ] `POST /artists/{id}/aip/approve` (API-12): gate on DEC-02
-  eligibility (reuse the engine) — ineligible → blocked naming the
+- [x] `POST /artists/{id}/aip/approve` (API-12): gates on DEC-02
+  eligibility (reuses the engine) — ineligible → 422 naming the
   incomplete sections (AC-006); stale draft token → 409; on success
-  snapshot the draft into version 1.0 (then 2.0…), write the Approval
-  with the seeded actor, audit with correlation.
-- [ ] `GET /artists/{id}/aip/versions` (API-13) and
-  `GET /aip-versions/{id}` (API-14): list with derived active/superseded
-  status and approver metadata; read one immutable version.
-- [ ] `GET /aip-versions/{id}/export`: the immutable snapshot rendered as
-  Markdown with YAML front matter (reuse `render_markdown`); Markdown
-  only (D7-6). No update or delete route exists on versions.
-- [ ] API tests: approve creates version + approval; ineligible blocked
-  with the list; superseding inserts 2.0 and leaves 1.0 byte-identical;
-  immutability proven at the API layer (no mutating route) and the DB
-  layer (app-role UPDATE/DELETE raises, REQ-014); approval record fields
-  (exact version id, non-null actor, timestamp); export contract.
+  snapshots the draft into version 1.0 (then 2.0…), writes the Approval
+  with the seeded actor (DEC-03), audits with correlation.
+- [x] `GET /artists/{id}/aip/versions` (API-13) and
+  `GET /aip-versions/{id}` (API-14): list and read-one with derived
+  active/superseded status (D7-2) and approver metadata.
+- [x] `GET /aip-versions/{id}/export`: the immutable snapshot rendered as
+  Markdown + YAML front matter (reuses `render_markdown`); Markdown only
+  (D7-6 settled). No update or delete route exists on versions.
+- [x] API tests (8, all executed): approve creates version + approval;
+  ineligible blocked naming all nine sections; stale token 409;
+  superseding marks 1.0 superseded while the read endpoint still returns
+  it unchanged;
+  list reports status + approver; get 404; export contract (front
+  matter + artist name); API-layer immutability (PUT/DELETE on a version
+  → 405). The DB-trigger half of REQ-014 stays proven in
+  test_aip_version_immutability.py (7.1).
 
 #### Increment 7.3 — Approval and version-history UI
 
@@ -1448,9 +1451,10 @@ reference layering (transport → domain → repositories).
 - D7-5 — Version comparison is client-side from the list and read-one
   endpoints; no dedicated compare endpoint unless a concrete need
   appears.
-- D7-6 (settle at 7.2) — Phase 7 export surface: a single endpoint
-  returning the immutable version rendered as Markdown + YAML front
-  matter. CSV/JSON and campaign-level export remain Phase 12.
+- D7-6 — Phase 7 export surface (SETTLED 2026-07-23):
+  `GET /aip-versions/{id}/export` returns the immutable version rendered
+  as Markdown + YAML front matter (reusing the 6.2 renderer). CSV/JSON
+  and campaign-level export remain Phase 12.
 
 ### Deliverable
 
@@ -3374,3 +3378,30 @@ this phase must not begin.
   indexes; hand-repaired (standing caution already recorded at 6.1).
 - Next recommended step: Increment 7.2 — approval API, versions, and
   export.
+
+### 2026-07-23 (Increment 7.2: approval API, versions, and export)
+
+- Phase: 7
+- Increment: 7.2 — Approval API, versions, and export
+- Status: COMPLETE
+- Work completed: AipApprovalService (domain) gates approval on the
+  DEC-02 engine, snapshots the eligible draft into an immutable version
+  (numbering + derived authority from the 7.1 version domain), writes
+  the Approval with the seeded actor, audits with correlation.
+  ApprovalNotEligible exception → 422 with the blocking-section list.
+  Routes: POST /artists/{id}/aip/approve, GET .../aip/versions (in the
+  aip router), and a new /aip-versions router with GET /{id} and
+  GET /{id}/export. Deps wire get_aip_approval_service; version-context
+  repo helper resolves the artist for export. D7-6 settled (Markdown
+  export endpoint).
+- Tests run (all executed, all passing): apps/api pytest 105 passed
+  (8 new approval-API tests); make check green (lint, root 22, api 105,
+  bootstrap check five services). Live smoke through the running stack:
+  save minimal draft -> approve -> version 1.0 approved by local-owner
+  -> export rendered Markdown+YAML naming the artist -> smoke artist
+  deleted. OpenAPI confirms all four routes registered. Hosted CI
+  verification with this commit's run.
+- Decisions: D7-6 settled (single Markdown export endpoint).
+- Risks: none new.
+- Next recommended step: Increment 7.3 — approval and version-history
+  UI (SCR-10, SCR-24).

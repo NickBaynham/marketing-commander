@@ -8,6 +8,7 @@ endpoint; product resources arrive per phase from Phase 5 onward
 from fastapi import APIRouter
 
 from app.api.v1.aip import router as aip_router
+from app.api.v1.aip_versions import router as aip_versions_router
 from app.api.v1.artists import router as artists_router
 from app.api.v1.workspaces import router as workspaces_router
 
@@ -15,6 +16,7 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(workspaces_router)
 router.include_router(artists_router)
 router.include_router(aip_router)
+router.include_router(aip_versions_router)
 
 
 @router.get("/ping")
