@@ -35,3 +35,15 @@ def test_postgres_dsn_assembly(monkeypatch):
     )
     assert settings.postgres_dsn == "postgresql://u:p@h:1/d"
     assert settings.postgres_async_dsn == "postgresql+asyncpg://u:p@h:1/d"
+
+
+def test_cookie_secure_derives_from_env():
+    # Local dev: off (plaintext http is expected there).
+    assert Settings(mc_env="local").cookie_secure is False
+    # Any non-local environment: on by default — a deployment cannot
+    # silently ship the session cookie over plaintext (REQ-053, D8-2).
+    assert Settings(mc_env="production").cookie_secure is True
+    assert Settings(mc_env="ci").cookie_secure is True
+    # An explicit override wins in either direction.
+    assert Settings(mc_env="production", session_cookie_secure=False).cookie_secure is False
+    assert Settings(mc_env="local", session_cookie_secure=True).cookie_secure is True

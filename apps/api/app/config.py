@@ -59,8 +59,18 @@ class Settings(BaseSettings):
     session_idle_ttl_seconds: int = 60 * 60  # 1 hour idle
     session_absolute_ttl_seconds: int = 60 * 60 * 12  # 12 hour absolute
     session_cookie_name: str = "mc_session"
-    # Secure flag off for local http development; set true behind TLS.
-    session_cookie_secure: bool = False
+    # Session-cookie Secure flag. Left unset it derives from the
+    # environment: OFF only for local http development, ON everywhere else
+    # (REQ-053, D8-2) — so a non-local deployment cannot silently ship a
+    # session cookie over plaintext. An explicit SESSION_COOKIE_SECURE
+    # override wins when set.
+    session_cookie_secure: bool | None = None
+
+    @property
+    def cookie_secure(self) -> bool:
+        if self.session_cookie_secure is not None:
+            return self.session_cookie_secure
+        return self.mc_env != "local"
 
     @property
     def cors_origins(self) -> list[str]:
