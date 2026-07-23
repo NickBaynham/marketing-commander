@@ -6,6 +6,7 @@
 // Traceability: AC-006, AC-007; REQ-013, REQ-015; BR-004, BR-006;
 // SCR-10, SCR-24.
 import { expect, test } from "@playwright/test";
+import { signInBrowser } from "../helpers/auth";
 import {
   apiContext,
   createArtist,
@@ -14,6 +15,12 @@ import {
 } from "../helpers/api";
 import { completeAllRequiredSections, openAipEditor } from "../helpers/aip";
 import { expectNoSeriousViolations } from "../helpers/axe";
+
+test.beforeEach(async ({ page }) => {
+  // Phase 8 bridge: authenticate the browser before navigating
+  // (real sign-in UI arrives in 8.4).
+  await signInBrowser(page);
+});
 
 test.beforeEach(async () => {
   const api = await apiContext();

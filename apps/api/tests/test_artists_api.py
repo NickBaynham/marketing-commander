@@ -46,6 +46,8 @@ def api(request):
 
     app = create_app()
     app.dependency_overrides[get_session] = override_session
+    from tests.conftest import authenticate_as
+    authenticate_as(app)
     client = TestClient(app)
     yield client, dsn
     client.close()

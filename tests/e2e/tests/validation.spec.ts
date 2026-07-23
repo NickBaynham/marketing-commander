@@ -2,12 +2,19 @@
 // focus management, assistive-technology exposure; unique-name rule
 // from D5-1. Traceability: AC-003; REQ-003; SCR-05.
 import { expect, test } from "@playwright/test";
+import { signInBrowser } from "../helpers/auth";
 import {
   apiContext,
   createArtist,
   deleteTestArtists,
   ensureWorkspace,
 } from "../helpers/api";
+
+test.beforeEach(async ({ page }) => {
+  // Phase 8 bridge: authenticate the browser before navigating
+  // (real sign-in UI arrives in 8.4).
+  await signInBrowser(page);
+});
 
 test.beforeAll(async () => {
   const api = await apiContext();

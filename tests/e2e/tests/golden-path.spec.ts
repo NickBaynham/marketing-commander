@@ -13,6 +13,7 @@
 // US-001..US-007; SCR-01, SCR-02, SCR-04..SCR-10, SCR-24;
 // REQ-001..REQ-006, REQ-010, REQ-012, REQ-013; DEC-02.
 import { expect, test } from "@playwright/test";
+import { signInBrowser } from "../helpers/auth";
 import { apiContext, deleteTestArtists } from "../helpers/api";
 import { expectNoSeriousViolations } from "../helpers/axe";
 import {
@@ -20,6 +21,12 @@ import {
   completeAllRequiredSections,
   openAipEditor,
 } from "../helpers/aip";
+
+test.beforeEach(async ({ page }) => {
+  // Phase 8 bridge: authenticate the browser before navigating
+  // (real sign-in UI arrives in 8.4).
+  await signInBrowser(page);
+});
 
 test.beforeAll(async () => {
   const api = await apiContext();

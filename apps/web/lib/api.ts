@@ -97,6 +97,10 @@ export function formatError(err: unknown, fallback: string): string {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
+    // Phase 8: carry the session cookie on cross-origin (same-site)
+    // API calls so authenticated requests are recognized. The sign-in
+    // UI that establishes the session lands in Increment 8.4.
+    credentials: "include",
     ...init,
   });
   let body: unknown = null;

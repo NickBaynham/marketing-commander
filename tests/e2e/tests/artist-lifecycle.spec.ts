@@ -2,6 +2,7 @@
 // what is lost (BR-015, REQ-051), through the UI.
 // Traceability: AC-025; REQ-005, REQ-051; SCR-06.
 import { expect, test } from "@playwright/test";
+import { signInBrowser } from "../helpers/auth";
 import {
   apiContext,
   createArtist,
@@ -9,6 +10,12 @@ import {
   ensureWorkspace,
 } from "../helpers/api";
 import { expectNoSeriousViolations } from "../helpers/axe";
+
+test.beforeEach(async ({ page }) => {
+  // Phase 8 bridge: authenticate the browser before navigating
+  // (real sign-in UI arrives in 8.4).
+  await signInBrowser(page);
+});
 
 test.beforeAll(async () => {
   const api = await apiContext();

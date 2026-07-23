@@ -10,9 +10,14 @@ from fastapi import APIRouter
 from app.api.v1.aip import router as aip_router
 from app.api.v1.aip_versions import router as aip_versions_router
 from app.api.v1.artists import router as artists_router
+from app.api.v1.auth import router as auth_router
 from app.api.v1.workspaces import router as workspaces_router
 
 router = APIRouter(prefix="/api/v1")
+# Auth routes are unauthenticated by design (login mints the session);
+# every other product router enforces a valid session via its
+# dependencies (get_current_user_id).
+router.include_router(auth_router)
 router.include_router(workspaces_router)
 router.include_router(artists_router)
 router.include_router(aip_router)

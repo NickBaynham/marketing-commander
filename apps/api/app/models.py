@@ -53,6 +53,10 @@ class User(TimestampMixin, Base):
     identity_source: Mapped[str] = mapped_column(
         String(32), nullable=False, server_default=text("'local_seed'")
     )
+    # Local password credential (Phase 8, D8-3/D8-5). Nullable: added in
+    # place to the seeded owner without rewriting the row's identity;
+    # future non-local identities may have none.
+    password_hash: Mapped[str | None] = mapped_column(String(255))
 
 
 class Workspace(TimestampMixin, Base):

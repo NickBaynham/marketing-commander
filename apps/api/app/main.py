@@ -30,6 +30,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
         expose_headers=["x-correlation-id"],
+        # Phase 8: the browser must send the session cookie cross-origin
+        # (exact-origin allowlist above; no wildcard with credentials).
+        allow_credentials=True,
     )
     register_error_handlers(application)
     application.include_router(health_router)

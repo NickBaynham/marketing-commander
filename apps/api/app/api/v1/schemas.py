@@ -61,6 +61,15 @@ class DeletionOut(BaseModel):
     removed: dict[str, str]
 
 
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=64)
+    password: str = Field(min_length=1, max_length=1024)
+
+
+class MeOut(BaseModel):
+    user_id: str
+
+
 class ApproveRequest(BaseModel):
     expected_version: int
     note: str | None = Field(default=None, max_length=2000)

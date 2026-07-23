@@ -3,9 +3,14 @@
 // before a spec runs. Traceability: Test Data Strategy (Phase 5).
 import { APIRequestContext, expect, request } from "@playwright/test";
 import { API_URL } from "./env";
+import { signInApi } from "./auth";
 
 export async function apiContext(): Promise<APIRequestContext> {
-  return request.newContext({ baseURL: API_URL });
+  const api = await request.newContext({ baseURL: API_URL });
+  // Product routes require a session (Phase 8); authenticate the setup
+  // context as the seeded owner before any call.
+  await signInApi(api);
+  return api;
 }
 
 export async function ensureWorkspace(api: APIRequestContext): Promise<void> {

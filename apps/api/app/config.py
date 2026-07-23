@@ -49,6 +49,19 @@ class Settings(BaseSettings):
     # form), nothing wider.
     web_origin: str = "http://localhost:3000"
 
+    # --- Auth and sessions (Phase 8, D8-2/D8-3/D8-5) ---
+    # The seeded owner's dev password, supplied via the environment and
+    # never committed (CLAUDE.md). Empty means the seed leaves the owner
+    # without credentials (no login possible until one is set).
+    local_owner_password: str = ""
+    # Opaque server-side sessions in Redis: sliding idle expiry refreshed
+    # on each validated request, plus a hard absolute lifetime (ASVS V3).
+    session_idle_ttl_seconds: int = 60 * 60  # 1 hour idle
+    session_absolute_ttl_seconds: int = 60 * 60 * 12  # 12 hour absolute
+    session_cookie_name: str = "mc_session"
+    # Secure flag off for local http development; set true behind TLS.
+    session_cookie_secure: bool = False
+
     @property
     def cors_origins(self) -> list[str]:
         origins = [self.web_origin]

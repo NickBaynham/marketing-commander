@@ -11,6 +11,18 @@ Traceability: Phase 4 Increment 4.1 (initial API test harness).
 import pytest
 from fastapi.testclient import TestClient
 
+LOCAL_OWNER_ID = "local-owner"
+
+
+def authenticate_as(app, user_id: str = LOCAL_OWNER_ID) -> None:
+    """Override the Phase 8 session gate so tests that are not about auth
+    run as an authenticated owner without minting a real session. The
+    real login/session/401 behavior is exercised in test_auth_api.py with
+    the override cleared."""
+    from app.api.v1.deps import get_current_user_id
+
+    app.dependency_overrides[get_current_user_id] = lambda: user_id
+
 
 def compose_stack_reachable() -> bool:
     """True when the compose PostgreSQL is reachable from the host."""
@@ -34,4 +46,6 @@ def client() -> TestClient:
     from app.main import create_app
 
     get_settings.cache_clear()
-    return TestClient(create_app())
+    app = create_app()
+    authenticate_as(app)
+    return TestClient(app)

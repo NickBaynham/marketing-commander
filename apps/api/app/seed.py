@@ -13,6 +13,7 @@ import asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.db import get_sessionmaker
 from app.identity import (
     IDENTITY_SOURCE,
@@ -20,13 +21,21 @@ from app.identity import (
     LOCAL_OWNER_ID,
 )
 from app.models import User, Workspace, WorkspaceMembership
+from app.security import hash_password
 
 DEFAULT_WORKSPACE_NAME = "CYR3NT Workspace"
 
 
 async def seed(session: AsyncSession) -> dict[str, str]:
-    """Ensure seed records exist; return what happened per record."""
+    """Ensure seed records exist; return what happened per record.
+
+    The owner's password comes from LOCAL_OWNER_PASSWORD (env, never
+    committed). Setting it adds a credential to the existing seeded user
+    in place — the same domain id — so no approval or audit row changes
+    (DEC-03, D8-5). An empty value leaves credentials untouched.
+    """
     outcome: dict[str, str] = {}
+    owner_password = get_settings().local_owner_password
 
     user = await session.get(User, LOCAL_OWNER_ID)
     if user is None:
@@ -34,11 +43,14 @@ async def seed(session: AsyncSession) -> dict[str, str]:
             id=LOCAL_OWNER_ID,
             display_name=LOCAL_OWNER_DISPLAY_NAME,
             identity_source=IDENTITY_SOURCE,
+            password_hash=hash_password(owner_password) if owner_password else None,
         )
         session.add(user)
         await session.flush()
         outcome["user"] = "created"
     else:
+        if owner_password:
+            user.password_hash = hash_password(owner_password)
         outcome["user"] = "exists"
 
     workspace = (

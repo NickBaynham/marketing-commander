@@ -24,6 +24,8 @@ jobs:
         run: make check
       - name: Apply database migrations
         run: make migrate
+      - name: Seed the local owner (sets the owner credential for sign-in)
+        run: make seed
       - name: Install Playwright (Chromium)
         run: cd tests/e2e && npm ci && npx playwright install --with-deps chromium
       - name: End-to-end tests (D5-3 CI scope, chromium desktop and mobile)

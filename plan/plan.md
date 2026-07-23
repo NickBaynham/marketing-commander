@@ -6,8 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 8 — Authentication and Authorization (IN PROGRESS —
-  Increment 8.1 COMPLETE 2026-07-23; D8-1 approved; next 8.2);
+- Current phase: Phase 8 — Authentication and Authorization (IN PROGRESS;
+  Increments 8.1–8.2 complete; next 8.3);
   Phases 1-7 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
@@ -1522,8 +1522,8 @@ CYR3NT AIP version 1.0 can be approved and exported
 
 ## Phase 8 — Authentication and Authorization
 
-- Status: IN PROGRESS (Increment 8.1 COMPLETE 2026-07-23; D8-1 approved;
-  next: Increment 8.2 — authentication backend)
+- Status: IN PROGRESS (Increments 8.1–8.2 COMPLETE 2026-07-23; D8-1/D8-2/
+  D8-3/D8-5 settled; next: Increment 8.3 — authorization enforcement)
 - Objective: Controlled access to artist and approval workflows.
 - Dependencies: Phase 5 (workspace model); informs approval flows from
   Phase 7 onward.
@@ -1569,20 +1569,31 @@ layering (transport → domain → repositories).
 - [x] Decisions recorded: D8-1 CONFIRMED, D8-4 and D8-6 settled below;
   D8-2/D8-3/D8-5 settle at 8.2. No application code.
 
-#### Increment 8.2 — Authentication backend (identity, credentials, sessions)
+#### Increment 8.2 — Authentication backend — COMPLETE
 
-- [ ] Credential storage on the user (password hash via a vetted KDF,
-  D8-3); the seed sets the local owner's dev password from an env var
-  (documented; never committed).
-- [ ] Login and logout endpoints; session issuance and validation
-  (mechanism per D8-2); a session-derived identity dependency that
-  replaces the permissive `get_actor_id` hook while preserving the
-  `local-owner` domain id (DEC-03 linking — no new actor, approvals
-  untouched).
-- [ ] Unauthenticated requests to protected routes → 401.
-- [ ] Tests: login success/failure, password verification, session
-  lifecycle (issue, validate, expire, logout), and a regression proving
-  historic approval records are byte-identical after linking.
+- [x] argon2id credentials on the user (`app/security.py`, D8-3):
+  salted, anti-enumeration dummy-verify; `password_hash` column
+  (migration 687c205cf24f, add-column-only, D6-1 caution applied); the
+  seed sets the owner's password from `LOCAL_OWNER_PASSWORD` in place
+  (DEC-03; never committed — `.env.example` placeholder).
+- [x] Login/logout/me endpoints (`app/api/v1/auth.py`); opaque
+  server-side sessions in Redis (`app/sessions.py`, D8-2): HttpOnly,
+  SameSite=Lax cookie, sliding idle + hard absolute expiry, immediate
+  revocation on logout. `get_current_user_id` (session cookie → id or
+  401) replaces the permissive hook and is wired into every product
+  service; the identity is the same seeded `local-owner`, so approvals
+  and audit rows are untouched (DEC-03).
+- [x] Unauthenticated product requests → 401; auth routes are the only
+  unauthenticated `/api/v1` routes.
+- [x] Tests: 7 security unit, 5 session unit (fake redis), 7 auth API
+  integration (login success/failure with one anti-enumeration message,
+  session grant/expire/logout, tampered cookie, and the DEC-03
+  regression: an authenticated write records actor `local-owner` and
+  adds no new user). Full API suite 124.
+- [x] E2E auth bridge: web client sends `credentials: include`; CI seeds
+  the owner; specs sign in programmatically (Node context + browser
+  context, host-matched cookie) until the real sign-in UI in 8.4. Full
+  DEC-09 matrix 48/48.
 
 #### Increment 8.3 — Authorization enforcement (role-action matrix)
 
@@ -1620,22 +1631,22 @@ layering (transport → domain → repositories).
   the seeded owner with no real auth — rejected because Phase 8's
   acceptance criteria require real access control and the linking
   migration. ADR-007 records this in 8.1.
-- D8-2 (settle at 8.2) — Session mechanism. Candidate: opaque
+- D8-2 (SETTLED 2026-07-23) — Session mechanism: opaque
   server-side session token in an HttpOnly, SameSite=Lax, Secure-in-prod
   cookie, stored in Redis (already provisioned), with idle + absolute
   expiry (ASVS V3). Alternative considered: signed JWT-in-cookie —
   heavier to revoke; server-side sessions are simpler and safer for a
   single-node local app.
-- D8-3 (settle at 8.2) — Password hashing: a vetted memory-hard KDF
-  (argon2id preferred, bcrypt acceptable) via a maintained library; work
-  factor recorded and configurable.
+- D8-3 (SETTLED 2026-07-23) — Password hashing: argon2id via
+  argon2-cffi (PasswordHasher defaults as the recorded work factor;
+  check_needs_rehash supports raising it later without a migration).
 - D8-4 (settled 8.1) — Role → action mapping: authored as
   `knowledge/requirements/role-action-matrix.md` (owner/admin/editor/
   reviewer/viewer × actions); the source for AC-029 allow/deny tests.
-- D8-5 (settle at 8.2) — Seeded-owner linking: the authenticated owner
-  resolves to the existing `local-owner` domain user id; no approval or
-  audit row is rewritten (DEC-03). A migration/seed change adds
-  credentials to that user in place.
+- D8-5 (SETTLED 2026-07-23) — Seeded-owner linking: the authenticated
+  owner resolves to the existing `local-owner` id; the seed adds a
+  password_hash to that row in place; no approval or audit row is
+  rewritten (DEC-03), proven by the auth-API regression test.
 - D8-6 (settled 8.1) — Member provisioning scope: the membership model
   and role enforcement are complete and tested; member-management UI is
   deferred (single-owner MVP), recorded in the role-action matrix and
@@ -3668,3 +3679,41 @@ this phase must not begin.
 - Risks: none new.
 - Next recommended step: Increment 8.2 — authentication backend
   (credentials, sessions, seeded-owner linking).
+
+### 2026-07-23 (Increment 8.2: authentication backend)
+
+- Phase: 8
+- Increment: 8.2 — Authentication backend (identity, credentials, sessions)
+- Status: COMPLETE
+- Work completed: argon2id credentials (app/security.py) with an
+  anti-enumeration dummy-verify; User.password_hash column (migration
+  687c205cf24f, add-column-only per the D6-1 caution); opaque Redis
+  sessions (app/sessions.py, D8-2) with HttpOnly SameSite=Lax cookie,
+  sliding idle + absolute expiry, immediate logout revocation; AuthService
+  (app/domain/auth.py) resolving login to the seeded local-owner id
+  (DEC-03); login/logout/me routes; get_current_user_id replacing the
+  permissive hook across every product service; seed sets the owner
+  password from LOCAL_OWNER_PASSWORD in place; CORS allow_credentials;
+  web client sends credentials; CI seeds the owner; E2E programmatic
+  sign-in bridge (Node + browser contexts) pending the 8.4 UI.
+- Tests run (all executed, all passing): apps/api pytest 124 (7 security
+  unit, 5 session unit, 7 auth API integration incl. the DEC-03
+  regression — authenticated write records actor local-owner and adds no
+  new user); full DEC-09 E2E matrix 48/48; make check green.
+- Decisions: D8-2 (opaque Redis sessions), D8-3 (argon2id), D8-5 (in-place
+  owner linking) settled.
+- Findings fixed mid-increment (recorded for the review):
+  1. Redis connection-pool leak — a per-operation client (chosen to dodge
+     the TestClient cross-loop error) exhausted file descriptors under the
+     single-loop server, surfacing as a Postgres DNS gaierror. Fixed with
+     a per-event-loop cached client (redis_client.get_loop_redis): reuse
+     within a loop, isolation across loops.
+  2. Docker VM ran out of disk during repeated rebuilds (postgres exited
+     "No space left on device"); reclaimed ~14GB of build cache/images.
+     Not a code defect; noted so a future rebuild-heavy increment prunes
+     proactively.
+- Risks: between 8.2 and 8.4 the web UI has no human sign-in screen (the
+  app is session-gated; E2E uses the programmatic bridge). Documented;
+  8.4 delivers SCR-01 sign-in.
+- Next recommended step: Increment 8.3 — authorization enforcement
+  (role-action matrix, 403).

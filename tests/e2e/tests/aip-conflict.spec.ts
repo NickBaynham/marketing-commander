@@ -5,12 +5,19 @@
 // never a silent overwrite — and reloading must adopt the latest.
 // Traceability: AC-008, REQ-006; BR-019; SCR-07; DEC-02 (D6-3).
 import { expect, test } from "@playwright/test";
+import { signInBrowser } from "../helpers/auth";
 import {
   apiContext,
   createArtist,
   deleteTestArtists,
   ensureWorkspace,
 } from "../helpers/api";
+
+test.beforeEach(async ({ page }) => {
+  // Phase 8 bridge: authenticate the browser before navigating
+  // (real sign-in UI arrives in 8.4).
+  await signInBrowser(page);
+});
 
 test("stale save surfaces the conflict view and never silently overwrites", async ({
   page,
