@@ -11,7 +11,14 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AipDraft, api, ApiError, Artist, formatError } from "../../../lib/api";
+import {
+  AipDraft,
+  AipVersion,
+  api,
+  ApiError,
+  Artist,
+  formatError,
+} from "../../../lib/api";
 import { percent } from "../../../lib/aip";
 
 export default function ArtistOverview({
@@ -27,6 +34,7 @@ export default function ArtistOverview({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [aip, setAip] = useState<AipDraft | null>(null);
+  const [activeVersion, setActiveVersion] = useState<AipVersion | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +42,15 @@ export default function ArtistOverview({
       .getAipDraft(id)
       .then((draft) => !cancelled && setAip(draft))
       .catch(() => undefined); // overview still renders without the AIP summary
+    api
+      .listAipVersions(id)
+      .then((versions) => {
+        if (cancelled) return;
+        // The active-authority version is the one still reported approved
+        // (highest number); older ones are superseded (derived, D7-2).
+        setActiveVersion(versions.find((v) => v.status === "approved") ?? null);
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -144,6 +161,12 @@ export default function ArtistOverview({
 
       <section className="aip-summary" aria-label="Artist Identity Profile">
         <h2>Artist Identity Profile</h2>
+        {activeVersion && (
+          <p>
+            Approved version: <strong>{activeVersion.version_label}</strong>
+            {activeVersion.approved_by ? ` by ${activeVersion.approved_by}` : ""}
+          </p>
+        )}
         {aip ? (
           <p>
             {percent(aip.display_percentage)} complete ·{" "}
@@ -151,6 +174,14 @@ export default function ArtistOverview({
               ? "ready for approval"
               : `${aip.incomplete_required_sections.length} required section(s) remaining`}{" "}
             · <Link href={`/artists/${id}/aip`}>Open editor</Link>
+            {aip.approval_eligible && (
+              <>
+                {" · "}
+                <Link href={`/artists/${id}/aip/review`}>Review &amp; approve</Link>
+              </>
+            )}
+            {" · "}
+            <Link href={`/artists/${id}/aip/versions`}>Version history</Link>
           </p>
         ) : (
           <p>

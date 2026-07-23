@@ -310,6 +310,10 @@ export default function AipEditor({
             {busy ? "Saving…" : "Save draft"}
           </button>
           <Link href={`/artists/${id}/aip/preview`}>Preview Markdown</Link>
+          {draft.approval_eligible && (
+            <Link href={`/artists/${id}/aip/review`}>Review &amp; approve</Link>
+          )}
+          <Link href={`/artists/${id}/aip/versions`}>Version history</Link>
         </div>
       </form>
     </>

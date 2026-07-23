@@ -52,6 +52,18 @@ export interface AipDraft {
   incomplete_required_sections: string[];
 }
 
+export interface AipVersion {
+  id: string;
+  artist_id: string;
+  version_number: number;
+  version_label: string;
+  status: "approved" | "superseded";
+  created_at: string;
+  created_by: string;
+  approved_by: string | null;
+  approved_at: string | null;
+}
+
 export class ApiError extends Error {
   status: number;
   code: string;
@@ -153,4 +165,15 @@ export const api = {
     }),
   getAipPreview: (id: string) =>
     request<{ markdown: string }>(`/api/v1/artists/${id}/aip/preview`),
+  approveAip: (id: string, expectedVersion: number) =>
+    request<AipVersion>(`/api/v1/artists/${id}/aip/approve`, {
+      method: "POST",
+      body: JSON.stringify({ expected_version: expectedVersion }),
+    }),
+  listAipVersions: (id: string) =>
+    request<AipVersion[]>(`/api/v1/artists/${id}/aip/versions`),
+  getAipVersion: (versionId: string) =>
+    request<AipVersion>(`/api/v1/aip-versions/${versionId}`),
+  exportAipVersion: (versionId: string) =>
+    request<{ markdown: string }>(`/api/v1/aip-versions/${versionId}/export`),
 };

@@ -1399,14 +1399,14 @@ reference layering (transport → domain → repositories).
 
 #### Increment 7.3 — Approval and version-history UI
 
-- [ ] SCR-10 AIP review and approval: profile in review layout, the
+- [x] SCR-10 AIP review and approval: profile in review layout, the
   exact draft version being approved, eligibility state; Approve enabled
   only when eligible, ineligible state lists blocking sections with jump
   links (AC-006).
-- [ ] SCR-24 artifact/version history: version list with derived
+- [x] SCR-24 artifact/version history: version list with derived
   active/superseded state, approver and timestamp, read-only version
   view, and a two-version comparison (client-side from list + read, D7-5).
-- [ ] SCR-06/editor surface the current approved version and the
+- [x] SCR-06/editor surface the current approved version and the
   Approve entry point when eligible; approved-AIP edit opens a new draft
   (never mutates the approved version, AC-007).
 
@@ -3405,3 +3405,33 @@ this phase must not begin.
 - Risks: none new.
 - Next recommended step: Increment 7.3 — approval and version-history
   UI (SCR-10, SCR-24).
+
+### 2026-07-22 (Increment 7.3 — approval and version-history UI)
+
+- Phase: 7
+- Increment: 7.3 — approval and version-history UI (implemented by the
+  test lead on Product Owner instruction)
+- Status: COMPLETE
+- Work completed: SCR-10 review/approval page (read-only profile,
+  eligibility state, exact draft version, Approve enabled only when
+  eligible, ineligible blocking-section jump links, 409 reload handling);
+  SCR-24 version-history page (active/superseded state, approver +
+  timestamp, read-one and client-side two-version compare via the export
+  endpoints, D7-5); SCR-06 overview + editor surface the active approved
+  version and the Review-&-approve entry point when eligible. Added the
+  AipVersion type and approve/list/get/export client methods. Applied the
+  recurring-defect-class patterns from the start: every useEffect fetch is
+  cancellation-guarded, all error sites use formatError, the approve
+  button is busy-gated, and 409 reloads rather than loops.
+- Tests run: web tsc clean; live browser smoke of the full flow verified
+  against the compose stack — complete AIP → Review & approve → Approve →
+  version 1.0 created and shown active with approver local-owner and
+  timestamp; compare loaded the immutable snapshot (YAML front matter, 12
+  headings); overview surfaced the approved version and entry points.
+  Automated E2E for approval lands in 7.4.
+- Decisions: none new.
+- Risks: none new; the fetch-race/aria class was pre-empted by applying
+  the guards up front.
+- Next recommended step: Increment 7.4 — E2E and golden-path growth
+  (Approve v1.0 in the golden path; ineligible-block and superseding
+  scenarios; axe on SCR-10/SCR-24).
