@@ -172,8 +172,6 @@ export const api = {
     }),
   listAipVersions: (id: string) =>
     request<AipVersion[]>(`/api/v1/artists/${id}/aip/versions`),
-  getAipVersion: (versionId: string) =>
-    request<AipVersion>(`/api/v1/aip-versions/${versionId}`),
   exportAipVersion: (versionId: string) =>
     request<{ markdown: string }>(`/api/v1/aip-versions/${versionId}/export`),
 };

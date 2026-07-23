@@ -1,7 +1,8 @@
 // SCR-24 — AIP artifact/version history (Phase 7, Increment 7.3). Lists
 // immutable approved versions with their derived active/superseded state,
-// approver, and timestamp; opens any version's snapshot read-only; and
-// compares two versions side by side (client-side from the list + export
+// approver, and timestamp. Each row's "View" action opens that version's
+// snapshot read-only in the left panel; the right panel makes it a
+// two-version side-by-side comparison (client-side from the list + export
 // endpoints, D7-5). Versions are immutable (REQ-014/AC-007) so this view
 // is entirely read-only.
 // Traceability: REQ-014, REQ-015, REQ-016; AC-007; SCR-24; D7-5.
@@ -27,6 +28,18 @@ export default function AipVersions({
   const [rightId, setRightId] = useState<string>("");
   const [left, setLeft] = useState<string | null>(null);
   const [right, setRight] = useState<string | null>(null);
+
+  // Reset compare selection whenever the route artist changes, so a
+  // reused component instance can never render one artist's version
+  // snapshot under another artist's page (the App Router reuses this leaf
+  // route across [id] changes; the compare state is keyed on version ids,
+  // not id, so it must be cleared here).
+  useEffect(() => {
+    setLeftId("");
+    setRightId("");
+    setLeft(null);
+    setRight(null);
+  }, [id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,6 +136,9 @@ export default function AipVersions({
               <th scope="col">State</th>
               <th scope="col">Approved by</th>
               <th scope="col">Approved at</th>
+              <th scope="col">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -138,6 +154,15 @@ export default function AipVersions({
                 </td>
                 <td>{v.approved_by ?? "—"}</td>
                 <td>{whenApproved(v)}</td>
+                <td>
+                  <button
+                    type="button"
+                    onClick={() => setLeftId(v.id)}
+                    aria-label={`View version ${v.version_label} read-only`}
+                  >
+                    View
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

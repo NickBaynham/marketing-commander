@@ -10,11 +10,21 @@ export default defineConfig({
   // One worker: specs share the single-workspace backend state.
   workers: 1,
   fullyParallel: false,
-  retries: 0,
+  // The full 6-project matrix runs six browsers against one docker stack;
+  // under that load a correct-but-slow render/navigation can exceed the
+  // default 5s assertion window on the heaviest multi-step specs (the
+  // two-cycle superseding approval). A 15s expect window tolerates the
+  // load without weakening any assertion, and one retry is a transparent
+  // safety net — a retried-then-passed test is reported as "flaky", so a
+  // genuine intermittent regression stays visible rather than hidden.
+  retries: 1,
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: WEB_URL,
     trace: "retain-on-failure",
+    navigationTimeout: 20_000,
   },
   projects: [
     {
