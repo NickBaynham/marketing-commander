@@ -15,7 +15,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_artist_service, get_current_workspace_id
+from app.api.v1.deps import get_artist_service, get_current_workspace_id, require
+from app.domain import authz
 from app.api.v1.schemas import (
     ArtistCreate,
     ArtistOut,
@@ -80,7 +81,12 @@ def _raise_mapped(exc: Exception) -> None:
     raise exc
 
 
-@router.post("", response_model=ArtistOut, status_code=201)
+@router.post(
+    "",
+    response_model=ArtistOut,
+    status_code=201,
+    dependencies=[Depends(require(authz.CREATE_ARTIST))],
+)
 async def create_artist(
     body: ArtistCreate, service: Service, session: Session, workspace_id: WorkspaceId
 ) -> ArtistOut:
@@ -98,7 +104,11 @@ async def create_artist(
     return ArtistOut.model_validate(artist)
 
 
-@router.get("", response_model=list[ArtistOut])
+@router.get(
+    "",
+    response_model=list[ArtistOut],
+    dependencies=[Depends(require(authz.VIEW))],
+)
 async def list_artists(
     service: Service, workspace_id: WorkspaceId
 ) -> list[ArtistOut]:
@@ -106,7 +116,11 @@ async def list_artists(
     return [ArtistOut.model_validate(a) for a in artists]
 
 
-@router.get("/{artist_id}", response_model=ArtistOut)
+@router.get(
+    "/{artist_id}",
+    response_model=ArtistOut,
+    dependencies=[Depends(require(authz.VIEW))],
+)
 async def get_artist(artist_id: uuid.UUID, service: Service) -> ArtistOut:
     try:
         artist = await service.get(artist_id)
@@ -115,7 +129,11 @@ async def get_artist(artist_id: uuid.UUID, service: Service) -> ArtistOut:
     return ArtistOut.model_validate(artist)
 
 
-@router.patch("/{artist_id}", response_model=ArtistOut)
+@router.patch(
+    "/{artist_id}",
+    response_model=ArtistOut,
+    dependencies=[Depends(require(authz.CREATE_ARTIST))],
+)
 async def update_artist(
     artist_id: uuid.UUID, body: ArtistUpdate, service: Service, session: Session
 ) -> ArtistOut:
@@ -134,7 +152,11 @@ async def update_artist(
     return ArtistOut.model_validate(artist)
 
 
-@router.post("/{artist_id}/archive", response_model=ArtistOut)
+@router.post(
+    "/{artist_id}/archive",
+    response_model=ArtistOut,
+    dependencies=[Depends(require(authz.ARCHIVE_RESTORE_ARTIST))],
+)
 async def archive_artist(
     artist_id: uuid.UUID, body: VersionedAction, service: Service, session: Session
 ) -> ArtistOut:
@@ -147,7 +169,11 @@ async def archive_artist(
     return ArtistOut.model_validate(artist)
 
 
-@router.post("/{artist_id}/restore", response_model=ArtistOut)
+@router.post(
+    "/{artist_id}/restore",
+    response_model=ArtistOut,
+    dependencies=[Depends(require(authz.ARCHIVE_RESTORE_ARTIST))],
+)
 async def restore_artist(
     artist_id: uuid.UUID, body: VersionedAction, service: Service, session: Session
 ) -> ArtistOut:
@@ -160,7 +186,11 @@ async def restore_artist(
     return ArtistOut.model_validate(artist)
 
 
-@router.delete("/{artist_id}", response_model=DeletionOut)
+@router.delete(
+    "/{artist_id}",
+    response_model=DeletionOut,
+    dependencies=[Depends(require(authz.DELETE_ARTIST))],
+)
 async def delete_artist(
     artist_id: uuid.UUID,
     service: Service,

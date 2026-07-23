@@ -16,7 +16,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.deps import get_aip_approval_service, get_aip_service
+from app.api.v1.deps import get_aip_approval_service, get_aip_service, require
+from app.domain import authz
 from app.api.v1.schemas import (
     AipDraftSave,
     AipDraftView,
@@ -100,7 +101,11 @@ def _view(state: AipDraftState) -> AipDraftView:
     )
 
 
-@router.get("/{artist_id}/aip", response_model=AipDraftView)
+@router.get(
+    "/{artist_id}/aip",
+    response_model=AipDraftView,
+    dependencies=[Depends(require(authz.VIEW))],
+)
 async def get_aip_draft(artist_id: uuid.UUID, service: Service) -> AipDraftView:
     try:
         state = await service.get_draft(artist_id)
@@ -109,7 +114,11 @@ async def get_aip_draft(artist_id: uuid.UUID, service: Service) -> AipDraftView:
     return _view(state)
 
 
-@router.put("/{artist_id}/aip", response_model=AipDraftView)
+@router.put(
+    "/{artist_id}/aip",
+    response_model=AipDraftView,
+    dependencies=[Depends(require(authz.EDIT_AIP))],
+)
 async def save_aip_draft(
     artist_id: uuid.UUID, body: AipDraftSave, service: Service, session: Session
 ) -> AipDraftView:
@@ -126,7 +135,11 @@ async def save_aip_draft(
     return _view(state)
 
 
-@router.get("/{artist_id}/aip/preview", response_model=AipPreviewOut)
+@router.get(
+    "/{artist_id}/aip/preview",
+    response_model=AipPreviewOut,
+    dependencies=[Depends(require(authz.VIEW))],
+)
 async def preview_aip_draft(
     artist_id: uuid.UUID, service: Service
 ) -> AipPreviewOut:
@@ -137,7 +150,12 @@ async def preview_aip_draft(
     return AipPreviewOut(markdown=markdown)
 
 
-@router.post("/{artist_id}/aip/approve", response_model=AipVersionOut, status_code=201)
+@router.post(
+    "/{artist_id}/aip/approve",
+    response_model=AipVersionOut,
+    status_code=201,
+    dependencies=[Depends(require(authz.APPROVE_AIP))],
+)
 async def approve_aip(
     artist_id: uuid.UUID,
     body: ApproveRequest,
@@ -155,7 +173,11 @@ async def approve_aip(
     return _version_out(view)
 
 
-@router.get("/{artist_id}/aip/versions", response_model=list[AipVersionOut])
+@router.get(
+    "/{artist_id}/aip/versions",
+    response_model=list[AipVersionOut],
+    dependencies=[Depends(require(authz.VIEW))],
+)
 async def list_aip_versions(
     artist_id: uuid.UUID, approvals: Approvals
 ) -> list[AipVersionOut]:

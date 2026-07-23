@@ -14,7 +14,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.v1.aip import _version_out
-from app.api.v1.deps import get_aip_approval_service
+from app.api.v1.deps import get_aip_approval_service, require
+from app.domain import authz
 from app.api.v1.schemas import AipVersionExportOut, AipVersionOut
 from app.domain.aip_approval import AipApprovalService
 from app.exceptions import NotFound
@@ -30,7 +31,11 @@ def _raise_mapped(exc: Exception) -> None:
     raise exc
 
 
-@router.get("/{version_id}", response_model=AipVersionOut)
+@router.get(
+    "/{version_id}",
+    response_model=AipVersionOut,
+    dependencies=[Depends(require(authz.VIEW))],
+)
 async def get_aip_version(
     version_id: uuid.UUID, approvals: Approvals
 ) -> AipVersionOut:
@@ -41,7 +46,11 @@ async def get_aip_version(
     return _version_out(view)
 
 
-@router.get("/{version_id}/export", response_model=AipVersionExportOut)
+@router.get(
+    "/{version_id}/export",
+    response_model=AipVersionExportOut,
+    dependencies=[Depends(require(authz.VIEW))],
+)
 async def export_aip_version(
     version_id: uuid.UUID, approvals: Approvals
 ) -> AipVersionExportOut:

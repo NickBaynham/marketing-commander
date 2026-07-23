@@ -1522,8 +1522,8 @@ CYR3NT AIP version 1.0 can be approved and exported
 
 ## Phase 8 — Authentication and Authorization
 
-- Status: IN PROGRESS (Increments 8.1–8.2 COMPLETE 2026-07-23; D8-1/D8-2/
-  D8-3/D8-5 settled; next: Increment 8.3 — authorization enforcement)
+- Status: IN PROGRESS (Increments 8.1–8.3 COMPLETE 2026-07-23; D8-1..D8-6
+  settled; next: Increment 8.4 — sign-in UX and session in the web app)
 - Objective: Controlled access to artist and approval workflows.
 - Dependencies: Phase 5 (workspace model); informs approval flows from
   Phase 7 onward.
@@ -1595,15 +1595,29 @@ layering (transport → domain → repositories).
   context, host-matched cookie) until the real sign-in UI in 8.4. Full
   DEC-09 matrix 48/48.
 
-#### Increment 8.3 — Authorization enforcement (role-action matrix)
+#### Increment 8.3 — Authorization enforcement (role-action matrix) — COMPLETE
 
-- [ ] Membership + role resolution dependency; per-endpoint enforcement
-  matching the endpoint-inventory Permission column; deny by default
-  (401 unauthenticated, 403 unauthorized); cross-workspace access denied
-  (BR-001).
-- [ ] Allow and deny tests generated from every applicable matrix cell.
-- [ ] Tests: full matrix allow/deny, route protection, cross-workspace
-  denial.
+- [x] `app/domain/authz.py` encodes the role-action matrix (D8-4) as
+  deny-by-default data; `MembershipRepository.role_for` resolves a
+  user's role in the workspace (None → denied); `require(action)`
+  route dependency enforces one matrix action, returning the Principal
+  (401 from the session gate, 403 on insufficient role or non-member).
+- [x] All 15 product routes gated to their matrix action (artists, AIP
+  draft/preview/approve/versions, aip-versions/export, workspace);
+  endpoint→action mapping recorded (artist metadata edit shares the
+  create-artist row; AIP-version export is a read → view).
+- [x] Full-matrix unit test (`test_authz.py`): every (role, action) cell
+  asserted against an independent transcription of the matrix document,
+  so doc/code drift fails the build (AC-029); deny-by-default for unknown
+  role/action.
+- [x] Full-stack authz API tests (`test_authz_api.py`): real logins as
+  owner/editor/reviewer/viewer + a non-member enforce allow, 403
+  (insufficient role), 401 (unauthenticated), and 403 (non-member, the
+  BR-001 boundary); approval separation proven (editor 403 on approve,
+  reviewer passes authz to the eligibility gate).
+- Test harness: the owner-context override now grants an owner Principal
+  so the ~124 pre-existing owner tests stay green; the real 403 path is
+  exercised in test_authz_api.py with the override cleared.
 
 #### Increment 8.4 — Sign-in UX and session in the web app
 
@@ -3717,3 +3731,33 @@ this phase must not begin.
   8.4 delivers SCR-01 sign-in.
 - Next recommended step: Increment 8.3 — authorization enforcement
   (role-action matrix, 403).
+
+### 2026-07-23 (Increment 8.3: authorization enforcement)
+
+- Phase: 8
+- Increment: 8.3 — Authorization enforcement (role-action matrix)
+- Status: COMPLETE
+- Work completed: app/domain/authz.py (deny-by-default matrix encoding of
+  role-action-matrix.md, D8-4); MembershipRepository.role_for;
+  Principal + get_principal + require(action) in deps.py; all 15 product
+  routes gated to their matrix action; endpoint→action mapping recorded
+  (artist edit shares create-artist; AIP-version export → view). Test
+  harness grants an owner Principal so pre-existing owner tests are
+  unaffected; real 401/403 exercised with the override cleared.
+- Tests run (all executed, all passing): apps/api pytest 212 passed
+  (new: test_authz.py full 70-cell matrix incl. deny-by-default;
+  test_authz_api.py 12 full-stack logins as each role — allow, 403
+  insufficient role, 401 unauthenticated, 403 non-member BR-001,
+  approval separation); make check green (lint, root 22, api 212,
+  bootstrap check); tests/e2e full DEC-09 matrix 48/48 after rebuild.
+- Findings during verification: 4 E2E specs first failed with a Next.js
+  404 on the nested /aip/{preview,review,versions} routes — a stale Next
+  dev-server state after the container rebuild (this increment touched
+  backend only; the API returned 200 throughout). A clean `docker
+  compose restart web` recompiled the routes; 48/48 green. CI builds the
+  web image fresh, so it is unaffected. Local caution: after rebuilding
+  the web container, restart it if nested routes 404.
+- Decisions: none new (D8-4 realized; endpoint→action mappings recorded).
+- Risks: none new.
+- Next recommended step: Increment 8.4 — sign-in UX and session in the
+  web app (real login screen, session-aware shell, logout).

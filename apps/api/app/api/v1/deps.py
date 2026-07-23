@@ -11,6 +11,7 @@ Traceability: REQ-052, REQ-053, REQ-055; DEC-03; D8-2, D8-5.
 """
 
 import uuid
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, Response
@@ -22,11 +23,13 @@ from app.domain.aip_approval import AipApprovalService
 from app.domain.aip_service import AipService
 from app.domain.artists import ArtistService
 from app.domain.auth import AuthService
+from app.domain.authz import is_allowed
 from app.redis_client import get_loop_redis
 from app.repositories.aip import AipRepository
 from app.repositories.aip_versions import AipVersionRepository
 from app.repositories.artists import ArtistRepository
 from app.repositories.audit import AuditRepository
+from app.repositories.memberships import MembershipRepository
 from app.repositories.users import UserRepository
 from app.repositories.workspaces import WorkspaceRepository
 from app.sessions import SessionStore
@@ -135,3 +138,56 @@ async def get_current_workspace_id(
             detail={"message": "no workspace exists yet; create one first"},
         )
     return workspace.id
+
+
+@dataclass(frozen=True)
+class Principal:
+    user_id: str
+    workspace_id: uuid.UUID
+    role: str
+
+
+def get_membership_repository(
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> MembershipRepository:
+    return MembershipRepository(session)
+
+
+async def get_principal(
+    user_id: Annotated[str, Depends(get_current_user_id)],
+    workspace_id: Annotated[uuid.UUID, Depends(get_current_workspace_id)],
+    memberships: Annotated[MembershipRepository, Depends(get_membership_repository)],
+) -> Principal:
+    """The authenticated caller's role in the current workspace. A user
+    with no membership is denied (403) — deny by default and the
+    enforceable BR-001 boundary. Overridable in tests that are not about
+    authorization (the harness grants an owner principal)."""
+    role = await memberships.role_for(user_id, workspace_id)
+    if role is None:
+        raise HTTPException(
+            status_code=403,
+            detail={"message": "no membership in this workspace"},
+        )
+    return Principal(user_id=user_id, workspace_id=workspace_id, role=role)
+
+
+def require(action: str):
+    """Route dependency enforcing one matrix action (D8-4). 401 comes
+    from the session gate, 403 from an insufficient role — deny by
+    default. Returns the Principal so handlers can use the role if needed."""
+
+    async def dependency(
+        principal: Annotated[Principal, Depends(get_principal)],
+    ) -> Principal:
+        if not is_allowed(principal.role, action):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "message": (
+                        f"role '{principal.role}' may not perform '{action}'"
+                    )
+                },
+            )
+        return principal
+
+    return dependency
