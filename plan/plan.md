@@ -6,7 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 8 — Authentication and Authorization (NOT STARTED);
+- Current phase: Phase 8 — Authentication and Authorization (NOT STARTED —
+  increment plan drafted 2026-07-23; D8-1 auth approach awaits PO sign-off);
   Phases 1-7 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
@@ -1521,7 +1522,8 @@ CYR3NT AIP version 1.0 can be approved and exported
 
 ## Phase 8 — Authentication and Authorization
 
-- Status: NOT STARTED
+- Status: NOT STARTED (increment plan drafted 2026-07-23; implementation
+  gated on Product Owner confirmation of D8-1, the auth approach)
 - Objective: Controlled access to artist and approval workflows.
 - Dependencies: Phase 5 (workspace model); informs approval flows from
   Phase 7 onward.
@@ -1530,22 +1532,111 @@ CYR3NT AIP version 1.0 can be approved and exported
   access control and must not be used beyond local development. Phase 8
   links real accounts to the same domain users; historic approval records
   are never mutated.
+- Traceability: DEC-03 (linking), DEC-09 (OWASP ASVS 5.0 L1 subset V2/V3/
+  V4), DEC-10 (local controlled release); BR-001 (workspace isolation),
+  BR-020 (non-null actor); the endpoint inventory Permission column
+  (technical design) is the per-route authorization contract. New
+  requirements REQ-052..REQ-056 (authentication, session, authorization
+  enforcement, membership/roles, account-linking) are authored in 8.1 —
+  no auth REQ block exists yet, so the behavior would otherwise be
+  untraceable (AGENT.md).
+- Phase-leakage stop condition: no external IdP / OAuth / SSO, no
+  self-service registration, no email flows (password reset, verification)
+  — all Phase 20 (production hardening / multi-customer). The MVP
+  provisions the single seeded owner; the full role model is enforced and
+  tested so future members work, but member-management UI is minimal/
+  deferred (D8-6).
 
-### Tasks
+### Increment Plan (drafted 2026-07-23)
 
-- [ ] Authentication approach selection.
-- [ ] Workspace membership.
-- [ ] Owner, admin, editor, reviewer, and viewer roles.
-- [ ] Role-action matrix created before implementing authorization,
-  covering at minimum: view artist, edit AIP draft, submit for review,
-  approve AIP, create campaign, generate content, edit content, approve
-  content, export campaign, manage workspace members.
-- [ ] Route protection.
-- [ ] API authorization.
-- [ ] Approval permissions.
-- [ ] Session handling.
-- [ ] Security tests: allow and deny tests generated from every applicable
-  cell of the role-action matrix.
+Each increment follows the Test Commander review loop and the reference
+layering (transport → domain → repositories).
+
+#### Increment 8.1 — Requirements, role-action matrix, and ADR (docs-first)
+
+- [ ] Add REQ-052..REQ-056 to `requirements.md` (authentication;
+  session handling; authorization enforcement / deny-by-default;
+  membership and the five roles; seeded-owner account linking per
+  DEC-03) with user stories and acceptance criteria; update the
+  traceability matrix in the same change.
+- [ ] Author the authoritative role-action matrix (owner, admin, editor,
+  reviewer, viewer × the actions in the task list) under
+  `knowledge/requirements/` — the source of the generated allow/deny
+  tests. Every endpoint-inventory Permission cell must map to a matrix
+  row.
+- [ ] ADR-007 recording the D8-1 auth approach (material architectural
+  decision).
+- [ ] Record decisions D8-1..D8-6. No application code.
+
+#### Increment 8.2 — Authentication backend (identity, credentials, sessions)
+
+- [ ] Credential storage on the user (password hash via a vetted KDF,
+  D8-3); the seed sets the local owner's dev password from an env var
+  (documented; never committed).
+- [ ] Login and logout endpoints; session issuance and validation
+  (mechanism per D8-2); a session-derived identity dependency that
+  replaces the permissive `get_actor_id` hook while preserving the
+  `local-owner` domain id (DEC-03 linking — no new actor, approvals
+  untouched).
+- [ ] Unauthenticated requests to protected routes → 401.
+- [ ] Tests: login success/failure, password verification, session
+  lifecycle (issue, validate, expire, logout), and a regression proving
+  historic approval records are byte-identical after linking.
+
+#### Increment 8.3 — Authorization enforcement (role-action matrix)
+
+- [ ] Membership + role resolution dependency; per-endpoint enforcement
+  matching the endpoint-inventory Permission column; deny by default
+  (401 unauthenticated, 403 unauthorized); cross-workspace access denied
+  (BR-001).
+- [ ] Allow and deny tests generated from every applicable matrix cell.
+- [ ] Tests: full matrix allow/deny, route protection, cross-workspace
+  denial.
+
+#### Increment 8.4 — Sign-in UX and session in the web app
+
+- [ ] SCR-01 becomes a real local sign-in (replacing the auto-seeded-owner
+  entry); the API client carries the session; logout control;
+  unauthenticated navigation redirects to sign-in.
+- [ ] Golden-path spec updated to sign in as the seeded owner first, then
+  continue the canonical path; unauthenticated-access-redirected
+  scenario; axe on the sign-in screen.
+- [ ] ASVS L1 subset (V2/V3/V4) control mapping recorded as pass / fail /
+  N/A with evidence (finalized at Phase 14).
+
+### Decisions (Phase 8)
+
+- D8-1 (PENDING — Product Owner confirmation before 8.2) — Authentication
+  approach. Recommended: minimal local username/password authentication
+  for the seeded owner, proportionate to the DEC-10 local single-workspace
+  release. The full five-role model is defined and enforced, but only the
+  owner is provisioned in the MVP. External IdP / OAuth / SSO and
+  self-service registration are deferred to Phase 20. Rationale: honors
+  "avoid speculative infrastructure" and "prefer a working vertical
+  slice"; a public-SaaS identity stack would over-build a local MVP.
+  Alternatives: (a) full OAuth/OIDC provider now — rejected as
+  Phase-20 scope; (b) keep the seeded owner with no real auth — rejected
+  because Phase 8's acceptance criteria require real access control and
+  the linking migration.
+- D8-2 (settle at 8.2) — Session mechanism. Candidate: opaque
+  server-side session token in an HttpOnly, SameSite=Lax, Secure-in-prod
+  cookie, stored in Redis (already provisioned), with idle + absolute
+  expiry (ASVS V3). Alternative considered: signed JWT-in-cookie —
+  heavier to revoke; server-side sessions are simpler and safer for a
+  single-node local app.
+- D8-3 (settle at 8.2) — Password hashing: a vetted memory-hard KDF
+  (argon2id preferred, bcrypt acceptable) via a maintained library; work
+  factor recorded and configurable.
+- D8-4 (settle at 8.1) — Role → action mapping: the exact matrix cells;
+  authored as the authoritative document in 8.1.
+- D8-5 (settle at 8.2) — Seeded-owner linking: the authenticated owner
+  resolves to the existing `local-owner` domain user id; no approval or
+  audit row is rewritten (DEC-03). A migration/seed change adds
+  credentials to that user in place.
+- D8-6 (settle at 8.1) — Member provisioning scope: the membership model
+  and role enforcement are complete and tested; a member-management API
+  may be included, but member-management UI is deferred (single-owner
+  MVP). Recorded as a limitation.
 
 ### Deliverable
 
@@ -3504,3 +3595,30 @@ this phase must not begin.
 - Next recommended step: Phase 8 — Authentication and Authorization. Link
   real accounts to the seeded local-owner without mutating the immutable
   approval records from Phase 7.
+
+### 2026-07-23 (Phase 8 increment plan drafted)
+
+- Phase: 8 (planning only)
+- Increment: Increment plan draft (8.1–8.4)
+- Status: NOT STARTED (implementation gated on PO confirmation of D8-1)
+- Work completed: Drafted the Phase 8 increment plan: 8.1 docs-first
+  (add REQ-052..056, the authoritative role-action matrix, and ADR-007 —
+  no auth REQ block exists yet, so building first would be untraceable);
+  8.2 authentication backend (credentials, sessions, seeded-owner
+  linking per DEC-03); 8.3 authorization enforcement (matrix-driven
+  allow/deny, deny-by-default); 8.4 sign-in UX and golden-path update.
+  Recorded traceability (DEC-03/09/10, BR-001/020, endpoint Permission
+  column), the phase-leakage stop condition (no IdP/OAuth/SSO,
+  registration, or email flows — Phase 20), and decisions D8-1..D8-6.
+- Tests run: `make check` — green (documentation suite validates the
+  plan edits).
+- Decisions: D8-2..D8-6 settled in the draft at their increments; D8-1
+  (auth approach) is PENDING and requires explicit Product Owner
+  confirmation before Increment 8.2 — recommendation and alternatives
+  recorded.
+- Risks: retrofitting authorization onto existing endpoints (mitigated —
+  the membership/actor hook has existed since Phase 5); over-building a
+  local MVP's identity stack (mitigated by the D8-1 recommendation).
+- Next recommended step: Product Owner confirms D8-1 (or selects an
+  alternative), then begin Increment 8.1 (docs-first: requirements,
+  role-action matrix, ADR-007).
