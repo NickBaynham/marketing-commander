@@ -6,8 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 7 — Artifact and Versioning System (NOT STARTED —
-  increment plan drafted 2026-07-22); Phases 1-6 COMPLETE
+- Current phase: Phase 7 — Artifact and Versioning System (IN REVIEW —
+  Increments 7.1–7.4 complete); Phases 1-6 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -217,7 +217,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 4 | Backend Application Foundation | COMPLETE |
 | 5 | Workspace and Artist Domain | COMPLETE |
 | 6 | Artist Identity Profile | COMPLETE |
-| 7 | Artifact and Versioning System | NOT STARTED |
+| 7 | Artifact and Versioning System | IN REVIEW |
 | 8 | Authentication and Authorization | NOT STARTED |
 | 9 | AI Provider and Prompt Foundation | NOT STARTED |
 | 10 | Background Jobs and Progress Updates | NOT STARTED |
@@ -1410,15 +1410,19 @@ reference layering (transport → domain → repositories).
   Approve entry point when eligible; approved-AIP edit opens a new draft
   (never mutates the approved version, AC-007).
 
-#### Increment 7.4 — E2E and golden-path growth
+#### Increment 7.4 — E2E and golden-path growth — COMPLETE
 
-- [ ] Golden-path spec grows: … Preview AIP Markdown → Approve AIP
-  version 1.0 (single spec, no forks).
-- [ ] Ineligible-approval-blocked scenario (AC-006); superseding
-  scenario (edit approved AIP → new draft → approve 2.0, 1.0 unchanged,
-  AC-007); immutability visible in version history.
-- [ ] Axe assertions on SCR-10 and SCR-24; full matrix locally, D5-3
-  subset in CI.
+- [x] Golden-path spec grows in place: … Preview AIP Markdown → Approve
+  AIP version 1.0, walking the real user path (overview → Review &
+  approve → SCR-10 approve → SCR-24 shows 1.0 active by local-owner).
+  Single spec, no forks.
+- [x] Ineligible-approval-blocked scenario (AC-006: Approve disabled,
+  blocking sections named) and superseding scenario (AC-007: approve
+  1.0, edit + save + approve 2.0; 2.0 active and 1.0 preserved as
+  superseded — both rows present) in a separate aip-approval spec.
+- [x] Axe assertions on SCR-10 and SCR-24; full DEC-09 matrix locally
+  (48/48 across chromium desktop/mobile/tablet/wide, firefox, webkit),
+  D5-3 subset in CI.
 
 ### Decisions (Phase 7)
 
@@ -3435,3 +3439,26 @@ this phase must not begin.
 - Next recommended step: Increment 7.4 — E2E and golden-path growth
   (Approve v1.0 in the golden path; ineligible-block and superseding
   scenarios; axe on SCR-10/SCR-24).
+
+### 2026-07-23 (Increment 7.4: E2E golden-path growth; Phase 7 to IN REVIEW)
+
+- Phase: 7
+- Increment: 7.4 — E2E and golden-path growth
+- Status: COMPLETE (Phase 7 IN REVIEW)
+- Work completed: Grew the single golden-path spec through Approve AIP
+  version 1.0 via the real user path (overview → Review & approve →
+  SCR-10 → SCR-24 shows 1.0 active by local-owner). Added an
+  aip-approval spec with the ineligible-blocked scenario (AC-006:
+  Approve disabled, blocking sections named) and the superseding
+  scenario (AC-007: approve 1.0, edit+save+approve 2.0; 2.0 active, 1.0
+  preserved as superseded). Axe on SCR-10 and SCR-24.
+- Tests run (all executed, all passing): tests/e2e full DEC-09 matrix
+  48/48 across chromium desktop/mobile/tablet/wide, firefox, webkit
+  (golden-path + aip-approval + prior specs); make check green (lint,
+  root 22, api 105, bootstrap check five services). Hosted CI (D5-3
+  chromium subset) verification with this commit's run.
+- Decisions: none new.
+- Risks: none new.
+- Next recommended step: Test Commander Phase 7 review. With no open
+  Major findings, Phase 7 closes and Phase 8 (Authentication and
+  Authorization) begins.

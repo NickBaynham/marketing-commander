@@ -3,13 +3,15 @@
 //   Open application → Create CYR3NT → View artist        (Phase 5)
 //   → Complete required AIP → Save draft → Validate
 //     completeness → Preview AIP Markdown                 (Phase 6)
+//   → Approve AIP version 1.0                             (Phase 7)
 //
 // Later phases extend this same spec toward the full canonical golden
-// path (Approve AIP v1.0 → campaign → …); do not fork it into parallel
-// variants (golden-path test plan). Workspace creation is idempotent
-// (REQ-001), so the spec handles first-run and provisioned environments.
-// Traceability: AC-024 (segment), AC-002, AC-004, AC-005; US-001..US-006;
-// SCR-01, SCR-02, SCR-04..SCR-09; REQ-001..REQ-006, REQ-012; DEC-02.
+// path (create campaign → …); do not fork it into parallel variants
+// (golden-path test plan). Workspace creation is idempotent (REQ-001),
+// so the spec handles first-run and provisioned environments.
+// Traceability: AC-024 (segment), AC-002, AC-004, AC-005, AC-006;
+// US-001..US-007; SCR-01, SCR-02, SCR-04..SCR-10, SCR-24;
+// REQ-001..REQ-006, REQ-010, REQ-012, REQ-013; DEC-02.
 import { expect, test } from "@playwright/test";
 import { apiContext, deleteTestArtists } from "../helpers/api";
 import { expectNoSeriousViolations } from "../helpers/axe";
@@ -99,4 +101,30 @@ test("golden path: create CYR3NT, complete AIP draft, preview", async ({
   }
   expect(markdown.startsWith("---")).toBeTruthy(); // YAML front matter
   await expectNoSeriousViolations(page, "SCR-09 AIP preview");
+
+  // Approve AIP version 1.0 (SCR-10). Walk the real user path: back to
+  // the overview, then Review & approve (offered only once eligible).
+  const artistUrl = page.url().replace(/\/aip\/preview$/, "");
+  await page.goto(artistUrl);
+  await page.getByRole("link", { name: "Review & approve" }).click();
+  await page.waitForURL(/\/aip\/review$/);
+  await expect(
+    page.getByRole("heading", { name: "Review and approve AIP" }),
+  ).toBeVisible();
+  await expect(page.getByText("Eligible", { exact: true })).toBeVisible();
+  await expectNoSeriousViolations(page, "SCR-10 review and approve");
+
+  await page.getByRole("button", { name: "Approve AIP version" }).click();
+
+  // Lands on version history (SCR-24): version 1.0 is the active
+  // (approved) authority, recorded against the seeded local owner
+  // (REQ-013, REQ-016, DEC-03).
+  await page.waitForURL(/\/aip\/versions/);
+  await expect(
+    page.getByRole("heading", { name: "AIP version history" }),
+  ).toBeVisible();
+  const v1 = page.getByRole("row").filter({ hasText: "1.0" });
+  await expect(v1).toContainText("active");
+  await expect(v1).toContainText("local-owner");
+  await expectNoSeriousViolations(page, "SCR-24 version history");
 });
