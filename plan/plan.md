@@ -6,8 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 7 — Artifact and Versioning System (IN REVIEW —
-  Increments 7.1–7.4 complete); Phases 1-6 COMPLETE
+- Current phase: Phase 8 — Authentication and Authorization (NOT STARTED);
+  Phases 1-7 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -217,7 +217,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 4 | Backend Application Foundation | COMPLETE |
 | 5 | Workspace and Artist Domain | COMPLETE |
 | 6 | Artist Identity Profile | COMPLETE |
-| 7 | Artifact and Versioning System | IN REVIEW |
+| 7 | Artifact and Versioning System | COMPLETE |
 | 8 | Authentication and Authorization | NOT STARTED |
 | 9 | AI Provider and Prompt Foundation | NOT STARTED |
 | 10 | Background Jobs and Progress Updates | NOT STARTED |
@@ -1326,7 +1326,9 @@ CYR3NT can complete a structured AIP draft
 
 ## Phase 7 — Artifact and Versioning System
 
-- Status: IN PROGRESS (Increment 7.1 COMPLETE; next: 7.2 approval API)
+- Status: COMPLETE — Test Commander Phase 7 exit review passed 2026-07-23
+  with zero open findings (3 exit-review findings fixed; clean-room 48/48
+  matrix + 105 API from a cold clone; hosted CI green).
 - Objective: CYR3NT AIP version 1.0 can be approved as an immutable version
   and exported.
 - Dependencies: Phase 6.
@@ -1494,11 +1496,26 @@ CYR3NT AIP version 1.0 can be approved and exported
 
 ### Decisions
 
-- None recorded yet.
+- D7-1..D7-6 recorded in the Phase 7 increment plan; D7-3 refined during
+  7.1 (trigger blocks UPDATE only so BR-015 aggregate deletion cascades).
 
 ### Completion Notes
 
-- None.
+- Closed 2026-07-23 by the Test Commander Phase 7 exit review (zero open
+  findings). Increments 7.1–7.4 complete. Two-layer immutability verified
+  including a raw-SQL UPDATE probe blocked by the DB trigger. Three
+  exit-review findings fixed (commit 6e7c17b): a Major version-compare
+  fetch-scope gap and a Minor read-only-view action from the independent
+  frontend review, and a load-induced E2E flake on the superseding spec
+  (config hardened: 15s expect window, retries:1). Clean-room from a cold
+  clone: 105 API tests, full Playwright matrix 48/48, hosted CI green.
+- Lesson: tear down the working-tree stack before a clean-room — a stray
+  service on a default port masked a readyz integration failure (false
+  pass in the first clean-room). Port-remapping harnesses must remap URLs,
+  not just PORT vars. The recurring frontend fetch-scope class was mostly
+  pre-empted up front but one derived-state fetch slipped through — the
+  Phase 6 lint-rule recommendation (unguarded useEffect fetches) is doubly
+  warranted for Phase 8+.
 
 ---
 
@@ -3462,3 +3479,28 @@ this phase must not begin.
 - Next recommended step: Test Commander Phase 7 review. With no open
   Major findings, Phase 7 closes and Phase 8 (Authentication and
   Authorization) begins.
+
+### 2026-07-23 (Phase 7 exit review — closed, zero open findings)
+
+- Phase: 7
+- Increment: Test Commander Phase 7 exit review
+- Status: COMPLETE
+- Work completed: Reviewed increments 7.1–7.4 with an independent
+  adversarial frontend reviewer on the test-lead-authored 7.3 UI and a
+  clean-room full-matrix run. Three findings raised and fixed (commit
+  6e7c17b): a Major version-compare fetch-scope gap and a Minor
+  read-only-view action (independent review), and a load-induced E2E flake
+  on the two-cycle superseding spec (config hardened). Two-layer
+  immutability independently verified, including a raw-SQL UPDATE blocked
+  by the DB trigger. All Phase 7 acceptance criteria met.
+- Tests run: clean-room from a cold GitHub clone (HEAD 6e7c17b, resources
+  freed) — 105 API tests + all checks, full Playwright matrix 48/48 (1.3m,
+  no flake); hosted CI green on HEAD. A readyz integration failure in the
+  clean-room was root-caused to a harness port-remapping bug (REDIS_URL
+  not remapped) that had masked a false pass in the first clean-room;
+  fixed and re-verified.
+- Decisions: none new.
+- Risks: none new; recorded clean-room and frontend lint-rule lessons.
+- Next recommended step: Phase 8 — Authentication and Authorization. Link
+  real accounts to the seeded local-owner without mutating the immutable
+  approval records from Phase 7.
