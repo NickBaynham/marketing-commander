@@ -32,7 +32,9 @@ export async function signInApi(api: APIRequestContext): Promise<void> {
 
 // Sign in the browser context so the app's credentialed fetches are
 // authenticated. Uses the localhost API origin to match the cookie host
-// the web app talks to. Call before navigating.
+// the web app talks to. Call before navigating. Non-golden specs use
+// this programmatic bridge; the golden path signs in through the real UI
+// (signInViaUi) per Increment 8.4.
 export async function signInBrowser(page: Page): Promise<void> {
   const response = await page.request.post(
     `${BROWSER_API_URL}/api/v1/auth/login`,
@@ -42,4 +44,15 @@ export async function signInBrowser(page: Page): Promise<void> {
     response.ok(),
     `owner sign-in failed (${response.status()}); did 'make seed' run?`,
   ).toBeTruthy();
+}
+
+// Sign in through the real SCR-01 screen (Increment 8.4). Assumes a
+// fresh, unauthenticated context so the form is shown.
+export async function signInViaUi(page: Page): Promise<void> {
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await page.getByLabel("Username").fill(OWNER_USERNAME);
+  await page.getByLabel("Password").fill(OWNER_PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.waitForURL(/\/(setup|artists)/);
 }

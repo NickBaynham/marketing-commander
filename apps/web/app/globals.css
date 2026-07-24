@@ -170,3 +170,15 @@ button {
 .compare-controls { display: flex; gap: 1rem; flex-wrap: wrap; align-items: end; }
 .compare-columns { display: flex; gap: 1rem; flex-wrap: wrap; }
 .compare-columns > div { flex: 1 1 18rem; min-width: 0; }
+
+/* Sign-in and session shell (Phase 8, Increment 8.4) */
+.signin-form { max-width: 22rem; }
+.session-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-left: auto;
+}
+.session-bar nav { margin-right: 0.5rem; }
+.session-user { font-size: 0.9em; }
+button.logout { padding: 0.3rem 0.75rem; }

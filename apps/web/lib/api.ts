@@ -10,6 +10,10 @@
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
+export interface CurrentUser {
+  user_id: string;
+}
+
 export interface Workspace {
   id: string;
   name: string;
@@ -125,6 +129,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  login: (username: string, password: string) =>
+    request<CurrentUser>("/api/v1/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+  logout: () =>
+    request<null>("/api/v1/auth/logout", { method: "POST" }),
+  getMe: () => request<CurrentUser>("/api/v1/auth/me"),
   getWorkspace: () => request<Workspace>("/api/v1/workspace"),
   createWorkspace: (name: string) =>
     request<Workspace>("/api/v1/workspace", {

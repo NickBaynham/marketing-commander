@@ -1,10 +1,12 @@
-// Application shell (Phase 5, Increment 5.3): navigation and page
-// frame per the UX specification's Common Screen Behavior.
-// Traceability: SCR-01 shell; DEC-09 accessibility baseline.
+// Application shell (Phase 5; session-aware since Phase 8, Increment 8.4).
+// The header carries the brand and a SessionBar that shows navigation,
+// the signed-in identity, and logout — and redirects unauthenticated
+// navigation to sign-in.
+// Traceability: SCR-01 shell; REQ-052, REQ-054; AC-028; DEC-09.
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import "./globals.css";
+import SessionBar from "./SessionBar";
 
 export const metadata: Metadata = {
   title: "Marketing Commander",
@@ -17,9 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <header className="app-nav">
           <span className="brand">Marketing Commander</span>
-          <nav aria-label="Primary">
-            <Link href="/artists">Artists</Link>
-          </nav>
+          <SessionBar />
         </header>
         <main className="app-main">{children}</main>
       </body>

@@ -13,20 +13,14 @@
 // US-001..US-007; SCR-01, SCR-02, SCR-04..SCR-10, SCR-24;
 // REQ-001..REQ-006, REQ-010, REQ-012, REQ-013; DEC-02.
 import { expect, test } from "@playwright/test";
-import { signInBrowser } from "../helpers/auth";
 import { apiContext, deleteTestArtists } from "../helpers/api";
 import { expectNoSeriousViolations } from "../helpers/axe";
+import { OWNER_PASSWORD, OWNER_USERNAME } from "../helpers/env";
 import {
   REQUIRED_SECTION_TITLES,
   completeAllRequiredSections,
   openAipEditor,
 } from "../helpers/aip";
-
-test.beforeEach(async ({ page }) => {
-  // Phase 8 bridge: authenticate the browser before navigating
-  // (real sign-in UI arrives in 8.4).
-  await signInBrowser(page);
-});
 
 test.beforeAll(async () => {
   const api = await apiContext();
@@ -34,11 +28,20 @@ test.beforeAll(async () => {
   await api.dispose();
 });
 
-test("golden path: create CYR3NT, complete AIP draft, preview", async ({
+test("golden path: sign in, create CYR3NT, complete AIP draft, preview", async ({
   page,
 }) => {
-  // Open application (SCR-01 routes by workspace presence).
+  // Sign in as the seeded owner through the real SCR-01 screen
+  // (Increment 8.4). The session cookie carries the rest of the path.
   await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expectNoSeriousViolations(page, "SCR-01 sign-in");
+  await page.getByLabel("Username").fill(OWNER_USERNAME);
+  await page.getByLabel("Password").fill(OWNER_PASSWORD);
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  // After sign-in the app routes by workspace presence (golden path
+  // Step 1).
   await page.waitForURL(/\/(setup|artists)/);
 
   if (page.url().includes("/setup")) {

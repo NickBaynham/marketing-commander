@@ -6,8 +6,8 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 8 — Authentication and Authorization (IN PROGRESS;
-  Increments 8.1–8.2 complete; next 8.3);
+- Current phase: Phase 8 — Authentication and Authorization (IN REVIEW —
+  Increments 8.1–8.4 complete; awaiting Test Commander Phase 8 review);
   Phases 1-7 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
@@ -219,7 +219,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 5 | Workspace and Artist Domain | COMPLETE |
 | 6 | Artist Identity Profile | COMPLETE |
 | 7 | Artifact and Versioning System | COMPLETE |
-| 8 | Authentication and Authorization | IN PROGRESS |
+| 8 | Authentication and Authorization | IN REVIEW |
 | 9 | AI Provider and Prompt Foundation | NOT STARTED |
 | 10 | Background Jobs and Progress Updates | NOT STARTED |
 | 11 | Campaign Domain and First Agent Workflow | NOT STARTED |
@@ -1619,16 +1619,21 @@ layering (transport → domain → repositories).
   so the ~124 pre-existing owner tests stay green; the real 403 path is
   exercised in test_authz_api.py with the override cleared.
 
-#### Increment 8.4 — Sign-in UX and session in the web app
+#### Increment 8.4 — Sign-in UX and session in the web app — COMPLETE
 
-- [ ] SCR-01 becomes a real local sign-in (replacing the auto-seeded-owner
-  entry); the API client carries the session; logout control;
-  unauthenticated navigation redirects to sign-in.
-- [ ] Golden-path spec updated to sign in as the seeded owner first, then
-  continue the canonical path; unauthenticated-access-redirected
-  scenario; axe on the sign-in screen.
-- [ ] ASVS L1 subset (V2/V3/V4) control mapping recorded as pass / fail /
-  N/A with evidence (finalized at Phase 14).
+- [x] SCR-01 is a real local sign-in (replacing the auto-seeded-owner
+  entry): credential form against the 8.2 session backend, client auth
+  methods (login/logout/getMe), a session-aware shell (SessionBar)
+  showing the signed-in owner with a logout control, and
+  unauthenticated navigation to any protected route redirected to
+  sign-in (defense-in-depth over the API's 401).
+- [x] Golden-path spec signs in through the real UI first, then
+  continues the canonical path; added an auth-ui spec with the
+  unauthenticated-redirect scenario (AC-028), a non-enumerating
+  wrong-credentials scenario, and logout re-protection; axe on SCR-01.
+- [x] ASVS L1 subset V2/V3/V4 control mapping recorded with evidence in
+  `docs/security/asvs-l1-baseline.md` (V5/V7/V9/V14 finalized at
+  Phase 14, per DEC-09).
 
 ### Decisions (Phase 8)
 
@@ -3761,3 +3766,31 @@ this phase must not begin.
 - Risks: none new.
 - Next recommended step: Increment 8.4 — sign-in UX and session in the
   web app (real login screen, session-aware shell, logout).
+
+### 2026-07-23 (Increment 8.4: sign-in UX and session; Phase 8 to IN REVIEW)
+
+- Phase: 8
+- Increment: 8.4 — Sign-in UX and session in the web app
+- Status: COMPLETE (Phase 8 IN REVIEW)
+- Work completed: SCR-01 is now a real credential sign-in against the
+  8.2 session backend; added client auth methods (login/logout/getMe),
+  a session-aware shell (SessionBar) showing the signed-in owner with a
+  logout control, and an unauthenticated-redirect guard on protected
+  routes (defense-in-depth over the API 401). Golden path signs in
+  through the real UI first; new auth-ui spec covers unauthenticated
+  redirect (AC-028), non-enumerating wrong-credentials, and logout
+  re-protection. ASVS L1 V2/V3/V4 mapping recorded in
+  docs/security/asvs-l1-baseline.md.
+- Tests run (all executed, all passing): web tsc clean (fixed a real
+  boolean-union type error in the sign-in effect before it shipped);
+  full DEC-09 matrix 66/66 across chromium desktop/mobile/tablet/wide,
+  firefox, webkit; make check green (lint, root 22, api 212, bootstrap
+  five services). One self-authored test defect caught and fixed
+  locally before commit: getByRole("alert") collided with Next's empty
+  route-announcer (strict-mode violation) — retargeted to the message
+  text. Hosted CI (D5-3 subset) verification with this commit's run.
+- Decisions: none new (D8-1..D8-6 all settled earlier).
+- Risks: none new.
+- Next recommended step: Test Commander Phase 8 review. With no open
+  Major findings, Phase 8 closes and Phase 9 (AI Provider and Prompt
+  Foundation) begins.
