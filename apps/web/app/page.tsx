@@ -20,22 +20,30 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
 
   // Route an existing session straight through; otherwise show the form.
+  // A failure while routing onward must never leave the "checking" gate
+  // stuck — it always resolves to the form with a visible, retryable error.
   useEffect(() => {
     let cancelled = false;
-    api
-      .getMe()
-      .then(() => {
-        if (!cancelled) routeOnward();
-      })
-      .catch((err: unknown) => {
+    (async () => {
+      try {
+        await api.getMe();
+      } catch (err) {
         if (cancelled) return;
-        if (err instanceof ApiError && err.status === 401) {
-          setChecking(false); // expected: not signed in yet
-        } else {
+        if (!(err instanceof ApiError && err.status === 401)) {
           setError(formatError(err, "API unreachable"));
+        }
+        setChecking(false); // not signed in (401) or unreachable: show form
+        return;
+      }
+      try {
+        if (!cancelled) await routeOnward();
+      } catch (err) {
+        if (!cancelled) {
+          setError(formatError(err, "could not load workspace"));
           setChecking(false);
         }
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -44,15 +52,17 @@ export default function SignIn() {
 
   async function routeOnward() {
     // Workspace presence decides the first screen (golden path Step 1).
+    // Only the 404 (no workspace) case is resolved here; every other
+    // failure propagates so the caller can surface it and reset its state.
     try {
       await api.getWorkspace();
       router.replace("/artists");
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         router.replace("/setup");
-      } else {
-        setError(formatError(err, "could not load workspace"));
+        return;
       }
+      throw err;
     }
   }
 
@@ -64,9 +74,10 @@ export default function SignIn() {
       await api.login(username, password);
       await routeOnward();
     } catch (err) {
-      setBusy(false);
       // 401 is the deliberate non-enumerating message from the API.
       setError(formatError(err, "sign-in failed"));
+    } finally {
+      setBusy(false);
     }
   }
 

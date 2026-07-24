@@ -6,6 +6,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import AuthGate from "./AuthGate";
 import SessionBar from "./SessionBar";
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <span className="brand">Marketing Commander</span>
           <SessionBar />
         </header>
-        <main className="app-main">{children}</main>
+        <main className="app-main">
+          <AuthGate>{children}</AuthGate>
+        </main>
       </body>
     </html>
   );

@@ -48,17 +48,30 @@ These defaults apply to every screen unless a screen overrides them:
 
 ## Screens
 
-### SCR-01 — Seeded-Owner Entry
+### SCR-01 — Sign In
 
-- Purpose: enter the application as the seeded local owner before Phase 8
-  authentication.
-- Entry points: application root on first load.
-- Data displayed: owner display name, identity source (`local_seed`), the
-  local-only limitation notice (DEC-03).
-- Main actions: continue as owner. Secondary: none.
-- Error state: seed data missing → instructs running the documented seed
-  command; no anonymous entry path.
-- Audit: session start audited. Requirements: REQ-002. AC: AC-024 (step 0).
+- Purpose: authenticate the local owner with a credential before any
+  workspace data is reachable (Phase 8; replaces the pre-auth seeded-owner
+  auto-entry). The authenticated owner links to the seeded `local-owner`
+  domain id (DEC-03).
+- Entry points: application root; and any unauthenticated navigation to a
+  protected route, redirected here by the session-aware shell (AuthGate /
+  SessionBar) as defense-in-depth over the API 401.
+- Data displayed: a username and password form (password field masked).
+  An already-authenticated visitor is routed straight onward (to setup
+  when no workspace exists, else artists) and never sees the form.
+- Main actions: sign in. On success the session cookie (HttpOnly,
+  server-side) is established and the shell shows the signed-in identity
+  with a logout control.
+- Error state: invalid credentials return a single non-enumerating message
+  ("invalid username or password") identical for a wrong password and an
+  unknown user (ASVS V2); a transient backend failure while routing onward
+  surfaces a visible, retryable error rather than a stuck screen. The
+  correlation id is shown for support (Common Screen Behavior).
+- Accessibility: labeled username/password inputs; error banner announced
+  via `role="alert"`; the session-check state uses `aria-live`.
+- Audit: session start (login) audited. Requirements: REQ-052, REQ-053,
+  REQ-054. AC: AC-026, AC-028; AC-024 (step 0).
 
 ### SCR-02 — Workspace Setup
 

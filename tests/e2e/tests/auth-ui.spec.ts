@@ -13,6 +13,11 @@ test("unauthenticated navigation to a protected route redirects to sign-in", asy
   await page.goto("/artists");
   await page.waitForURL("/");
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  // The gate withholds protected content until the session is confirmed,
+  // so the artists page's own fetch never 401s into a visible error
+  // banner before the redirect (8.4 review, Major 2).
+  await expect(page.getByText(/could not load artists/i)).toHaveCount(0);
+  await expect(page.getByText(/invalid username or password/i)).toHaveCount(0);
 });
 
 test("wrong credentials are rejected without revealing which field", async ({
