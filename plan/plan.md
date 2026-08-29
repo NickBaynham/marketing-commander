@@ -7,8 +7,9 @@
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
 - Current phase: Phase 8 — Authentication and Authorization (IN REVIEW —
-  Increments 8.1–8.4 complete; awaiting Test Commander Phase 8 review);
-  Phases 1-7 COMPLETE
+  Increments 8.1–8.4 complete; awaiting Test Commander Phase 8 review).
+  Phase 9 increment plan drafted 2026-07-24 (NOT STARTED, gated on Phase 8
+  closure). Phases 1-7 COMPLETE
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -1704,41 +1705,156 @@ Controlled access to artist and approval workflows
 
 ## Phase 9 — AI Provider and Prompt Foundation
 
-- Status: NOT STARTED
+- Status: NOT STARTED (increment plan drafted 2026-07-24; implementation
+  starts on Product Owner go)
 - Objective: Auditable, testable, cost-controlled, and privacy-respecting
   AI-generation capability behind a provider-neutral interface.
 - Dependencies: Phase 4; Phase 7 for persisting generated artifacts.
   Decision 6 (provider and cost ceilings) and Decision 10 (privacy) must be
-  approved before the first live LLM call.
+  approved before the first live LLM call (both APPROVED in Phase 1).
+- Traceability: REQ-033 (agent-run auditability), REQ-035 (cost caps),
+  REQ-036 (mock default), REQ-037 (prompt-injection defenses), REQ-038
+  (privacy controls); the ProviderAttempt entity for REQ-034 (its
+  worker-restart duplicate-accounting test is Phase 10); AC-021, AC-022;
+  US-009, US-010, US-015, US-016; BR-008, BR-011, BR-012, BR-016, BR-017;
+  DEC-05 (quality gate inputs), DEC-06, DEC-10; Technical Design §6.
+- Reuse (no rebuild): artifact/version persistence (Phase 7) for accepted
+  output; audit + correlation infra (Phase 5/8); local deletion (REQ-051,
+  already shipped) for the DEC-10 deletion requirement; session identity
+  and workspace scoping (Phase 8) for run ownership and per-workspace
+  budgets.
+- Phase-leakage stop condition: NO Redis-backed job queue, worker
+  execution, or progress events (Phase 10); NO campaign/content generation
+  wiring (Phase 11); NO agent-activity UI (Phase 10, SCR-20). Phase 9
+  delivers the capability invoked synchronously in tests via the mock
+  provider; the only live path is the designed budget-capped smoke test
+  (opt-in, never in PR CI). The generation validation pipeline validates
+  against the DEC-04 contracts as available; campaign-specific content
+  generation is Phase 11.
 
-### Tasks
+### Increment Plan (drafted 2026-07-24)
 
-- [ ] Provider-neutral LLM interface.
-- [ ] Configurable provider and model (reference provider/model per
-  Decision 6 configuration).
-- [ ] Versioned prompt templates.
-- [ ] Structured generation requests.
-- [ ] Structured result validation.
-- [ ] Token, cost, latency, and error recording.
-- [ ] Agent-run entity.
-- [ ] Provider-attempt records, distinct from logical agent runs.
-- [ ] Safe retry behavior within the Decision 5 regeneration limit (maximum
-  three automated attempts per item per user action; retries visible and
-  budget-consuming).
-- [ ] Cost caps per Decision 6: caps enforced before dispatch, estimated
-  cost reserved, actual cost reconciled, retries count toward the campaign
-  budget, workers cannot override caps, 80% warning and 100% block
-  behavior.
-- [ ] Privacy and provider-data processing rules per Decision 10, all
-  satisfied before the first live LLM call.
-- [ ] AI fault library (see Cross-Cutting Requirements) with expected
-  behavior per fault mode.
-- [ ] Recorded-response fixtures and mock LLM response corpus.
-- [ ] Prompt-injection defenses (see Cross-Cutting Requirements) with
-  adversarial fixtures.
-- [ ] Mock provider for automated tests.
-- [ ] Live smoke test design (small, explicit, budget-capped).
-- [ ] No LLM calls directly from API route handlers.
+Each increment follows the Test Commander review loop and the reference
+layering (transport → domain → repositories); no provider SDK is imported
+outside the adapter, and no LLM call originates in a route handler.
+
+#### Increment 9.1 — Provider-neutral interface, prompt registry, mock provider
+
+- [ ] `LLMProvider` protocol: `generate(request) -> response` with the
+  Technical Design §6 envelopes — request (prompt version id, system
+  instructions from the registry, delimited untrusted-input slots, output
+  schema ref, token limits); response (raw output, parsed structured
+  output, token counts, duration, provider and model ids).
+- [ ] Prompt registry: `PromptTemplate` / `PromptVersion` (immutable
+  versions, exact-version resolution); system instructions live only in
+  the registry, never composed from user content.
+- [ ] Mock provider (default in test/ci, REQ-036): deterministic and
+  scriptable to emit each fault mode; the corpus seed for 9.4.
+- [ ] Reference provider adapter as a thin, unwired stub (the real call
+  path is exercised only by the 9.4 smoke-test design; D9-1).
+- Decisions settled here: D9-1 (reference provider/model), D9-2 (prompt
+  storage and versioning shape).
+- Tests: interface contract, prompt-version resolution and immutability,
+  mock determinism, "no provider SDK imported outside the adapter" guard.
+
+#### Increment 9.2 — Agent-run / provider-attempt recording and validation pipeline
+
+- [ ] `AgentRun` entity (REQ-033): prompt version, target, requesting
+  actor, token totals, cost, latency, state, failure classification.
+- [ ] `ProviderAttempt` entity (REQ-034 entity + single-run accounting):
+  every dispatch — including a repeat after an uncertain failure — is its
+  own attempt with its own cost and failure class. Distinct from the
+  logical run (BR-017); never conflated in code, data, or reporting. The
+  worker-restart duplicate-accounting integration test is Phase 10.
+- [ ] Validation pipeline in strict order (Technical Design §6): schema
+  (DEC-04 contracts) → policy (do/avoid, fabricated-fact vs AIP evidence
+  references) → quality (calendar consistency, duplicate detection).
+  Output failing schema or policy is never persisted as content (BR-008);
+  it is retained as an attempt record under the DEC-10 retention rules.
+- [ ] Retry rules (BR-012): at most three attempts per item per explicit
+  user action; `refusal` and `policy_violation` never auto-retry; retries
+  are visible and budget-consuming (budget wired in 9.3).
+- [ ] Provenance (BR-016): every persisted generated version records
+  prompt version, agent run, and provider attempt.
+- Tests: run-vs-attempt distinction, each failure classification, pipeline
+  ordering, no-persist-on-invalid, retry cap and no-auto-retry classes.
+
+#### Increment 9.3 — Cost service and budget ledger (DEC-06)
+
+- [ ] `Budget` (per-workspace caps: per-run, per-campaign, monthly, token
+  caps, 80% and 100% thresholds) and append-only `CostLedgerEntry`
+  (reservation / reconciliation / release).
+- [ ] Cost service (REQ-035): estimate and reserve before dispatch;
+  reconcile actual after completion; retries draw on the same budget;
+  warn at 80%; block paid generation at 100% (mock and manual editing
+  remain available); owner-only, audited cap changes; enforcement in the
+  cost service before every dispatch so no caller (including a future
+  worker) can bypass.
+- Decisions settled here: D9-3 (cost estimation method), D9-4 (reservation
+  vs reconciliation model).
+- Tests: reservation precedes dispatch; block-at-cap before dispatch;
+  reconciliation adjusts the ledger; retries stay within budget; 80/100%
+  threshold behavior; cap change requires owner + audit.
+
+#### Increment 9.4 — Privacy, prompt-injection, fault library, smoke-test design
+
+- [ ] DEC-10 privacy (REQ-038), all before any live call: data-disclosure
+  summary (which AIP fields are sent), provider/model display, no secrets
+  in prompts, redaction of unnecessary personal fields, prompt/response
+  retention rules, provider data-use documentation, local deletion (reuse
+  REQ-051), explicit consent action before the first live paid generation,
+  minimal provider-metadata storage, defined processing boundaries (only
+  API/worker/adapter see AIP content; logs exclude it).
+- [ ] Prompt-injection defenses (REQ-037): delimited untrusted slots,
+  system/user trust separation, output validated independently of prompt
+  content, adversarial fixtures asserting no embedded instruction is
+  obeyed.
+- [ ] AI fault library (Cross-Cutting Requirements): all fifteen fault
+  modes, each with a test for its expected retry, failure, budget, and
+  user-visible/audit behavior.
+- [ ] Recorded-response fixtures: capture, redaction, storage, and replay
+  in CI (the recorded-response layer of the AI testing strategy).
+- [ ] Live smoke-test design (REQ-036): a single real generation with hard
+  token and cost caps, asserting schema validity, run recording, and cost
+  reconciliation; nightly/pre-release only, never in PR CI, opt-in, no key
+  committed. Design and harness only in Phase 9.
+- Decisions settled here: D9-5 (consent-gate placement), D9-6 (retention
+  defaults).
+- Tests: privacy behaviors (disclosure, redaction, no-secrets, deletion,
+  consent required), the adversarial injection fixtures, the full fault
+  library, recorded-response replay.
+
+### Decisions (Phase 9)
+
+- D9-1 (settle at 9.1; Product Owner confirm) — Reference provider/model:
+  candidate Anthropic with a current small/fast model as the configured
+  default (DEC-06 keeps the values environment-configurable, not hard-
+  coded). The interface stays provider-neutral; only the adapter and
+  config name a provider.
+- D9-2 (settle at 9.1) — Prompt storage: prompt templates and immutable
+  versions in Postgres (versioned rows), rendered through a small
+  registry; system instructions never sourced from user content. Prompt
+  bodies live in the repository as versioned files loaded at seed, so
+  prompt changes are code-reviewed.
+- D9-3 (settle at 9.3) — Cost estimation: token-count estimate against
+  configured per-token input/output prices; reserve the estimate, then
+  reconcile to actual reported usage after completion. Prices are config,
+  not committed dollar constants (DEC-06).
+- D9-4 (settle at 9.3) — Reservation model: reserve estimated cost as a
+  ledger hold before dispatch; on completion, release the hold and post
+  the reconciled actual; on failure, release the hold but keep the
+  attempt's incurred cost (attempts are billable, BR-012).
+- D9-5 (settle at 9.4; Product Owner confirm) — Consent-gate placement:
+  the capability enforces the DEC-10 consent/disclosure gate at the
+  service boundary now (no live paid call without a recorded consent
+  token); the user-facing consent surface (SCR-13) arrives with
+  user-triggered generation in Phase 11. The budget-capped smoke test
+  supplies consent explicitly.
+- D9-6 (settle at 9.4) — Retention defaults: store prompt and response
+  text only as attempt records under a configured retention window,
+  redacted of unnecessary personal fields; the default window and the
+  provider data-use note are recorded in the privacy documentation and
+  are configurable.
 
 ### Deliverable
 
@@ -1771,10 +1887,13 @@ Auditable and testable AI-generation capability
   interface.
 - Silent retry cost accumulation; mitigated by visible retries and budget
   reservation.
+- Live-call cost or key exposure during the smoke test; mitigated by hard
+  caps, opt-in, no committed key, and exclusion from PR CI.
 
 ### Decisions
 
-- None recorded yet.
+- Recorded above as D9-1..D9-6 (before the Deliverable), settled at their
+  increments; D9-1 and D9-5 flagged for Product Owner confirmation.
 
 ### Completion Notes
 
@@ -3794,3 +3913,35 @@ this phase must not begin.
 - Next recommended step: Test Commander Phase 8 review. With no open
   Major findings, Phase 8 closes and Phase 9 (AI Provider and Prompt
   Foundation) begins.
+
+### 2026-07-24 (Phase 9 increment plan drafted)
+
+- Phase: 9 (planning only; Phase 8 remains IN REVIEW)
+- Increment: Increment plan draft (9.1–9.4)
+- Status: NOT STARTED (implementation gated on Phase 8 closure and
+  Product Owner go)
+- Work completed: Drafted the Phase 9 increment plan: 9.1
+  provider-neutral interface + prompt registry + mock provider; 9.2
+  agent-run / provider-attempt recording + the schema→policy→quality
+  validation pipeline; 9.3 cost service + budget ledger (DEC-06); 9.4
+  privacy (DEC-10), prompt-injection defenses, fault library,
+  recorded-response fixtures, and the budget-capped live smoke-test
+  design. Recorded traceability (REQ-033/035/036/037/038, ProviderAttempt
+  for REQ-034; AC-021/022; BR-008/011/012/016/017; DEC-05/06/10; Tech
+  Design §6), reuse (Phase 7 persistence, Phase 5/8 audit+identity,
+  REQ-051 deletion), the phase-leakage stop condition (no queue/worker/
+  progress/UI — those are Phases 10/11), and decisions D9-1..D9-6.
+- Tests run: `make lint` (clean) and `pdm run pytest tests/docs
+  tests/repo` (17 passed — the documentation-validation suite that checks
+  plan structure, links, golden-path integrity, and traceability).
+  `bootstrap-check` was not run locally (Docker daemon down); the full
+  `make check` gate including the five-service stack is verified by
+  hosted CI on push.
+- Decisions: D9-1..D9-6 recorded with candidates; D9-1 (reference model)
+  and D9-5 (consent-gate placement) flagged for Product Owner
+  confirmation; DEC-06 and DEC-10 already approved govern the phase.
+- Risks: live-call cost/key exposure (mitigated: hard caps, opt-in, no
+  committed key, excluded from PR CI); provider drift (isolated behind
+  the adapter).
+- Next recommended step: Test Commander Phase 8 exit review. On closure,
+  Product Owner confirms D9-1/D9-5, then Increment 9.1 begins.
