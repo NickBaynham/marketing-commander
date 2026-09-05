@@ -1826,11 +1826,12 @@ outside the adapter, and no LLM call originates in a route handler.
 
 ### Decisions (Phase 9)
 
-- D9-1 (settle at 9.1; Product Owner confirm) — Reference provider/model:
-  candidate Anthropic with a current small/fast model as the configured
-  default (DEC-06 keeps the values environment-configurable, not hard-
-  coded). The interface stays provider-neutral; only the adapter and
-  config name a provider.
+- D9-1 (APPROVED 2026-09-04 by Nick Baynham, Product Owner) — Reference
+  provider/model: Anthropic with a current small/fast (Haiku-class) model
+  as the configured default. DEC-06 keeps the value environment-
+  configurable, not hard-coded. The interface stays provider-neutral;
+  only the adapter and config name a provider. Chosen for lowest
+  smoke-test cost and per CLAUDE.md's latest-model guidance.
 - D9-2 (settle at 9.1) — Prompt storage: prompt templates and immutable
   versions in Postgres (versioned rows), rendered through a small
   registry; system instructions never sourced from user content. Prompt
@@ -1844,12 +1845,12 @@ outside the adapter, and no LLM call originates in a route handler.
   ledger hold before dispatch; on completion, release the hold and post
   the reconciled actual; on failure, release the hold but keep the
   attempt's incurred cost (attempts are billable, BR-012).
-- D9-5 (settle at 9.4; Product Owner confirm) — Consent-gate placement:
-  the capability enforces the DEC-10 consent/disclosure gate at the
-  service boundary now (no live paid call without a recorded consent
-  token); the user-facing consent surface (SCR-13) arrives with
-  user-triggered generation in Phase 11. The budget-capped smoke test
-  supplies consent explicitly.
+- D9-5 (APPROVED 2026-09-04 by Nick Baynham, Product Owner) —
+  Consent-gate placement: the capability enforces the DEC-10 consent/
+  disclosure gate at the service boundary now (no live paid call without
+  a recorded consent token); the user-facing consent surface (SCR-13)
+  arrives with user-triggered generation in Phase 11. The budget-capped
+  smoke test supplies consent explicitly.
 - D9-6 (settle at 9.4) — Retention defaults: store prompt and response
   text only as attempt records under a configured retention window,
   redacted of unnecessary personal fields; the default window and the
@@ -3967,3 +3968,20 @@ this phase must not begin.
 - Next recommended step: Test Commander Phase 8 exit review using the
   evidence package; on closure, confirm D9-1/D9-5 and begin Increment
   9.1.
+
+### 2026-09-04 (D9-1 and D9-5 approved by Product Owner)
+
+- Phase: 9 (planning)
+- Increment: Decision sign-off (no code change)
+- Status: NOT STARTED (still gated on Phase 8 Test Commander closure)
+- Work completed: Recorded Product Owner approval of D9-1 (reference
+  provider/model: Anthropic small/fast Haiku-class default, env-
+  configurable) and D9-5 (consent gate enforced at the service boundary
+  in Phase 9; consent UI in Phase 11). D9-2/D9-3/D9-4/D9-6 remain to be
+  settled at their increments. Phase 9 implementation does not begin
+  until the Test Commander Phase 8 exit review closes.
+- Tests run: docs validation (tests/docs) green.
+- Decisions: D9-1, D9-5 APPROVED.
+- Risks: none new.
+- Next recommended step: Test Commander Phase 8 exit review. On closure,
+  begin Increment 9.1 with D9-1/D9-5 settled.
