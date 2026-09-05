@@ -3945,3 +3945,25 @@ this phase must not begin.
   the adapter).
 - Next recommended step: Test Commander Phase 8 exit review. On closure,
   Product Owner confirms D9-1/D9-5, then Increment 9.1 begins.
+
+### 2026-07-24 (Phase 8 exit-review evidence package prepared)
+
+- Phase: 8 (IN REVIEW)
+- Increment: Exit-review evidence assembly (no product change)
+- Status: Phase 8 remains IN REVIEW; evidence ready for Test Commander
+- Work completed: Wrote docs/testing/phase8-evidence.md — a
+  self-contained package mapping the three Phase 8 acceptance criteria
+  and REQ-052..056 to code and tests, the ASVS V2/V3/V4 verdicts, the
+  security-review fix history (8.2/8.3/8.4), known limitations by
+  decision, reviewer input files, and recommended adversarial focus.
+- Tests run (first-hand): full API suite against the compose stack —
+  214 passed (cd apps/api && pdm run pytest, 13.17s), the exact command
+  CI runs; docs link/structure validation — 9 passed. Recorded a
+  reviewer note that running a subset of the auth test files together
+  yields spurious 401s from dependency-override leakage (harness
+  interaction, not a defect); the full suite is the valid signal.
+- Decisions: none.
+- Risks: none new.
+- Next recommended step: Test Commander Phase 8 exit review using the
+  evidence package; on closure, confirm D9-1/D9-5 and begin Increment
+  9.1.
