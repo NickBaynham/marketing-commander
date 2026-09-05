@@ -30,13 +30,20 @@ Service = Annotated[AuthService, Depends(get_auth_service)]
 
 
 @router.post("/login", response_model=MeOut)
-async def login(body: LoginRequest, response: Response, service: Service) -> MeOut:
+async def login(
+    body: LoginRequest, request: Request, response: Response, service: Service
+) -> MeOut:
     token = await service.login(body.username, body.password)
     if token is None:
         # One message for unknown-user and wrong-password (no enumeration).
+        # A failed attempt leaves any existing session untouched.
         raise HTTPException(
             status_code=401, detail={"message": "invalid username or password"}
         )
+    # A successful re-authentication revokes the previously presented
+    # session so an old token cannot outlive the new login (Phase 8 exit
+    # review, A2). Revocation is server-side, not just a cookie overwrite.
+    await service.logout(read_session_cookie(request))
     set_session_cookie(response, token)
     return MeOut(user_id=body.username)
 

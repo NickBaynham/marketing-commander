@@ -57,8 +57,14 @@ def set_session_cookie(response: Response, token: str) -> None:
 
 
 def clear_session_cookie(response: Response) -> None:
+    # Mirror the attributes used to set the cookie (incl. Secure) so the
+    # deletion Set-Cookie matches exactly (Phase 8 exit review, A1).
     response.delete_cookie(
-        key=session_cookie_name(), httponly=True, samesite="lax", path="/"
+        key=session_cookie_name(),
+        httponly=True,
+        samesite="lax",
+        secure=get_settings().cookie_secure,
+        path="/",
     )
 
 

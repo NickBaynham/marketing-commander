@@ -22,6 +22,7 @@
 | Credentials never logged | pass | Login body excluded from logs; correlation logging carries no password field. |
 | Dev/seed password supplied via env, never committed | pass | `LOCAL_OWNER_PASSWORD` env var; `.env` gitignored; hygiene test gates committed secrets. |
 | Account provisioning limited to the seeded owner (MVP) | n/a (self-service registration) | D8-1/D8-6: only the owner is provisioned; registration is Phase 20. |
+| Brute-force / credential-stuffing protection (rate limiting, lockout) | n/a (deferred to Phase 20) | Not implemented in the MVP: the DEC-10 local single-workspace release has one seeded owner and no public exposure, and argon2id imposes a per-attempt cost. Rate limiting and lockout are public-hosting controls owned by Phase 20. Recorded explicitly per the Phase 8 exit review (finding A3) so the V2 mapping is complete. |
 
 ## V3 — Session Management
 

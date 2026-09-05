@@ -6,10 +6,10 @@
   locally, in hosted CI, and from a clean-room clone; migration cycle
   empty-to-head and downgrade verified; readiness on the layered slice;
   AST-enforced import direction; D4-1..D4-3 recorded). Next: Phase 5.
-- Current phase: Phase 8 — Authentication and Authorization (IN REVIEW —
-  Increments 8.1–8.4 complete; awaiting Test Commander Phase 8 review).
-  Phase 9 increment plan drafted 2026-07-24 (NOT STARTED, gated on Phase 8
-  closure). Phases 1-7 COMPLETE
+- Current phase: Phase 9 — AI Provider and Prompt Foundation (NOT STARTED;
+  increment plan drafted, D9-1/D9-5 approved — Increment 9.1 ready to
+  begin). Phases 1-8 COMPLETE; Phase 8 closed 2026-09-04 by the Test
+  Commander exit review (zero Major findings).
 - Last updated: 2026-07-21
 - Governance baseline commit: `bdd6ac54678fe16fc02f2fba93c5933392a09feb`
   (Governance baseline v1.0, committed 2026-07-18)
@@ -220,7 +220,7 @@ The default `ci` and `test` environments use the mock LLM provider.
 | 5 | Workspace and Artist Domain | COMPLETE |
 | 6 | Artist Identity Profile | COMPLETE |
 | 7 | Artifact and Versioning System | COMPLETE |
-| 8 | Authentication and Authorization | IN REVIEW |
+| 8 | Authentication and Authorization | COMPLETE |
 | 9 | AI Provider and Prompt Foundation | NOT STARTED |
 | 10 | Background Jobs and Progress Updates | NOT STARTED |
 | 11 | Campaign Domain and First Agent Workflow | NOT STARTED |
@@ -1523,8 +1523,11 @@ CYR3NT AIP version 1.0 can be approved and exported
 
 ## Phase 8 — Authentication and Authorization
 
-- Status: IN PROGRESS (Increments 8.1–8.3 COMPLETE 2026-07-23; D8-1..D8-6
-  settled; next: Increment 8.4 — sign-in UX and session in the web app)
+- Status: COMPLETE (2026-09-04) — Increments 8.1–8.4 delivered; Test
+  Commander exit review recorded zero Critical/Major findings; five Minor
+  findings — four fixed in the exit-review remediation commit, one (B2,
+  latent cross-workspace id scoping) recorded as a Phase 20 follow-up.
+  (This line had drifted at 8.4 close; corrected here.)
 - Objective: Controlled access to artist and approval workflows.
 - Dependencies: Phase 5 (workspace model); informs approval flows from
   Phase 7 onward.
@@ -3985,3 +3988,31 @@ this phase must not begin.
 - Risks: none new.
 - Next recommended step: Test Commander Phase 8 exit review. On closure,
   begin Increment 9.1 with D9-1/D9-5 settled.
+
+### 2026-09-04 (Test Commander Phase 8 exit review: PASS; Phase 8 COMPLETE)
+
+- Phase: 8
+- Increment: Exit review and remediation
+- Status: COMPLETE
+- Work completed: Phase 8 exit review conducted through Test Commander
+  using two independent adversarial reviewer agents (auth/session and
+  authz/access-control), each finding verified first-hand against the
+  code before disposition. Verdict: PASS — zero Critical or Major
+  findings; five Minor. Dispositions: A1 (logout cookie-clear omitted
+  Secure) FIXED; A2 (re-login left the prior server-side session alive)
+  FIXED with a regression test; A3 (ASVS V2 lacked an explicit row for
+  brute-force protection) FIXED as a documented n/a deferred to Phase 20;
+  B1 (EDIT_AIP and ARCHIVE_RESTORE had no API-level allow/deny
+  assertions) FIXED with four tests using stale-version 409s to prove
+  authorization without mutating shared fixtures; B2 (id-addressed routes
+  not re-scoped to workspace — latent, unreachable under the singleton
+  index) RECORDED as a Phase 20 multi-tenant-isolation follow-up. Review
+  document: marketing-commander-test/.test-commander/documents/
+  phase8-review-2026-09-04.md.
+- Tests run (first-hand): apps/api pytest — 219 passed (214 → +5);
+  make lint clean; tests/docs 9 passed. Hosted CI verification with the
+  remediation commit's run.
+- Decisions: none new (D9-1/D9-5 already approved).
+- Risks: B2 carried to Phase 20; no new risk.
+- Next recommended step: Begin Increment 9.1 (provider-neutral interface,
+  prompt registry, mock provider) — all gates cleared.

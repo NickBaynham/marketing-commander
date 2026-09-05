@@ -185,6 +185,55 @@ def test_editor_cannot_delete_artist(as_role):
     assert response.status_code == 403
 
 
+# Edit AIP draft (matrix "Edit AIP draft (save)"): editor allowed past
+# authz, viewer denied. The allowed case uses a deliberately stale version
+# so it reaches the domain layer (409) without mutating the shared scratch
+# artist — the same technique as the approve tests above. Added per the
+# Phase 8 exit review (finding B1: EDIT_AIP had no API-level assertion).
+
+
+def test_viewer_cannot_save_aip_draft(as_role):
+    client = as_role("viewer-user")
+    response = client.put(
+        f"/api/v1/artists/{ARTIST_ID}/aip",
+        json={"expected_version": 1, "sections": {}},
+    )
+    assert response.status_code == 403
+
+
+def test_editor_passes_authz_on_save_aip_draft(as_role):
+    client = as_role("editor-user")
+    response = client.put(
+        f"/api/v1/artists/{ARTIST_ID}/aip",
+        json={"expected_version": 999, "sections": {}},
+    )
+    # Not 401/403: authorization allowed the action; the stale token is
+    # then rejected by optimistic concurrency (BR-019), proving the request
+    # reached the domain layer.
+    assert response.status_code == 409
+
+
+# Archive / restore artist (matrix "Archive / restore artist"): editor
+# allowed past authz, viewer denied (finding B1: ARCHIVE_RESTORE_ARTIST had
+# no API-level assertion).
+
+
+def test_viewer_cannot_archive_artist(as_role):
+    client = as_role("viewer-user")
+    response = client.post(
+        f"/api/v1/artists/{ARTIST_ID}/archive", json={"expected_version": 1}
+    )
+    assert response.status_code == 403
+
+
+def test_editor_passes_authz_on_archive(as_role):
+    client = as_role("editor-user")
+    response = client.post(
+        f"/api/v1/artists/{ARTIST_ID}/archive", json={"expected_version": 999}
+    )
+    assert response.status_code == 409
+
+
 # Deny by default: a member with no matching role row, an unauthenticated
 # caller, and a non-member are all denied.
 

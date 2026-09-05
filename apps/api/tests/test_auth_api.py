@@ -135,6 +135,22 @@ def test_session_grants_access_then_logout_revokes(fresh_client):
     assert fresh_client.get("/api/v1/auth/me").status_code == 401
 
 
+def test_relogin_revokes_prior_session(fresh_client):
+    """A successful re-authentication destroys the previously presented
+    session server-side, so an old token cannot outlive a fresh login
+    (Phase 8 exit review, finding A2). A failed login leaves the existing
+    session untouched (covered by the wrong-password test's 401 path)."""
+    assert login(fresh_client).status_code == 200
+    old_token = fresh_client.cookies.get("mc_session")
+    assert old_token
+    assert login(fresh_client).status_code == 200
+    new_token = fresh_client.cookies.get("mc_session")
+    assert new_token and new_token != old_token
+    # The jar now holds the new cookie; present the OLD token instead.
+    fresh_client.cookies.set("mc_session", old_token)
+    assert fresh_client.get("/api/v1/auth/me").status_code == 401
+
+
 def test_tampered_cookie_is_rejected(fresh_client):
     login(fresh_client)
     fresh_client.cookies.set("mc_session", "not-a-real-token")
